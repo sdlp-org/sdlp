@@ -9,12 +9,20 @@
       "publicKeyJwk": {
         "kty": "OKP",
         "crv": "Ed25519",
-        "x": "OIsG7Oa7G0B-lM2zT2I-6A0jSSG6sc2B68v2sODvM-s"
+        "x": "5KCrL98PpC0X1o8kTqdfa2bSpwjdPrwGW2zB3rB8UfA"
       }
     }
   ],
-  "authentication": ["did:web:acme.example#key-1"],
-  "assertionMethod": ["did:web:acme.example#key-1"],
-  "capabilityInvocation": ["did:web:acme.example#key-1"],
-  "capabilityDelegation": ["did:web:acme.example#key-1"]
+  "authentication": [
+    "did:web:acme.example#key-1"
+  ],
+  "assertionMethod": [
+    "did:web:acme.example#key-1"
+  ],
+  "capabilityInvocation": [
+    "did:web:acme.example#key-1"
+  ],
+  "capabilityDelegation": [
+    "did:web:acme.example#key-1"
+  ]
 }
