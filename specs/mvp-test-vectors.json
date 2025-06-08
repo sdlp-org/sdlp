@@ -1,0 +1,57 @@
+[
+  {
+    "description": "Happy path with did:key - A valid link signed with a did:key",
+    "link": "sdlp://eyJwcm90ZWN0ZWQiOiJleUpoYkdjaU9pSkZaRVJUUVNJc0ltdHBaQ0k2SW1ScFpEcHJaWGs2ZWpKRVZVUnVaRXBUYVVkdlVERmpXa3g0Tm5SRlpVWnlPVWQxWjJ0T05GRnhZa1pPWTJKSFMxVjVVamh3T1djamVqSkVWVVJ1WkVwVGFVZHZVREZqV2t4NE5uUkZaVVp5T1VkMVoydE9ORkZ4WWtaT1kySkhTMVY1VWpod09XY2lmUSIsInBheWxvYWQiOiJleUoySWpvaVUwUk1MVEV1TUNJc0luTnBaQ0k2SW1ScFpEcHJaWGs2ZWpKRVZVUnVaRXBUYVVkdlVERmpXa3g0Tm5SRlpVWnlPVWQxWjJ0T05GRnhZa1pPWTJKSFMxVjVVamh3T1djaUxDSjBlWEJsSWpvaWRHVjRkQzl3YkdGcGJpSXNJbU52YlhBaU9pSnViMjVsSWl3aVkyaHJJam9pWkdabVpEWXdNakZpWWpKaVpEVmlNR0ZtTmpjMk1qa3dPREE1WldNellUVXpNVGt4WkdRNE1XTTNaamN3WVRSaU1qZzJPRGhoTXpZeU1UZ3lPVGcyWmlKOSIsInNpZ25hdHVyZSI6Ilk0dzJ1bF9XbmtXbnJZYW15N0IxLUNqMHo2U1BxWFJQQjREYm5lRVlxalRJYUQ1VER0WllMUExyVmVnN3dwaDJUQTZkMmdBYlFfN3FkM3pMb2xQUkR3In0.SGVsbG8sIFdvcmxkIQ",
+    "expected": {
+      "valid": true,
+      "payload": "Hello, World!",
+      "payloadType": "text/plain",
+      "senderDid": "did:key:z2DUDndJSiGoP1cZLx6tEeFr9GugkN4QqbFNcbGKUyR8p9g",
+      "error": null
+    }
+  },
+  {
+    "description": "Happy path with did:web - A valid link signed with a did:web key",
+    "link": "sdlp://eyJwcm90ZWN0ZWQiOiJleUpoYkdjaU9pSkZaRVJUUVNJc0ltdHBaQ0k2SW1ScFpEcDNaV0k2WVdOdFpTNWxlR0Z0Y0d4bEkydGxlUzB4SW4wIiwicGF5bG9hZCI6ImV5SjJJam9pVTBSTUxURXVNQ0lzSW5OcFpDSTZJbVJwWkRwM1pXSTZZV050WlM1bGVHRnRjR3hsSWl3aWRIbHdaU0k2SW5SbGVIUXZjR3hoYVc0aUxDSmpiMjF3SWpvaWJtOXVaU0lzSW1Ob2F5STZJakJoT0dJeU0yWTJZV016T0RjMk1UQTFZV0ZsWW1NME5tSTBaamRtWVdKbFpqRXlOVFExTlRrMVpUUTBNRFZtTkRkak9Ua3pZVFpqTjJOaU1tSmhNR1FpZlEiLCJzaWduYXR1cmUiOiJxUU5DVGN3MkNObUZJMG5UYTVjbjFGdEJsU0paQzdsNUk1VmZGTjJPYkRVWnVmeUg4Q21JQWNwZ0RMclVINDZhMU1uRjZnU2JSdlJ0UDEtZDdaTUhCdyJ9.SGVsbG8gZnJvbSBBQ01FIENvcnAh",
+    "expected": {
+      "valid": true,
+      "payload": "Hello from ACME Corp!",
+      "payloadType": "text/plain",
+      "senderDid": "did:web:acme.example",
+      "error": null
+    }
+  },
+  {
+    "description": "Invalid signature - A link with valid structure but manipulated signature",
+    "link": "sdlp://eyJwcm90ZWN0ZWQiOiJleUpoYkdjaU9pSkZaRVJUUVNJc0ltdHBaQ0k2SW1ScFpEcHJaWGs2ZWpKRVZVUnVaRXBUYVVkdlVERmpXa3g0Tm5SRlpVWnlPVWQxWjJ0T05GRnhZa1pPWTJKSFMxVjVVamh3T1djamVqSkVWVVJ1WkVwVGFVZHZVREZqV2t4NE5uUkZaVVp5T1VkMVoydE9ORkZ4WWtaT1kySkhTMVY1VWpod09XY2lmUSIsInBheWxvYWQiOiJleUoySWpvaVUwUk1MVEV1TUNJc0luTnBaQ0k2SW1ScFpEcHJaWGs2ZWpKRVZVUnVaRXBUYVVkdlVERmpXa3g0Tm5SRlpVWnlPVWQxWjJ0T05GRnhZa1pPWTJKSFMxVjVVamh3T1djaUxDSjBlWEJsSWpvaWRHVjRkQzl3YkdGcGJpSXNJbU52YlhBaU9pSnViMjVsSWl3aVkyaHJJam9pWkRCaE5XTmxNek0xWm1VNU56ZGlPR1EzWm1SaVpXUTBOekV4TVdZeFpqSmhabUl5WXpOa00yRTBNVFV3T0dFMU1tWXpNalZoTURFMll6WXhaRGxsWmlKOSIsInNpZ25hdHVyZSI6IkVqYloxSWVTay1KaXp0LXY1ZVlFcFhNbkxXY3JiYThuNkFsN3l5cWhwU2oxVUt6ZUpwRUNzLVkxdjhObUdiRFZuazdWcFJnc3FoWDhSNk5na3pJVEFBIn0.VGVzdCBwYXlsb2Fk",
+    "expected": {
+      "valid": false,
+      "payload": null,
+      "payloadType": null,
+      "senderDid": null,
+      "error": "INVALID_SIGNATURE"
+    }
+  },
+  {
+    "description": "Payload tampering - A link with valid signature but altered payload causing checksum mismatch",
+    "link": "sdlp://eyJwcm90ZWN0ZWQiOiJleUpoYkdjaU9pSkZaRVJUUVNJc0ltdHBaQ0k2SW1ScFpEcHJaWGs2ZWpKRVZVUnVaRXBUYVVkdlVERmpXa3g0Tm5SRlpVWnlPVWQxWjJ0T05GRnhZa1pPWTJKSFMxVjVVamh3T1djamVqSkVWVVJ1WkVwVGFVZHZVREZqV2t4NE5uUkZaVVp5T1VkMVoydE9ORkZ4WWtaT1kySkhTMVY1VWpod09XY2lmUSIsInBheWxvYWQiOiJleUoySWpvaVUwUk1MVEV1TUNJc0luTnBaQ0k2SW1ScFpEcHJaWGs2ZWpKRVZVUnVaRXBUYVVkdlVERmpXa3g0Tm5SRlpVWnlPVWQxWjJ0T05GRnhZa1pPWTJKSFMxVjVVamh3T1djaUxDSjBlWEJsSWpvaWRHVjRkQzl3YkdGcGJpSXNJbU52YlhBaU9pSnViMjVsSWl3aVkyaHJJam9pWVRVd09XRm1NMlV6TWpZek5qTTVZV1kxT1RRNE5URXhZbVZtWVdZMlpUazNZekF4WmpJMFlURTRORGRoWVRBeFl6SmxZMk5qTlRCbVl6TmxORGhpWVNKOSIsInNpZ25hdHVyZSI6IlFXSXhnWFhSMldsMjg4djU0emszbmFEMGZUQWE4M1RLLWlhbXo4c25udG1yY3B2VGt2eUliaWx5dGZuMVhvVnpvdEFUdGZvRWxjN3dFRDRWcG9FbEF3In0.VGFtcGVyZWQgcGF5bG9hZA",
+    "expected": {
+      "valid": false,
+      "payload": null,
+      "payloadType": null,
+      "senderDid": null,
+      "error": "PAYLOAD_CHECKSUM_MISMATCH"
+    }
+  },
+  {
+    "description": "Expired link - A validly signed link where the exp timestamp is in the past",
+    "link": "sdlp://eyJwcm90ZWN0ZWQiOiJleUpoYkdjaU9pSkZaRVJUUVNJc0ltdHBaQ0k2SW1ScFpEcHJaWGs2ZWpKRVZVUnVaRXBUYVVkdlVERmpXa3g0Tm5SRlpVWnlPVWQxWjJ0T05GRnhZa1pPWTJKSFMxVjVVamh3T1djamVqSkVWVVJ1WkVwVGFVZHZVREZqV2t4NE5uUkZaVVp5T1VkMVoydE9ORkZ4WWtaT1kySkhTMVY1VWpod09XY2lmUSIsInBheWxvYWQiOiJleUoySWpvaVUwUk1MVEV1TUNJc0luTnBaQ0k2SW1ScFpEcHJaWGs2ZWpKRVZVUnVaRXBUYVVkdlVERmpXa3g0Tm5SRlpVWnlPVWQxWjJ0T05GRnhZa1pPWTJKSFMxVjVVamh3T1djaUxDSjBlWEJsSWpvaWRHVjRkQzl3YkdGcGJpSXNJbU52YlhBaU9pSnViMjVsSWl3aVkyaHJJam9pTWpJelptTmtOV1EwTWpJeFpEVXpaVEk1TUdKbU5EQTVZemszTVdGaU5tUmlOREZsWVRjek1tTTNZMlpsWVdJNU1tTmtPV0k1TldOa1lXRXlaVFkxWVNJc0ltVjRjQ0k2TVRjME9UTTNNemt3TVgwIiwic2lnbmF0dXJlIjoiMlc0UVNPSjBNLTR5WUoyQzZxOGpfbjI0NWwxSUZDUlBsemdYN29Ea25jcXJ0a0VQWm0yN1F1TmlBM2NZc3lUUDN6YTJXODNzbG1TZkVmZVlmN2FlRGcifQ.RXhwaXJlZCBjb250ZW50",
+    "expected": {
+      "valid": false,
+      "payload": null,
+      "payloadType": null,
+      "senderDid": null,
+      "error": "LINK_EXPIRED"
+    }
+  }
+]

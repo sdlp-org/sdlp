@@ -1,0 +1,16 @@
+{
+  "description": "Test key pair for SDLP MVP test vectors",
+  "ed25519_private_key_jwk": {
+    "kty": "OKP",
+    "crv": "Ed25519",
+    "d": "pM1Z8hQe5R5St8e9zIl2a3fhxVof9oZIEY23Y2B41sE",
+    "x": "OIsG7Oa7G0B-lM2zT2I-6A0jSSG6sc2B68v2sODvM-s"
+  },
+  "ed25519_public_key_jwk": {
+    "kty": "OKP",
+    "crv": "Ed25519",
+    "x": "OIsG7Oa7G0B-lM2zT2I-6A0jSSG6sc2B68v2sODvM-s"
+  },
+  "did_key_identifier": "did:key:z2DUDndJSiGoP1cZLx6tEeFr9GugkN4QqbFNcbGKUyR8p9g",
+  "did_web_identifier": "did:web:acme.example"
+}
