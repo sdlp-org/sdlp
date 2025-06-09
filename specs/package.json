@@ -12,12 +12,15 @@
     "generate-vectors": "tsx scripts/generate-test-vectors.ts",
     "generate-did-key": "tsx scripts/generate-did-key.ts",
     "parse-link": "tsx scripts/parse-sdlp-link.ts",
+    "validate-fixtures": "tsx scripts/validate-fixtures.ts",
+    "validate-test-vectors": "tsx scripts/validate-test-vectors.ts",
+    "validate-all": "tsx scripts/validate-all.ts",
     "dev": "vite",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.js",
     "lint:fix": "eslint . --ext .ts,.js --fix",
     "format": "prettier --write .",
-    "help": "echo \"Available scripts: build, test, typecheck, generate-vectors, generate-did-key, parse-link\""
+    "help": "echo \"Available scripts: build, test, typecheck, generate-vectors, generate-did-key, parse-link, validate-fixtures, validate-test-vectors, validate-all\""
   },
   "keywords": [],
   "author": "",

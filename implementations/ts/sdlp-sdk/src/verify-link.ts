@@ -1,15 +1,26 @@
 /**
- * Verify Link functionality for SDLP
+ * Verification functionality for SDLP
  */
 
 import { sha256 } from "@noble/hashes/sha256";
 import { importJWK, type JWK } from "jose";
 import { resolveDid, extractDidFromKid } from "./did-resolver.js";
 import type {
-  VerificationResultUnion,
+  VerificationResult,
   CoreMetadata,
   JWSProtectedHeader,
 } from "./types.js";
+
+type VerificationResultUnion = VerificationResult;
+
+/**
+ * Interface for JWS Flattened JSON Serialization
+ */
+interface JWSFlattenedFormat {
+  protected: string;
+  payload: string;
+  signature: string;
+}
 
 /**
  * Verifies a Secure Deep Link
@@ -18,13 +29,13 @@ export async function verifyLink(
   link: string,
 ): Promise<VerificationResultUnion> {
   try {
-    // 1. Parse the link format
+    // 1. Parse the SDLP link format
     const parseResult = parseSDLPLink(link);
     if (!parseResult) {
       return {
         valid: false,
         error: "INVALID_LINK_FORMAT",
-        details: "Link must be in format: sdlp://<jws>.<payload>",
+        details: "Invalid SDLP link format",
       };
     }
 
@@ -33,12 +44,14 @@ export async function verifyLink(
     // 2. Decode and parse the JWS to extract metadata
     let coreMetadata: CoreMetadata;
     let protectedHeader: JWSProtectedHeader;
-    let jwsObject: any;
+    let jwsObject: JWSFlattenedFormat;
 
     try {
       // Decode the JWS object (Flattened JSON Serialization)
       const jwsJson = base64urlDecode(jwsToken);
-      jwsObject = JSON.parse(new TextDecoder().decode(jwsJson));
+      jwsObject = JSON.parse(
+        new TextDecoder().decode(jwsJson),
+      ) as JWSFlattenedFormat;
 
       // Decode the protected header
       const headerJson = base64urlDecode(jwsObject.protected);
@@ -61,7 +74,7 @@ export async function verifyLink(
 
     // 3. Validate time bounds
     const now = Math.floor(Date.now() / 1000);
-    if (coreMetadata.exp && now > coreMetadata.exp) {
+    if (typeof coreMetadata.exp === "number" && now > coreMetadata.exp) {
       return {
         valid: false,
         error: "LINK_EXPIRED",
@@ -69,7 +82,7 @@ export async function verifyLink(
       };
     }
 
-    if (coreMetadata.nbf && now < coreMetadata.nbf) {
+    if (typeof coreMetadata.nbf === "number" && now < coreMetadata.nbf) {
       return {
         valid: false,
         error: "LINK_EXPIRED",
@@ -119,7 +132,7 @@ export async function verifyLink(
         return {
           valid: false,
           error: "UNSUPPORTED_COMPRESSION",
-          details: `Unsupported compression algorithm: ${coreMetadata.comp}`,
+          details: `Unsupported compression algorithm: ${String(coreMetadata.comp)}`,
         };
       }
     } catch (error) {
@@ -216,15 +229,4 @@ function base64urlDecode(data: string): Uint8Array {
   // Convert base64url to base64
   const base64 = padded.replace(/-/g, "+").replace(/_/g, "/");
   return new Uint8Array(Buffer.from(base64, "base64"));
-}
-
-/**
- * Base64URL encode a Uint8Array
- */
-function base64urlEncode(data: Uint8Array): string {
-  return Buffer.from(data)
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
 }

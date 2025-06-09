@@ -1,0 +1,111 @@
+name: Validate SDLP Specifications
+
+on:
+  push:
+    branches: [main, develop]
+    paths: 
+      - 'specs/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'specs/**'
+  workflow_dispatch:
+
+jobs:
+  validate-specs:
+    name: Validate SDLP Specs Consistency
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: specs
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'specs/package-lock.json'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run TypeScript type checking
+        run: npm run typecheck
+        
+      - name: Run linting
+        run: npm run lint
+        
+      - name: Validate test fixtures
+        run: npm run validate-fixtures
+        
+      - name: Validate test vectors
+        run: npm run validate-test-vectors
+        
+      - name: Run complete validation suite
+        run: npm run validate-all
+        
+      - name: Run tests
+        run: npm test
+        
+      - name: Generate test coverage
+        run: npm run test:coverage
+        
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          directory: specs/coverage
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  validate-protocol-consistency:
+    name: Check Protocol Implementation Consistency
+    runs-on: ubuntu-latest
+    needs: validate-specs
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install specs dependencies
+        run: |
+          cd specs
+          npm ci
+          
+      - name: Install implementation dependencies
+        run: |
+          cd implementations/ts/sdlp-sdk
+          npm ci
+          
+      - name: Test implementation against specs
+        run: |
+          cd implementations/ts/sdlp-sdk
+          npm test
+          
+      - name: Check for spec drift
+        run: |
+          # Verify that test vectors in implementation match specs
+          if ! diff -q specs/mvp-test-vectors.json implementations/ts/sdlp-sdk/tests/mvp-test-vectors.json; then
+            echo "❌ Test vectors in implementation don't match specs!"
+            echo "Please update implementation test vectors or regenerate specs."
+            exit 1
+          fi
+          
+          # Verify that test fixtures match (via symlinks)
+          if ! diff -q specs/test-fixtures/keys.json implementations/ts/sdlp-sdk/tests/test-fixtures/keys.json; then
+            echo "❌ Test fixtures in implementation don't match specs!"
+            echo "Please check symlinks or regenerate fixtures."
+            exit 1
+          fi
+          
+          echo "✅ Implementation is consistent with specs" 

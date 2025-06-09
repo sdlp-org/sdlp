@@ -3,9 +3,9 @@
  */
 
 import { sha256 } from "@noble/hashes/sha256";
-import { FlattenedSign, importJWK, type JWK } from "jose";
+import { FlattenedSign, importJWK, type JWK, type KeyLike } from "jose";
 import type {
-  CreateLinkParams as CreateLinkParameters,
+  CreateLinkParameters,
   CoreMetadata,
   JWSProtectedHeader,
 } from "./types.js";
@@ -112,6 +112,8 @@ function base64urlEncode(data: Uint8Array): string {
 /**
  * Import a private key from JWK format for use with jose
  */
-async function importPrivateKey(jwk: Record<string, unknown>) {
+async function importPrivateKey(
+  jwk: Record<string, unknown>,
+): Promise<CryptoKey | KeyLike> {
   return await importJWK(jwk as unknown as JWK, "EdDSA");
 }

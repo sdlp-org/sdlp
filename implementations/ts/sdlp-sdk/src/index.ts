@@ -12,7 +12,7 @@ export { verifyLink } from "./verify-link.js";
 // Export types
 export type {
   Signer,
-  CreateLinkParams,
+  CreateLinkParameters,
   VerificationResult,
   VerificationFailure,
   VerificationResultUnion,

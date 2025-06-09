@@ -5,12 +5,12 @@
  * generated in the specs project.
  */
 
+import { readFile } from "node:fs/promises";
 import { describe, it, expect, beforeAll } from "vitest";
-import { readFile } from "fs/promises";
-import { createLink, verifyLink } from "../src/index.js";
-import type {
-  CreateLinkParams,
-  VerificationResultUnion,
+import {
+  createLink,
+  verifyLink,
+  type CreateLinkParameters,
 } from "../src/index.js";
 
 interface TestVector {
@@ -73,7 +73,7 @@ describe("SDLP SDK", () => {
       const identity = testIdentities["did:key"];
       const payload = new TextEncoder().encode("Hello, World!");
 
-      const params: CreateLinkParams = {
+      const params: CreateLinkParameters = {
         payload,
         payloadType: "text/plain",
         signer: {
@@ -93,7 +93,7 @@ describe("SDLP SDK", () => {
       const identity = testIdentities["did:web"];
       const payload = new TextEncoder().encode('{"message": "Test payload"}');
 
-      const params: CreateLinkParams = {
+      const params: CreateLinkParameters = {
         payload,
         payloadType: "application/json",
         signer: {
@@ -113,7 +113,7 @@ describe("SDLP SDK", () => {
       const identity = testIdentities["did:key"];
       const payload = new TextEncoder().encode("Expiring message");
 
-      const params: CreateLinkParams = {
+      const params: CreateLinkParameters = {
         payload,
         payloadType: "text/plain",
         signer: {
@@ -132,7 +132,7 @@ describe("SDLP SDK", () => {
     it("should reject invalid kid format", async () => {
       const payload = new TextEncoder().encode("Test");
 
-      const params: CreateLinkParams = {
+      const params: CreateLinkParameters = {
         payload,
         payloadType: "text/plain",
         signer: {
@@ -152,7 +152,7 @@ describe("SDLP SDK", () => {
       const originalPayload = new TextEncoder().encode("Round trip test");
 
       // Create a link
-      const params: CreateLinkParams = {
+      const params: CreateLinkParameters = {
         payload: originalPayload,
         payloadType: "text/plain",
         signer: {
@@ -255,7 +255,7 @@ describe("SDLP SDK", () => {
       const identity = testIdentities["did:key"];
       const originalPayload = new TextEncoder().encode("Original message");
 
-      const params: CreateLinkParams = {
+      const params: CreateLinkParameters = {
         payload: originalPayload,
         payloadType: "text/plain",
         signer: {
@@ -269,7 +269,7 @@ describe("SDLP SDK", () => {
 
       // Tamper with the payload part (everything after the last dot)
       const lastDotIndex = link.lastIndexOf(".");
-      const tamperedLink = link.substring(0, lastDotIndex + 1) + "dGFtcGVyZWQ"; // "tampered" in base64
+      const tamperedLink = `${link.substring(0, lastDotIndex + 1)}dGFtcGVyZWQ`; // "tampered" in base64
 
       const result = await verifyLink(tamperedLink);
 
@@ -284,7 +284,7 @@ describe("SDLP SDK", () => {
       const identity = testIdentities["did:key"];
       const payload = new TextEncoder().encode("Expired message");
 
-      const params: CreateLinkParams = {
+      const params: CreateLinkParameters = {
         payload,
         payloadType: "text/plain",
         signer: {
