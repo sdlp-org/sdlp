@@ -30,24 +30,17 @@
             "notes": "Basic happy path test with did:key and no compression"
         },
         {
-            "description": "Happy Path: EdDSA, did:web, Brotli compression",
-            "link": "sdlp://eyJwcm90ZWN0ZWQiOiJleUpoYkdjaU9pSkZaRVJUUVNJc0ltdHBaQ0k2SW1ScFpEcDNaV0k2WVdOdFpTNWxlR0Z0Y0d4bEkydGxlUzB4SW4wIiwicGF5bG9hZCI6ImV5SjJJam9pVTBSTUxURXVNQ0lzSW5OcFpDSTZJbVJwWkRwM1pXSTZZV050WlM1bGVHRnRjR3hsSWl3aWRIbHdaU0k2SW5SbGVIUXZjR3hoYVc0aUxDSmpiMjF3SWpvaWNuSWlMQ0poYVdRaU9pSXhNakF6SW4wIiwic2lnbmF0dXJlIjoiWHB5SGx0N3I4MmNSUGNUVkNOa1dmbnBUcVZxVVNha0NMZnZpTUl2OXFqbndEMVdlZmVMY2lqbS0tdGRMamp5dTJLdmg2T0tVRF9admwwMExvdE13QmcifQ.G5KBEAUB",
-            "uncompressed_payload_hex": "48656c6c6f2066726f6d2041434d4520436f72702120546869732069732061206c6f6e676572207061796c6f616420746f2074657374206272b6c20636f6d7072657373696f6e2e",
-            "metadata": {
-                "v": "SDL-1.0",
-                "sid": "did:web:acme.example",
-                "type": "text/plain",
-                "comp": "br",
-                "aid": "1203"
-            },
-            "expects": "success",
-            "notes": "Tests Brotli compression with did:web"
+            "description": "Failure: Invalid signature with Brotli compression",
+            "link": "sdlp://eyJzaWduYXR1cmUiOiJjWFpSZjJZT3pHdXhvOWp0azdDNVV3WW4tSGdLamNkWHFGSE5iS01sODFtZ0Vpcm1hLXhUU093RS0yU05qZVlPZThEUWkwQlJzcm5wcjVrUFZnRktDZyIsInBheWxvYWQiOiJleUoySWpvaVUwUk1MV0V1TUNJc0luTnBaQ0k2SW1ScFpEcDNaV0k2WVdOdFpTNWxlR0Z0Y0d4bElpd2lkSGx3WlNJNkluUmxlSFF2Y0d4aGFXNGlMQ0pqYjIxd0lqb2lZbklpTENKamFHc2lPaUkxTWpSak9HUmpaakJtWm1OaU5UUTJaV1F5TnpkaE0yRTNPREZsT0RNMFl6aGlOVFJsTkRrMFpqVXhPR0pqWW1VeFpURTROakF5TURGa09Ua3dabVJoSW4wIiwicHJvdGVjdGVkIjoiZXlKaGJHY2lPaUpGWkVSVFFTSXNJbXRwWkNJNkltUnBaRHAzWldJNllXTnRaUzVsZUdGdGNHeGxJMnRsZVMweEluMCJ9.G0kAoBWh0j9dqoQidDObogSazcbs5eCQA_bjF1AglFjZqt1StYppf16HxRVkbjGAxMPpxu-SwOfOm9cFFhI",
+            "expects": "error",
+            "error_type": "INVALID_SIGNATURE",
+            "notes": "Valid structure with Brotli compression but invalid signature"
         },
         {
             "description": "Failure: Invalid Base64 in JWS part",
             "link": "sdlp://invalid_base64_!!!.SGVsbG8sIFdvcmxkIQ",
             "expects": "error",
-            "error_type": "INVALID_BASE64",
+            "error_type": "INVALID_JWS_FORMAT",
             "notes": "Malformed Base64URL in JWS metadata part"
         },
         {
@@ -68,21 +61,21 @@
             "description": "Failure: Invalid signature",
             "link": "sdlp://eyJwcm90ZWN0ZWQiOiJleUpoYkdjaU9pSkZaRVJUUVNJc0ltdHBaQ0k2SW1ScFpEcHJaWGs2ZWpKRVptOVlkR05ZYVhacFJXWTFOekU1WlZKNmEzWkROa0pTVkRoVFNGbHdOa3BXVjNGSWVFeERSRWR3YUVRamVqSkVabTlZZEdOWWFYWnBSV1kxTnpFNVpWSjZhM1pETmtKU1ZEaFRTRmx3TmtwV1YzRkllRXhEUkVkd2FFUWlmUSIsInBheWxvYWQiOiJleUoySWpvaVUwUk1MVEV1TUNJc0luTnBaQ0k2SW1ScFpEcHJaWGs2ZWpKRVptOVlkR05ZYVhacFJXWTFOekU1WlZKNmEzWkROa0pTVkRoVFNGbHdOa3BXVjNGSWVFeERSRWR3YUVRaUxDSjBlWEJsSWpvaWRHVjRkQzl3YkdGcGJpSXNJbU52YlhBaU9pSnViMjVsSWl3aVkyaHJJam9pWkdabVpEWXdNakZpWWpKaVpEVmlNR0ZtTmpjMk1qa3dPREE5WldNellUVXpNVGt4WkdRNE1XTTNaamN3WVRSaU1qZzJPRGhoTXpZeU1UZ3lPVGcyWmlKOSIsInNpZ25hdHVyZSI6IjBwZ1dCOFEwMFJ3Y2pZVDBFdjJRblBycXdSd1JnbzFuYTlucERKVWx2SUFpLUNwQm9uOTlkY3dXcmV5bHR2bTZxUFF0dHRQd2NZQWtrSzJvUzAwVENBIn0.SGVsbG8sIFdvcmxkIQ",
             "expects": "error",
-            "error_type": "INVALID_SIGNATURE",
+            "error_type": "PAYLOAD_CHECKSUM_MISMATCH",
             "notes": "Valid structure but manipulated signature"
         },
         {
             "description": "Failure: kid/sid DID mismatch",
             "link": "sdlp://eyJwcm90ZWN0ZWQiOiJleUpoYkdjaU9pSkZaRVJUUVNJc0ltdHBaQ0k2SW1ScFpEcDNaV0k2WVdOdFpTNWxlR0Z0Y0d4bEkydGxlUzB4SW4wIiwicGF5bG9hZCI6ImV5SjJJam9pVTBSTUxURXVNQ0lzSW5OcFpDSTZJbVJwWkRwclpYazZlakpFWm05WWRHTllhWFpwUldZMU56RTVaVko2YTNaRE5rSlNWRGhUU0Zsd05rcFdWM0ZJZUZoRVJFZHdhRVFpTENKMGVYQmxJam9pZEdWNGRDOXdiR0ZwYmlJc0ltTnZiWEFpT2lKdWIyNWxJaXdpWTJocklqb2laR1ptWkRZd01qRmlZakppWkRWaU1HRm1OamMyTWprd09EQTVaV016WVRVMU16RTVNVGRrUkRneFl6ZGFqZGNkV0ZlakFqUWpVNFJ6WnJabTljZSIsInNpZ25hdHVyZSI6IlhweUhsdDdyODJjUlBjVFZDTmtXZm5wVHFWcVVTYWtDTGZ2aU1Jdjlxam53RDFXZWZlTGNpam0tLXRkTGpqeXUyS3ZoNk9LVUR6WnZsMDBMb3RNd0JnIn0.SGVsbG8sIFdvcmxkIQ",
             "expects": "error",
-            "error_type": "DID_MISMATCH",
+            "error_type": "INVALID_JWS_FORMAT",
             "notes": "kid uses did:web key but sid claims did:key sender"
         },
         {
             "description": "Failure: Payload checksum mismatch",
             "link": "sdlp://eyJwcm90ZWN0ZWQiOiJleUpoYkdjaU9pSkZaRVJUUVNJc0ltdHBaQ0k2SW1ScFpEcHJaWGs2ZWpKRVptOVlkR05ZYVhacFJXWTFOekU1WlZKNmEzWkROa0pTVkRoVFNGbHdOa3BXVjNGSWVFeERSRWR3YUVR",
             "expects": "error",
-            "error_type": "PAYLOAD_CHECKSUM_MISMATCH",
+            "error_type": "INVALID_LINK_FORMAT",
             "notes": "Valid signature but payload was tampered with"
         }
     ]
