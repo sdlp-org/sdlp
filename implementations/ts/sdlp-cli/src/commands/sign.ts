@@ -1,5 +1,5 @@
+import { readFileSync } from 'node:fs';
 import { Command } from 'commander';
-import { readFileSync } from 'fs';
 import { createLink } from 'sdlp-sdk';
 import type { Signer } from 'sdlp-sdk';
 
@@ -23,7 +23,7 @@ export const signCommand = new Command('sign')
             const exp = options.expires ? parseTime(options.expires) : undefined;
 
             // Create the link
-            const createLinkParams: Parameters<typeof createLink>[0] = {
+            const createLinkParameters: Parameters<typeof createLink>[0] = {
                 payload,
                 payloadType: options.type,
                 signer,
@@ -31,10 +31,10 @@ export const signCommand = new Command('sign')
             };
 
             if (exp) {
-                createLinkParams.expiresIn = exp - Math.floor(Date.now() / 1000);
+                createLinkParameters.expiresIn = exp - Math.floor(Date.now() / 1000);
             }
 
-            const link = await createLink(createLinkParams);
+            const link = await createLink(createLinkParameters);
 
             // Output the link
             console.log(link);
@@ -88,18 +88,18 @@ async function loadSigner(keyFile?: string): Promise<Signer> {
 /**
  * Parse time string (ISO 8601 or seconds from now)
  */
-function parseTime(timeStr: string): number {
+function parseTime(timeString: string): number {
     // Try to parse as ISO 8601 first
-    const isoTime = new Date(timeStr);
+    const isoTime = new Date(timeString);
     if (!isNaN(isoTime.getTime())) {
         return Math.floor(isoTime.getTime() / 1000);
     }
 
     // Try to parse as seconds from now
-    const seconds = parseInt(timeStr, 10);
+    const seconds = parseInt(timeString, 10);
     if (!isNaN(seconds)) {
         return Math.floor(Date.now() / 1000) + seconds;
     }
 
-    throw new Error(`Invalid time format: ${timeStr}. Use ISO 8601 format or seconds from now`);
+    throw new Error(`Invalid time format: ${timeString}. Use ISO 8601 format or seconds from now`);
 } 

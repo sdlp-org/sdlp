@@ -20,7 +20,7 @@ export const verifyCommand = new Command('verify')
             // Clean up the link (ensure it has sdlp:// prefix, trim whitespace)
             linkToVerify = linkToVerify.trim();
             if (!linkToVerify.startsWith('sdlp://')) {
-                linkToVerify = 'sdlp://' + linkToVerify;
+                linkToVerify = `sdlp://${  linkToVerify}`;
             }
 
             // Verify the link
@@ -34,13 +34,13 @@ export const verifyCommand = new Command('verify')
                     console.log(JSON.stringify({
                         valid: true,
                         sender: result.sender,
-                        contentType: result.metadata.typ || 'application/octet-stream',
+                        contentType: result.metadata.type || 'application/octet-stream',
                         payloadSize: result.payload.length,
                         metadata: result.metadata,
-                    }, null, 2));
+                    }));
 
-                    // Write payload to stdout as binary data
-                    process.stdout.write(result.payload);
+                    // Write payload to stdout as text (assuming it's text-based for JSON output)
+                    console.log(new TextDecoder().decode(result.payload));
                 } else {
                     console.log(JSON.stringify({
                         valid: false,
@@ -49,7 +49,7 @@ export const verifyCommand = new Command('verify')
                             message: result.error.message,
                             code: result.error.code,
                         },
-                    }, null, 2));
+                    }));
                     process.exit(1);
                 }
             } else {
@@ -57,7 +57,7 @@ export const verifyCommand = new Command('verify')
                 if (result.valid) {
                     console.error(`✅ Link verified successfully!`);
                     console.error(`👤 Sender: ${result.sender}`);
-                    console.error(`📄 Content Type: ${result.metadata.typ || 'application/octet-stream'}`);
+                    console.error(`📄 Content Type: ${result.metadata.type || 'application/octet-stream'}`);
                     console.error(`📊 Payload Size: ${result.payload.length} bytes`);
 
                     if (result.metadata.exp) {
@@ -99,7 +99,7 @@ export const verifyCommand = new Command('verify')
                         name: 'UnexpectedError',
                         message: String(error),
                     },
-                }, null, 2));
+                }));
             } else {
                 console.error('❌ Unexpected error:', error);
             }

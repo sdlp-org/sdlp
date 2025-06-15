@@ -37,6 +37,7 @@ export interface DIDDocument {
     controller: string;
     publicKeyJwk?: Record<string, unknown>;
     publicKeyMultibase?: string;
+    publicKeyBase58?: string;
   }>;
   /** Additional DID document properties */
   [key: string]: unknown;

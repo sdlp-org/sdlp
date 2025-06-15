@@ -2,10 +2,9 @@
  * Comprehensive test suite for SDLP CLI
  */
 
+import { execSync, spawn } from 'node:child_process';
+import { writeFileSync, readFileSync, unlinkSync, existsSync } from 'node:fs';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { execSync, spawn } from 'child_process';
-import { writeFileSync, readFileSync, unlinkSync, existsSync } from 'fs';
-import { join } from 'path';
 
 // Test data and files
 const TEST_PAYLOAD = JSON.stringify({
@@ -22,7 +21,37 @@ const TEST_FILES = {
 };
 
 // CLI executable path
-const CLI_PATH = './dist/index.js';
+const CLI_PATH = './dist/src/index.js';
+
+// Helper function to spawn a child process and return a Promise
+function spawnCommand(args: string[], input?: string): Promise<{ code: number; stdout: string; stderr: string }> {
+    return new Promise((resolve, reject) => {
+        const child = spawn('node', [CLI_PATH, ...args]);
+        let stdout = '';
+        let stderr = '';
+
+        child.stdout.on('data', (data) => {
+            stdout += data.toString();
+        });
+
+        child.stderr.on('data', (data) => {
+            stderr += data.toString();
+        });
+
+        child.on('close', (code) => {
+            resolve({ code: code ?? 0, stdout, stderr });
+        });
+
+        child.on('error', (error) => {
+            reject(error);
+        });
+
+        if (input) {
+            child.stdin.write(input);
+            child.stdin.end();
+        }
+    });
+}
 
 describe('SDLP CLI', () => {
     beforeAll(() => {
@@ -50,232 +79,129 @@ describe('SDLP CLI', () => {
     });
 
     describe('Command Parsing and Help', () => {
-        it('should show help when called with --help', (done) => {
-            const child = spawn('node', [CLI_PATH, '--help']);
-            let stdout = '';
+        it('should show help when called with --help', async () => {
+            const result = await spawnCommand(['--help']);
 
-            child.stdout.on('data', (data) => {
-                stdout += data.toString();
-            });
-
-            child.on('close', (code) => {
-                expect(code).toBe(0);
-                expect(stdout).toContain('CLI for the Secure Deep Link Protocol (SDLP)');
-                expect(stdout).toContain('keygen');
-                expect(stdout).toContain('sign');
-                expect(stdout).toContain('verify');
-                done();
-            });
+            expect(result.code).toBe(0);
+            expect(result.stdout).toContain('CLI for the Secure Deep Link Protocol (SDLP)');
+            expect(result.stdout).toContain('keygen');
+            expect(result.stdout).toContain('sign');
+            expect(result.stdout).toContain('verify');
         });
 
-        it('should show version when called with --version', (done) => {
-            const child = spawn('node', [CLI_PATH, '--version']);
-            let stdout = '';
+        it('should show version when called with --version', async () => {
+            const result = await spawnCommand(['--version']);
 
-            child.stdout.on('data', (data) => {
-                stdout += data.toString();
-            });
-
-            child.on('close', (code) => {
-                expect(code).toBe(0);
-                expect(stdout.trim()).toBe('1.0.0');
-                done();
-            });
+            expect(result.code).toBe(0);
+            expect(result.stdout.trim()).toBe('1.0.0');
         });
 
-        it('should show command help for keygen', (done) => {
-            const child = spawn('node', [CLI_PATH, 'keygen', '--help']);
-            let stdout = '';
+        it('should show command help for keygen', async () => {
+            const result = await spawnCommand(['keygen', '--help']);
 
-            child.stdout.on('data', (data) => {
-                stdout += data.toString();
-            });
-
-            child.on('close', (code) => {
-                expect(code).toBe(0);
-                expect(stdout).toContain('Generate a did:key and save the private key');
-                expect(stdout).toContain('--out');
-                done();
-            });
+            expect(result.code).toBe(0);
+            expect(result.stdout).toContain('Generate a did:key and save the private key');
+            expect(result.stdout).toContain('--out');
         });
 
-        it('should show command help for sign', (done) => {
-            const child = spawn('node', [CLI_PATH, 'sign', '--help']);
-            let stdout = '';
+        it('should show command help for sign', async () => {
+            const result = await spawnCommand(['sign', '--help']);
 
-            child.stdout.on('data', (data) => {
-                stdout += data.toString();
-            });
-
-            child.on('close', (code) => {
-                expect(code).toBe(0);
-                expect(stdout).toContain('Sign a payload file and create an SDLP link');
-                expect(stdout).toContain('--payload-file');
-                expect(stdout).toContain('--type');
-                done();
-            });
+            expect(result.code).toBe(0);
+            expect(result.stdout).toContain('Sign a payload file and create an SDLP link');
+            expect(result.stdout).toContain('--payload-file');
+            expect(result.stdout).toContain('--type');
         });
 
-        it('should show command help for verify', (done) => {
-            const child = spawn('node', [CLI_PATH, 'verify', '--help']);
-            let stdout = '';
+        it('should show command help for verify', async () => {
+            const result = await spawnCommand(['verify', '--help']);
 
-            child.stdout.on('data', (data) => {
-                stdout += data.toString();
-            });
-
-            child.on('close', (code) => {
-                expect(code).toBe(0);
-                expect(stdout).toContain('Verify an SDLP link and output the payload');
-                expect(stdout).toContain('--json');
-                done();
-            });
+            expect(result.code).toBe(0);
+            expect(result.stdout).toContain('Verify an SDLP link and output the payload');
+            expect(result.stdout).toContain('--json');
         });
     });
 
     describe('Keygen Command', () => {
-        it('should generate a key pair successfully', (done) => {
-            const child = spawn('node', [CLI_PATH, 'keygen', '--out', TEST_FILES.key]);
-            let stdout = '';
-            let stderr = '';
+        it('should generate a key pair successfully', async () => {
+            const result = await spawnCommand(['keygen', '--out', TEST_FILES.key]);
 
-            child.stdout.on('data', (data) => {
-                stdout += data.toString();
-            });
+            expect(result.code).toBe(0);
+            expect(result.stdout).toContain('✅ Key pair generated successfully!');
+            expect(result.stdout).toContain('📁 Private key saved to:');
+            expect(result.stdout).toContain('🔑 DID:');
+            expect(result.stdout).toContain('did:key:');
+            expect(existsSync(TEST_FILES.key)).toBe(true);
 
-            child.stderr.on('data', (data) => {
-                stderr += data.toString();
-            });
-
-            child.on('close', (code) => {
-                expect(code).toBe(0);
-                expect(stdout).toContain('✅ Key pair generated successfully!');
-                expect(stdout).toContain('📁 Private key saved to:');
-                expect(stdout).toContain('🔑 DID:');
-                expect(stdout).toContain('did:key:');
-                expect(existsSync(TEST_FILES.key)).toBe(true);
-
-                // Validate the generated key file
-                const keyContent = readFileSync(TEST_FILES.key, 'utf8');
-                const key = JSON.parse(keyContent);
-                expect(key).toHaveProperty('kty');
-                expect(key).toHaveProperty('crv');
-                expect(key).toHaveProperty('kid');
-                expect(key).toHaveProperty('alg');
-                expect(key.kid).toMatch(/^did:key:z[A-Za-z0-9]+#key-1$/);
-
-                done();
-            });
+            // Validate the generated key file
+            const keyContent = readFileSync(TEST_FILES.key, 'utf8');
+            const key = JSON.parse(keyContent);
+            expect(key).toHaveProperty('kty');
+            expect(key).toHaveProperty('crv');
+            expect(key).toHaveProperty('kid');
+            expect(key).toHaveProperty('alg');
+            expect(key.kid).toMatch(/^did:key:z[A-Za-z0-9]+#z[A-Za-z0-9]+$/);
         });
 
-        it('should fail when output file is not writable', (done) => {
-            const child = spawn('node', [CLI_PATH, 'keygen', '--out', '/invalid/path/key.jwk']);
-            let stderr = '';
+        it('should fail when output file is not writable', async () => {
+            const result = await spawnCommand(['keygen', '--out', '/invalid/path/key.jwk']);
 
-            child.stderr.on('data', (data) => {
-                stderr += data.toString();
-            });
-
-            child.on('close', (code) => {
-                expect(code).toBe(1);
-                expect(stderr).toContain('❌ Error generating key pair');
-                done();
-            });
+            expect(result.code).toBe(1);
+            expect(result.stderr).toContain('❌ Error generating key pair');
         });
     });
 
     describe('Sign Command', () => {
-        it('should sign a payload successfully', (done) => {
-            const child = spawn('node', [
-                CLI_PATH,
+        it('should sign a payload successfully', async () => {
+            const result = await spawnCommand([
                 'sign',
                 '--payload-file', TEST_FILES.payload,
                 '--type', 'application/json',
                 '--signer-key', TEST_FILES.key,
             ]);
-            let stdout = '';
-            let stderr = '';
 
-            child.stdout.on('data', (data) => {
-                stdout += data.toString();
-            });
+            expect(result.code).toBe(0);
+            expect(result.stdout).toMatch(/^sdlp:\/\/[A-Za-z0-9\-_=\n\r]+\.[A-Za-z0-9\-_=\n\r]+$/);
 
-            child.stderr.on('data', (data) => {
-                stderr += data.toString();
-            });
-
-            child.on('close', (code) => {
-                expect(code).toBe(0);
-                expect(stdout).toMatch(/^sdlp:\/\/[A-Za-z0-9\-_=\n\r]+\.[A-Za-z0-9\-_=\n\r]+$/);
-
-                // Save the link for use in verification tests
-                writeFileSync(TEST_FILES.link, stdout.trim());
-                done();
-            });
+            // Save the link for use in verification tests
+            writeFileSync(TEST_FILES.link, result.stdout.trim());
         });
 
-        it('should fail when payload file does not exist', (done) => {
-            const child = spawn('node', [
-                CLI_PATH,
+        it('should fail when payload file does not exist', async () => {
+            const result = await spawnCommand([
                 'sign',
                 '--payload-file', 'nonexistent.json',
                 '--type', 'application/json',
                 '--signer-key', TEST_FILES.key,
             ]);
-            let stderr = '';
 
-            child.stderr.on('data', (data) => {
-                stderr += data.toString();
-            });
-
-            child.on('close', (code) => {
-                expect(code).toBe(1);
-                expect(stderr).toContain('❌ Error creating link');
-                done();
-            });
+            expect(result.code).toBe(1);
+            expect(result.stderr).toContain('❌ Error creating link');
         });
 
-        it('should fail when signer key does not exist', (done) => {
-            const child = spawn('node', [
-                CLI_PATH,
+        it('should fail when signer key does not exist', async () => {
+            const result = await spawnCommand([
                 'sign',
                 '--payload-file', TEST_FILES.payload,
                 '--type', 'application/json',
                 '--signer-key', 'nonexistent.jwk',
             ]);
-            let stderr = '';
 
-            child.stderr.on('data', (data) => {
-                stderr += data.toString();
-            });
-
-            child.on('close', (code) => {
-                expect(code).toBe(1);
-                expect(stderr).toContain('❌ Error creating link');
-                done();
-            });
+            expect(result.code).toBe(1);
+            expect(result.stderr).toContain('❌ Error creating link');
         });
 
-        it('should accept compression options', (done) => {
-            const child = spawn('node', [
-                CLI_PATH,
+        it('should accept compression options', async () => {
+            const result = await spawnCommand([
                 'sign',
                 '--payload-file', TEST_FILES.payload,
                 '--type', 'application/json',
                 '--signer-key', TEST_FILES.key,
                 '--compression', 'none',
             ]);
-            let stdout = '';
 
-            child.stdout.on('data', (data) => {
-                stdout += data.toString();
-            });
-
-            child.on('close', (code) => {
-                expect(code).toBe(0);
-                expect(stdout).toMatch(/^sdlp:\/\/[A-Za-z0-9\-_=\n\r]+\.[A-Za-z0-9\-_=\n\r]+$/);
-                done();
-            });
+            expect(result.code).toBe(0);
+            expect(result.stdout).toMatch(/^sdlp:\/\/[A-Za-z0-9\-_=\n\r]+\.[A-Za-z0-9\-_=\n\r]+$/);
         });
     });
 
@@ -284,217 +210,126 @@ describe('SDLP CLI', () => {
 
         beforeAll(async () => {
             // Generate a test link for verification tests
-            testLink = await new Promise<string>((resolve, reject) => {
-                const child = spawn('node', [
-                    CLI_PATH,
-                    'sign',
-                    '--payload-file', TEST_FILES.payload,
-                    '--type', 'application/json',
-                    '--signer-key', TEST_FILES.key,
-                ]);
-                let stdout = '';
+            const result = await spawnCommand([
+                'sign',
+                '--payload-file', TEST_FILES.payload,
+                '--type', 'application/json',
+                '--signer-key', TEST_FILES.key,
+            ]);
 
-                child.stdout.on('data', (data) => {
-                    stdout += data.toString();
-                });
+            if (result.code !== 0) {
+                throw new Error(`Sign command failed with code ${result.code}`);
+            }
 
-                child.on('close', (code) => {
-                    if (code === 0) {
-                        const link = stdout.trim();
-                        writeFileSync(TEST_FILES.link, link);
-                        resolve(link);
-                    } else {
-                        reject(new Error(`Sign command failed with code ${code}`));
-                    }
-                });
-            });
+            testLink = result.stdout.trim();
+            writeFileSync(TEST_FILES.link, testLink);
         });
 
-        it('should verify a valid link successfully', (done) => {
-            const child = spawn('node', [CLI_PATH, 'verify']);
-            let stdout = '';
-            let stderr = '';
+        it('should verify a valid link successfully', async () => {
+            const result = await spawnCommand(['verify'], testLink);
 
-            // Use the generated test link
-            child.stdin.write(testLink);
-            child.stdin.end();
-
-            child.stdout.on('data', (data) => {
-                stdout += data.toString();
-            });
-
-            child.stderr.on('data', (data) => {
-                stderr += data.toString();
-            });
-
-            child.on('close', (code) => {
-                expect(code).toBe(0);
-                expect(stderr).toContain('✅ Link verified successfully!');
-                expect(stderr).toContain('👤 Sender:');
-                expect(stderr).toContain('did:key:');
-                expect(stderr).toContain('📄 Content Type: application/json');
-                expect(stdout).toContain('"message": "Hello, SDLP!"');
-                done();
-            });
+            expect(result.code).toBe(0);
+            expect(result.stderr).toContain('✅ Link verified successfully!');
+            expect(result.stderr).toContain('👤 Sender:');
+            expect(result.stderr).toContain('did:key:');
+            expect(result.stderr).toContain('📄 Content Type: application/json');
+            expect(result.stdout).toContain('"message":"Hello, SDLP!"');
         });
 
-        it('should verify a link passed as argument', (done) => {
-            const child = spawn('node', [CLI_PATH, 'verify', testLink]);
-            let stderr = '';
+        it('should verify a link passed as argument', async () => {
+            const result = await spawnCommand(['verify', testLink]);
 
-            child.stderr.on('data', (data) => {
-                stderr += data.toString();
-            });
-
-            child.on('close', (code) => {
-                expect(code).toBe(0);
-                expect(stderr).toContain('✅ Link verified successfully!');
-                done();
-            });
+            expect(result.code).toBe(0);
+            expect(result.stderr).toContain('✅ Link verified successfully!');
         });
 
-        it('should output JSON format when requested', (done) => {
-            const child = spawn('node', [CLI_PATH, 'verify', '--json']);
-            let stdout = '';
+        it('should output JSON format when requested', async () => {
+            const result = await spawnCommand(['verify', '--json'], testLink);
 
-            // Use the generated test link
-            child.stdin.write(testLink);
-            child.stdin.end();
+            expect(result.code).toBe(0);
 
-            child.stdout.on('data', (data) => {
-                stdout += data.toString();
-            });
+            // Parse the JSON output (first part)
+            const lines = result.stdout.split('\n');
+            const jsonOutput = JSON.parse(lines[0]);
 
-            child.on('close', (code) => {
-                expect(code).toBe(0);
-
-                // Parse the JSON output (first part)
-                const lines = stdout.split('\n');
-                const jsonOutput = JSON.parse(lines[0]);
-
-                expect(jsonOutput).toHaveProperty('valid', true);
-                expect(jsonOutput).toHaveProperty('sender');
-                expect(jsonOutput).toHaveProperty('contentType', 'application/json');
-                expect(jsonOutput).toHaveProperty('payloadSize');
-                expect(jsonOutput).toHaveProperty('metadata');
-                done();
-            });
+            expect(jsonOutput).toHaveProperty('valid', true);
+            expect(jsonOutput).toHaveProperty('sender');
+            expect(jsonOutput).toHaveProperty('contentType', 'application/json');
+            expect(jsonOutput).toHaveProperty('payloadSize');
+            expect(jsonOutput).toHaveProperty('metadata');
         });
 
-        it('should fail with invalid link format', (done) => {
-            const child = spawn('node', [CLI_PATH, 'verify']);
-            let stderr = '';
+        it('should fail with invalid link format', async () => {
+            const result = await spawnCommand(['verify'], 'invalid-link-format');
 
-            child.stdin.write('invalid-link-format');
-            child.stdin.end();
-
-            child.stderr.on('data', (data) => {
-                stderr += data.toString();
-            });
-
-            child.on('close', (code) => {
-                expect(code).toBe(1);
-                expect(stderr).toContain('❌ Link verification failed');
-                expect(stderr).toContain('Error:');
-                done();
-            });
+            expect(result.code).toBe(1);
+            expect(result.stderr).toContain('❌ Link verification failed');
+            expect(result.stderr).toContain('Error:');
         });
 
-        it('should fail with malformed link', (done) => {
-            const child = spawn('node', [CLI_PATH, 'verify', 'sdlp://invalid.link']);
-            let stderr = '';
+        it('should fail with malformed link', async () => {
+            const result = await spawnCommand(['verify', 'sdlp://invalid.link']);
 
-            child.stderr.on('data', (data) => {
-                stderr += data.toString();
-            });
-
-            child.on('close', (code) => {
-                expect(code).toBe(1);
-                expect(stderr).toContain('❌ Link verification failed');
-                done();
-            });
+            expect(result.code).toBe(1);
+            expect(result.stderr).toContain('❌ Link verification failed');
         });
 
-        it('should respect max payload size option', (done) => {
-            const child = spawn('node', [
-                CLI_PATH,
+        it('should respect max payload size option', async () => {
+            const result = await spawnCommand([
                 'verify',
                 '--max-payload-size', '10', // Very small limit
                 testLink,
             ]);
-            let stderr = '';
 
-            child.stderr.on('data', (data) => {
-                stderr += data.toString();
-            });
-
-            child.on('close', (code) => {
-                expect(code).toBe(1);
-                expect(stderr).toContain('❌ Link verification failed');
-                done();
-            });
+            expect(result.code).toBe(1);
+            expect(result.stderr).toContain('❌ Link verification failed');
         });
     });
 
     describe('Integration Tests', () => {
-        it('should complete full round-trip: keygen -> sign -> verify', (done) => {
+        it('should complete full round-trip: keygen -> sign -> verify', async () => {
             const tempKey = 'temp-integration-key.jwk';
             const tempPayload = 'temp-integration-payload.json';
             const integrationPayload = { test: 'integration', value: 42 };
 
             writeFileSync(tempPayload, JSON.stringify(integrationPayload));
 
-            // Step 1: Generate key
-            const keygenChild = spawn('node', [CLI_PATH, 'keygen', '--out', tempKey]);
-
-            keygenChild.on('close', (keygenCode) => {
-                expect(keygenCode).toBe(0);
+            try {
+                // Step 1: Generate key
+                const keygenResult = await spawnCommand(['keygen', '--out', tempKey]);
+                expect(keygenResult.code).toBe(0);
                 expect(existsSync(tempKey)).toBe(true);
 
                 // Step 2: Sign payload
-                const signChild = spawn('node', [
-                    CLI_PATH,
+                const signResult = await spawnCommand([
                     'sign',
                     '--payload-file', tempPayload,
                     '--type', 'application/json',
                     '--signer-key', tempKey,
                 ]);
+                expect(signResult.code).toBe(0);
+                const link = signResult.stdout.trim();
+                expect(link).toMatch(/^sdlp:\/\//);
 
-                let signStdout = '';
-                signChild.stdout.on('data', (data) => {
-                    signStdout += data.toString();
-                });
+                // Step 3: Verify the link
+                const verifyResult = await spawnCommand(['verify', '--json', link]);
+                expect(verifyResult.code).toBe(0);
 
-                signChild.on('close', (signCode) => {
-                    expect(signCode).toBe(0);
-                    const link = signStdout.trim();
-                    expect(link).toMatch(/^sdlp:\/\//);
+                const lines = verifyResult.stdout.split('\n');
+                const verificationResult = JSON.parse(lines[0]);
+                const payload = JSON.parse(lines[1]);
 
-                    // Step 3: Verify the link
-                    const verifyChild = spawn('node', [CLI_PATH, 'verify', '--json', link]);
-                    let verifyStdout = '';
-
-                    verifyChild.stdout.on('data', (data) => {
-                        verifyStdout += data.toString();
-                    });
-
-                    verifyChild.on('close', (verifyCode) => {
-                        expect(verifyCode).toBe(0);
-
-                        const lines = verifyStdout.split('\n');
-                        const verificationResult = JSON.parse(lines[0]);
-                        const payload = JSON.parse(lines[1]);
-
-                        expect(verificationResult.valid).toBe(true);
-                        expect(payload).toEqual(integrationPayload);
-
-                        // Clean up
-                        unlinkSync(tempKey);
-                        unlinkSync(tempPayload);
-                        done();
-                    });
-                });
-            });
+                expect(verificationResult.valid).toBe(true);
+                expect(payload).toEqual(integrationPayload);
+            } finally {
+                // Clean up
+                if (existsSync(tempKey)) {
+                    unlinkSync(tempKey);
+                }
+                if (existsSync(tempPayload)) {
+                    unlinkSync(tempPayload);
+                }
+            }
         });
     });
 }); 

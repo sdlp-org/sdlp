@@ -1,7 +1,7 @@
-import { Command } from 'commander';
-import { writeFileSync } from 'fs';
-import { generateKeyPair, exportJWK } from 'jose';
+import { writeFileSync } from 'node:fs';
 import bs58 from 'bs58';
+import { Command } from 'commander';
+import { generateKeyPair, exportJWK } from 'jose';
 
 export const keygenCommand = new Command('keygen')
     .description('Generate a did:key and save the private key')
@@ -20,10 +20,14 @@ export const keygenCommand = new Command('keygen')
             // Generate the did:key identifier
             const didKey = generateDidKey(publicJWK as unknown as Record<string, unknown>);
 
+            // Extract the key identifier (the part after 'did:key:')
+            const keyIdentifier = didKey.replace('did:key:', '');
+            const fullKeyId = `${didKey}#${keyIdentifier}`;
+
             // Save private key to file
             const keyData = {
                 ...privateJWK,
-                kid: `${didKey}#key-1`,
+                kid: fullKeyId,
                 alg: 'EdDSA',
             };
 
@@ -32,7 +36,7 @@ export const keygenCommand = new Command('keygen')
             console.log(`✅ Key pair generated successfully!`);
             console.log(`📁 Private key saved to: ${options.out}`);
             console.log(`🔑 DID: ${didKey}`);
-            console.log(`🔗 Key ID: ${didKey}#key-1`);
+            console.log(`🔗 Key ID: ${fullKeyId}`);
 
         } catch (error) {
             console.error('❌ Error generating key pair:', error);
@@ -80,8 +84,8 @@ function base64urlDecode(str: string): Uint8Array {
     // Decode
     const binary = atob(base64);
     const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
+    for (let index = 0; index < binary.length; index++) {
+        bytes[index] = binary.charCodeAt(index);
     }
     return bytes;
 } 

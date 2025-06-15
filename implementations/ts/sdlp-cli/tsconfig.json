@@ -8,7 +8,7 @@
         "allowJs": true,
         "checkJs": false,
         "outDir": "./dist",
-        "rootDir": "./src",
+        "rootDir": "./",
         "strict": true,
         "noImplicitAny": true,
         "strictNullChecks": true,
@@ -28,11 +28,11 @@
         "resolveJsonModule": true
     },
     "include": [
-        "src/**/*"
+        "src/**/*",
+        "test/**/*"
     ],
     "exclude": [
         "node_modules",
-        "dist",
-        "test/**/*"
+        "dist"
     ]
 }

@@ -70,7 +70,7 @@ describe("Compression", () => {
     describe("Browser environment", () => {
         beforeEach(() => {
             // Mock browser environment (no process.versions.node)
-            globalThis.process = undefined as typeof process;
+            globalThis.process = undefined as unknown as typeof process;
         });
 
         it("should attempt to use brotli-wasm in browser environment", async () => {
@@ -103,7 +103,7 @@ describe("Compression", () => {
 
     describe("Environment detection edge cases", () => {
         it("should handle undefined process", async () => {
-            globalThis.process = undefined as typeof process;
+            globalThis.process = undefined as unknown as typeof process;
 
             const testData = new TextEncoder().encode("Test data");
 

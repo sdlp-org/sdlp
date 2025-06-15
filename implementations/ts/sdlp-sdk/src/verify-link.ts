@@ -228,10 +228,36 @@ export async function verifyLink(
     let publicKey: Record<string, unknown>;
     if (verificationMethod.publicKeyJwk) {
       publicKey = verificationMethod.publicKeyJwk;
+    } else if (verificationMethod.publicKeyBase58 && verificationMethod.type === "Ed25519VerificationKey2018") {
+      // Convert publicKeyBase58 to JWK format for Ed25519 keys
+      const base58Key = verificationMethod.publicKeyBase58;
+      try {
+        // Decode base58 to get the raw public key bytes
+        const bs58 = await import("bs58");
+        const keyBytes = bs58.default.decode(base58Key);
+
+        // Convert to base64url for JWK format
+        const base64url = Buffer.from(keyBytes)
+          .toString("base64")
+          .replace(/\+/g, "-")
+          .replace(/\//g, "_")
+          .replace(/=/g, "");
+
+        publicKey = {
+          kty: "OKP",
+          crv: "Ed25519",
+          x: base64url,
+        };
+      } catch (error) {
+        return {
+          valid: false,
+          error: new DIDResolutionError(coreMetadata.sid, `Failed to convert publicKeyBase58 to JWK: ${error instanceof Error ? error.message : "Unknown error"}`),
+        };
+      }
     } else {
       return {
         valid: false,
-        error: new DIDResolutionError(coreMetadata.sid, `Verification method '${keyId}' does not contain publicKeyJwk`),
+        error: new DIDResolutionError(coreMetadata.sid, `Verification method '${keyId}' does not contain publicKeyJwk or supported publicKeyBase58`),
       };
     }
 
