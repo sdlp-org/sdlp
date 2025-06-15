@@ -27,13 +27,16 @@ export async function createLink(
   const payloadHash = sha256(payload);
   const chk = Buffer.from(payloadHash).toString("hex");
 
-  // 3. Compress the payload (for MVP, we only support 'none')
+  // 3. Compress the payload
   let compressedPayload: Uint8Array;
   if (compress === "none") {
     compressedPayload = payload;
+  } else if (compress === "br") {
+    // Brotli compression using cross-platform utility
+    const { compressBrotli } = await import("./compression.js");
+    compressedPayload = await compressBrotli(payload);
   } else {
-    // TODO: Implement Brotli compression
-    throw new Error("Brotli compression not yet implemented");
+    throw new Error(`Unsupported compression algorithm: ${compress}`);
   }
 
   // 4. Base64URL encode the compressed payload
@@ -114,6 +117,6 @@ function base64urlEncode(data: Uint8Array): string {
  */
 async function importPrivateKey(
   jwk: Record<string, unknown>,
-): Promise<CryptoKey | KeyLike> {
-  return await importJWK(jwk as unknown as JWK, "EdDSA");
+): Promise<KeyLike> {
+  return await importJWK(jwk as unknown as JWK, "EdDSA") as KeyLike;
 }
