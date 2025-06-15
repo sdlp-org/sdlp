@@ -3,18 +3,10 @@
  */
 
 import { sha256 } from "@noble/hashes/sha256";
-import { importJWK, type JWK, flattenedVerify } from "jose";
 import { Resolver } from "did-resolver";
+import { importJWK, type JWK, flattenedVerify } from "jose";
 import { getResolver as getKeyResolver } from "key-did-resolver";
 import { getResolver as getWebResolver } from "web-did-resolver";
-import type {
-  VerificationResult,
-  VerifyOptions,
-  CoreMetadata,
-  JWSProtectedHeader,
-  DIDDocument,
-} from "./types.js";
-
 import {
   SdlpError,
   DIDMismatchError,
@@ -26,6 +18,11 @@ import {
   UnsupportedCompressionError,
   DIDResolutionError,
   InvalidLinkFormatError,
+  type VerificationResult,
+  type VerifyOptions,
+  type CoreMetadata,
+  type JWSProtectedHeader,
+  type DIDDocument,
 } from "./types.js";
 
 /**
@@ -206,7 +203,7 @@ export async function verifyLink(
       if (!result.didDocument) {
         return {
           valid: false,
-          error: new DIDResolutionError(coreMetadata.sid, result.didResolutionMetadata.error || "No DID document returned"),
+          error: new DIDResolutionError(coreMetadata.sid, result.didResolutionMetadata.error ?? "No DID document returned"),
         };
       }
       didDocument = result.didDocument;

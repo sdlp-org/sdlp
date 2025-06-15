@@ -48,7 +48,7 @@ interface TestIdentity {
 }
 
 // Mock DID resolution for hermetic testing
-const mockDidDocuments = new Map<string, any>();
+const mockDidDocuments = new Map<string, Record<string, unknown>>();
 
 // Mock the did-resolver to return controlled results
 vi.mock("did-resolver", () => {
@@ -94,7 +94,7 @@ describe("SDLP SDK v1.0", () => {
       );
       const testVectorSuite: TestVectorSuite = JSON.parse(testVectorsJson);
       testVectors = testVectorSuite.vectors;
-    } catch (error) {
+    } catch {
       console.warn("Could not load v1.0 test vectors, using empty array");
       testVectors = [];
     }
@@ -120,7 +120,7 @@ describe("SDLP SDK v1.0", () => {
           publicKeyJwk: keys.ed25519_public_key_jwk,
         },
       };
-    } catch (error) {
+    } catch {
       console.warn("Could not load test fixtures, creating default identities");
       testIdentities = {};
     }
@@ -310,7 +310,7 @@ describe("SDLP SDK v1.0", () => {
         payloadType: "text/plain",
         signer: {
           kid: "invalid-kid-format",
-          privateKeyJwk: testIdentities["did:key"]?.privateKeyJwk || {},
+          privateKeyJwk: testIdentities["did:key"]?.privateKeyJwk ?? {},
         },
         compress: "none",
       };
@@ -452,7 +452,7 @@ describe("SDLP SDK v1.0", () => {
             id: `${otherDid}#key-1`,
             type: "Ed25519VerificationKey2018",
             controller: otherDid,
-            publicKeyJwk: testIdentities["did:key"]?.publicKeyJwk || {},
+            publicKeyJwk: testIdentities["did:key"]?.publicKeyJwk ?? {},
           },
         ],
       });

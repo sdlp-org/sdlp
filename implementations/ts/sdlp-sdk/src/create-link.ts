@@ -68,7 +68,7 @@ export async function createLink(
     const { compressBrotli } = await import("./compression.js");
     compressedPayload = await compressBrotli(payload);
   } else {
-    throw new Error(`Unsupported compression algorithm: ${compress} `);
+    throw new Error(`Unsupported compression algorithm: ${compress as string}`);
   }
 
   // 4. Base64URL encode the compressed payload

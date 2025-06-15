@@ -72,7 +72,7 @@ export interface VerificationFailure {
 export abstract class SdlpError extends Error {
   abstract readonly code: string;
 
-  constructor(message: string, public readonly details?: string) {
+  constructor(message: string) {
     super(message);
     this.name = this.constructor.name;
   }
@@ -106,8 +106,8 @@ export class InvalidJWSFormatError extends SdlpError {
 export class InvalidSignatureError extends SdlpError {
   readonly code = "INVALID_SIGNATURE";
 
-  constructor(details?: string) {
-    super("Invalid signature", details);
+  constructor(message?: string) {
+    super(message ?? "Invalid signature");
   }
 }
 
@@ -161,8 +161,8 @@ export class UnsupportedCompressionError extends SdlpError {
 export class DIDResolutionError extends SdlpError {
   readonly code = "DID_RESOLUTION_FAILED";
 
-  constructor(did: string, reason: string) {
-    super(`Failed to resolve DID '${did}': ${reason}`);
+  constructor(didUrl: string, reason: string) {
+    super(`Failed to resolve DID '${didUrl}': ${reason}`);
   }
 }
 
@@ -229,7 +229,8 @@ export interface VerifyOptions {
  */
 export interface DIDResolver {
   /** Resolve a DID to its DID Document */
-  resolve(did: string): Promise<DIDResolutionResult>;
+  // eslint-disable-next-line no-unused-vars
+  resolve(didUrl: string): Promise<DIDResolutionResult>;
 }
 
 /**

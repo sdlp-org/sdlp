@@ -6,13 +6,13 @@
 import { promisify } from "node:util";
 
 // Detect environment
-const isNode = typeof process !== "undefined" && process.versions?.node;
+const isNode = typeof process !== "undefined" && process.versions?.node !== undefined;
 
 /**
  * Compress data using Brotli compression
  */
 export async function compressBrotli(data: Uint8Array): Promise<Uint8Array> {
-    if (isNode) {
+    if (isNode === true) {
         // Use Node.js built-in Brotli compression
         const zlib = await import("node:zlib");
         const brotliCompress = promisify(zlib.brotliCompress);
@@ -30,7 +30,7 @@ export async function compressBrotli(data: Uint8Array): Promise<Uint8Array> {
  * Decompress Brotli-compressed data
  */
 export async function decompressBrotli(compressedData: Uint8Array): Promise<Uint8Array> {
-    if (isNode) {
+    if (isNode === true) {
         // Use Node.js built-in Brotli decompression
         const zlib = await import("node:zlib");
         const brotliDecompress = promisify(zlib.brotliDecompress);
