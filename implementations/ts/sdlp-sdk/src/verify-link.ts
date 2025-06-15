@@ -61,7 +61,41 @@ function extractDidFromKid(kid: string): string {
 }
 
 /**
- * Verifies a Secure Deep Link according to SDLP v1.0 specification
+ * Verifies a Secure Deep Link according to SDLP v1.0 specification.
+ * 
+ * This function performs comprehensive verification of an SDLP link including:
+ * - Link format validation and parsing
+ * - JWS signature verification using the sender's public key
+ * - DID resolution and key validation
+ * - Payload integrity verification (checksum)
+ * - Time bounds validation (expiration and not-before)
+ * - Payload decompression and size limits
+ * 
+ * @param link - The SDLP link string to verify (e.g., "sdlp://...")
+ * @param options - Verification options and configuration
+ * @param options.resolver - Custom DID resolver (defaults to did:key and did:web support)
+ * @param options.allowedAlgorithms - Allowed signature algorithms (defaults to ['EdDSA'])
+ * @param options.maxPayloadSize - Maximum decompressed payload size in bytes (defaults to 10MB)
+ * 
+ * @returns A promise that resolves to a VerificationResult discriminated union:
+ *   - On success: `{ valid: true, sender, payload, metadata, didDocument? }`
+ *   - On failure: `{ valid: false, error }`
+ * 
+ * @example
+ * ```typescript
+ * import { verifyLink } from '@sdlp/sdk';
+ * 
+ * const result = await verifyLink('sdlp://eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9...');
+ * 
+ * if (result.valid) {
+ *   console.log('Verified sender:', result.sender);
+ *   console.log('Payload:', new TextDecoder().decode(result.payload));
+ *   console.log('Content type:', result.metadata.type);
+ * } else {
+ *   console.error('Verification failed:', result.error.message);
+ *   console.error('Error code:', result.error.code);
+ * }
+ * ```
  */
 export async function verifyLink(
   link: string,

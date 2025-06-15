@@ -11,7 +11,39 @@ import type {
 } from "./types.js";
 
 /**
- * Creates and signs a Secure Deep Link
+ * Creates and signs a Secure Deep Link according to SDLP v1.0 specification.
+ * 
+ * This function takes a payload and signer information, compresses the payload
+ * (if requested), creates a cryptographic signature using JWS Flattened JSON
+ * Serialization, and returns a complete SDLP link.
+ * 
+ * @param params - Configuration object containing payload, signer, and options
+ * @param params.payload - The raw payload data to include in the link
+ * @param params.payloadType - MIME type of the payload (e.g., "application/json")
+ * @param params.signer - Signer information including private key and DID URL
+ * @param params.compress - Compression algorithm: "br" (Brotli) or "none" (default: "none")
+ * @param params.expiresIn - Optional expiration time in seconds from now
+ * 
+ * @returns A promise that resolves to a complete SDLP link string (e.g., "sdlp://...")
+ * 
+ * @throws {Error} When the signer's kid is not a valid DID URL format
+ * @throws {Error} When an unsupported compression algorithm is specified
+ * 
+ * @example
+ * ```typescript
+ * import { createLink } from '@sdlp/sdk';
+ * 
+ * const link = await createLink({
+ *   payload: new TextEncoder().encode('{"message": "Hello World"}'),
+ *   payloadType: 'application/json',
+ *   signer: {
+ *     kid: 'did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK',
+ *     privateKeyJwk: { kty: 'OKP', crv: 'Ed25519', x: '...', d: '...' }
+ *   },
+ *   compress: 'br',
+ *   expiresIn: 3600 // 1 hour
+ * });
+ * ```
  */
 export async function createLink(
   params: CreateLinkParameters,
@@ -20,7 +52,7 @@ export async function createLink(
 
   // 1. Validate input
   if (!isValidDidUrl(signer.kid)) {
-    throw new Error(`Invalid kid format: ${signer.kid}`);
+    throw new Error(`Invalid kid format: ${signer.kid} `);
   }
 
   // 2. Calculate SHA-256 checksum of the original payload
@@ -36,7 +68,7 @@ export async function createLink(
     const { compressBrotli } = await import("./compression.js");
     compressedPayload = await compressBrotli(payload);
   } else {
-    throw new Error(`Unsupported compression algorithm: ${compress}`);
+    throw new Error(`Unsupported compression algorithm: ${compress} `);
   }
 
   // 4. Base64URL encode the compressed payload
