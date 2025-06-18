@@ -46,7 +46,7 @@ function spawnCommand(args: string[], input?: string): Promise<{ code: number; s
             reject(err);
         });
 
-        if (input) {
+        if (typeof input === 'string' && input.length > 0) {
             child.stdin.write(input);
             child.stdin.end();
         }
@@ -58,7 +58,7 @@ describe('SDLP CLI', () => {
         // Ensure CLI is built
         try {
             execSync('npm run build', { stdio: 'inherit' });
-        } catch (error) {
+        } catch {
             throw new Error('Failed to build CLI');
         }
 

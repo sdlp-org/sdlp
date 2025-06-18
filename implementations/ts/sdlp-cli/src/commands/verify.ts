@@ -6,21 +6,14 @@ export const verifyCommand = new Command('verify')
     .argument('[link]', 'SDLP link to verify (if not provided, reads from stdin)')
     .option('--json', 'Output verification result in JSON format')
     .option('--max-payload-size <size>', 'Maximum payload size in bytes', '1048576') // 1MB default
-    .action(async (link, options) => {
+    .action(async (link: string | undefined, options: { json?: boolean; maxPayloadSize: string }) => {
         try {
-            let linkToVerify: string;
-
-            if (link) {
-                linkToVerify = link;
-            } else {
-                // Read from stdin
-                linkToVerify = await readStdin();
-            }
+            let linkToVerify = typeof link === 'string' && link.length > 0 ? link : await readStdin();
 
             // Clean up the link (ensure it has sdlp:// prefix, trim whitespace)
             linkToVerify = linkToVerify.trim();
             if (!linkToVerify.startsWith('sdlp://')) {
-                linkToVerify = `sdlp://${  linkToVerify}`;
+                linkToVerify = `sdlp://${linkToVerify}`;
             }
 
             // Verify the link
@@ -28,7 +21,7 @@ export const verifyCommand = new Command('verify')
                 maxPayloadSize: parseInt(options.maxPayloadSize, 10),
             });
 
-            if (options.json) {
+            if (typeof options.json === 'boolean' && options.json) {
                 // JSON output for machine consumption
                 if (result.valid) {
                     console.log(JSON.stringify({
@@ -57,20 +50,20 @@ export const verifyCommand = new Command('verify')
                 if (result.valid) {
                     console.error(`✅ Link verified successfully!`);
                     console.error(`👤 Sender: ${result.sender}`);
-                    console.error(`📄 Content Type: ${result.metadata.type || 'application/octet-stream'}`);
+                    console.error(`📄 Content Type: ${result.metadata.type ?? 'application/octet-stream'}`);
                     console.error(`📊 Payload Size: ${result.payload.length} bytes`);
 
-                    if (result.metadata.exp) {
+                    if (typeof result.metadata.exp === 'number') {
                         const expDate = new Date(result.metadata.exp * 1000);
                         console.error(`⏰ Expires: ${expDate.toISOString()}`);
                     }
 
-                    if (result.metadata.nbf) {
+                    if (typeof result.metadata.nbf === 'number') {
                         const nbfDate = new Date(result.metadata.nbf * 1000);
                         console.error(`🕐 Not Before: ${nbfDate.toISOString()}`);
                     }
 
-                    if (result.metadata.comp && result.metadata.comp !== 'none') {
+                    if (typeof result.metadata.comp === 'string' && result.metadata.comp !== 'none') {
                         console.error(`🗜️  Compression: ${result.metadata.comp}`);
                     }
 
@@ -83,7 +76,7 @@ export const verifyCommand = new Command('verify')
                     console.error(`❌ Link verification failed:`);
                     console.error(`Error: ${result.error.message}`);
 
-                    if (result.error.code) {
+                    if (typeof result.error.code === 'string') {
                         console.error(`Code: ${result.error.code}`);
                     }
 
@@ -92,7 +85,7 @@ export const verifyCommand = new Command('verify')
             }
 
         } catch (error) {
-            if (options.json) {
+            if (typeof options.json === 'boolean' && options.json) {
                 console.log(JSON.stringify({
                     valid: false,
                     error: {
@@ -128,4 +121,4 @@ function readStdin(): Promise<string> {
             reject(error);
         });
     });
-} 
+}

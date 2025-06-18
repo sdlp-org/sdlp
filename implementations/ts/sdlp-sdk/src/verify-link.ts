@@ -232,7 +232,7 @@ export async function verifyLink(
     let publicKey: Record<string, unknown>;
     if (verificationMethod.publicKeyJwk) {
       publicKey = verificationMethod.publicKeyJwk;
-    } else if (verificationMethod.publicKeyBase58 && verificationMethod.type === "Ed25519VerificationKey2018") {
+    } else if (typeof verificationMethod.publicKeyBase58 === 'string' && verificationMethod.publicKeyBase58.length > 0 && verificationMethod.type === "Ed25519VerificationKey2018") {
       // Convert publicKeyBase58 to JWK format for Ed25519 keys
       const base58Key = verificationMethod.publicKeyBase58;
       try {
