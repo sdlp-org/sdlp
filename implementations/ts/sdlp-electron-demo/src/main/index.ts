@@ -7,33 +7,61 @@ const isDev = process.env.NODE_ENV === 'development';
 
 let mainWindow: BrowserWindow | null = null;
 
-// Load the test key for generating example links
-// Use the packaged key file that's distributed with the application
-const possibleKeyPaths = [
+// Load the test keys for generating example links
+// Use the packaged key files that are distributed with the application
+const trustedKeyPaths = [
   join(__dirname, '../../fixtures/valid-key.jwk'), // Packaged with the app
   join(process.cwd(), 'fixtures/valid-key.jwk'), // Development fallback
   join(__dirname, '../../../sdlp-cli/fixtures/valid-key.jwk'), // External fallback
 ];
 
-let testKey: any = null;
+const untrustedKeyPaths = [
+  join(__dirname, '../../fixtures/untrusted-key.jwk'), // Packaged with the app
+  join(process.cwd(), 'fixtures/untrusted-key.jwk'), // Development fallback
+];
 
-for (const keyPath of possibleKeyPaths) {
+let trustedKey: any = null;
+let untrustedKey: any = null;
+
+// Load trusted key
+for (const keyPath of trustedKeyPaths) {
   try {
-    testKey = JSON.parse(readFileSync(keyPath, 'utf-8'));
-    console.log('Successfully loaded test key from:', keyPath);
+    trustedKey = JSON.parse(readFileSync(keyPath, 'utf-8'));
+    console.log('Successfully loaded trusted key from:', keyPath);
     break;
   } catch (error) {
     // Continue to next path
   }
 }
 
-if (!testKey) {
+// Load untrusted key
+for (const keyPath of untrustedKeyPaths) {
+  try {
+    untrustedKey = JSON.parse(readFileSync(keyPath, 'utf-8'));
+    console.log('Successfully loaded untrusted key from:', keyPath);
+    break;
+  } catch (error) {
+    // Continue to next path
+  }
+}
+
+if (!trustedKey) {
   console.warn(
-    'Could not load test key for link generation from any of the attempted paths:',
-    possibleKeyPaths
+    'Could not load trusted key for link generation from any of the attempted paths:',
+    trustedKeyPaths
   );
+}
+
+if (!untrustedKey) {
   console.warn(
-    'The application will still work for verification, but link generation will be disabled.'
+    'Could not load untrusted key for link generation from any of the attempted paths:',
+    untrustedKeyPaths
+  );
+}
+
+if (!trustedKey && !untrustedKey) {
+  console.warn(
+    'No keys available for link generation. The application will still work for verification, but link generation will be disabled.'
   );
 }
 
@@ -69,27 +97,52 @@ function createWindow(): void {
 
 // Setup IPC handlers
 function setupIpcHandlers() {
-  // Handle SDLP link generation
+  // Handle SDLP link generation (trusted)
   ipcMain.handle('generate-sdlp-link', async (_event, payload: string) => {
     try {
       const { createLink } = await import('@sdlp/sdk');
 
-      if (!testKey) {
-        throw new Error('Test key not available for link generation');
+      if (!trustedKey) {
+        throw new Error('Trusted key not available for link generation');
       }
 
       const link = await createLink({
         payload: new TextEncoder().encode(payload),
         payloadType: 'text/plain',
         signer: {
-          kid: testKey.kid,
-          privateKeyJwk: testKey,
+          kid: trustedKey.kid,
+          privateKeyJwk: trustedKey,
         },
         compress: 'none',
       });
       return link;
     } catch (error) {
       console.error('Failed to generate SDLP link:', error);
+      throw error;
+    }
+  });
+
+  // Handle SDLP link generation (untrusted)
+  ipcMain.handle('generate-untrusted-sdlp-link', async (_event, payload: string) => {
+    try {
+      const { createLink } = await import('@sdlp/sdk');
+
+      if (!untrustedKey) {
+        throw new Error('Untrusted key not available for link generation');
+      }
+
+      const link = await createLink({
+        payload: new TextEncoder().encode(payload),
+        payloadType: 'text/plain',
+        signer: {
+          kid: untrustedKey.kid,
+          privateKeyJwk: untrustedKey,
+        },
+        compress: 'none',
+      });
+      return link;
+    } catch (error) {
+      console.error('Failed to generate untrusted SDLP link:', error);
       throw error;
     }
   });
@@ -149,15 +202,16 @@ async function processSDLPLink(
     } else {
       const payload = new TextDecoder().decode(result.payload);
 
-      // Determine trust level - for demo purposes, we'll consider our test key as trusted
+      // Determine trust level based on sender key
       // TODO: In a real implementation, this should check against a configurable trust store
       // or a list of known senders, not hardcoded values.
       const senderKey = result.sender || '';
-      isTrusted =
-        !forceUntrusted &&
-        (senderKey.includes('test-key-1') ||
-          senderKey.includes('trusted') ||
-          senderKey.includes('z6MkozXRpKZqLRoLWE6dUTWpSp2Sw2nRrEY')); // Our actual test key identifier
+      
+      // Check if the sender is our trusted key
+      const trustedKeyId = trustedKey?.kid || '';
+      const isTrustedSender = trustedKeyId && senderKey.includes(trustedKeyId.split('#')[0]);
+      
+      isTrusted = !forceUntrusted && isTrustedSender;
 
       const trustIndicator = isTrusted ? '✅' : '⚠️';
       const trustStatus = isTrusted

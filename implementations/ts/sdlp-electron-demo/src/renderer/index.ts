@@ -19,6 +19,7 @@ declare global {
       onSDLPResult: (callback: (data: SDLPResult) => void) => void;
       removeAllListeners: (channel: string) => void;
       generateSDLPLink: (payload: string) => Promise<string>;
+      generateUntrustedSDLPLink: (payload: string) => Promise<string>;
       verifySDLPLink: (link: string) => Promise<any>;
       processSDLPLinkWithDialog: (
         link: string,
@@ -171,14 +172,11 @@ class SDLPRenderer {
       untrustedLinkBtn.addEventListener('click', async () => {
         console.log('Untrusted link button clicked!');
         try {
-          // For the untrusted example, we'll generate a valid link but mark it as untrusted
-          const untrustedLink = await window.electronAPI.generateSDLPLink(
+          // Generate a link using the untrusted key
+          const untrustedLink = await window.electronAPI.generateUntrustedSDLPLink(
             'echo "This is from an untrusted source"'
           );
-          await window.electronAPI.processSDLPLinkWithDialog(
-            untrustedLink,
-            true
-          );
+          await window.electronAPI.processSDLPLinkWithDialog(untrustedLink);
         } catch (error) {
           console.error('Failed to generate untrusted example link:', error);
         }
@@ -654,10 +652,11 @@ class SDLPRenderer {
       const validPayload = 'echo "Hello from a valid SDLP link!"';
       const untrustedPayload = 'echo "This is from an untrusted source"';
 
-      // Generate the valid link
+      // Generate the valid link using trusted key
       const validLink = await window.electronAPI.generateSDLPLink(validPayload);
+      // Generate the untrusted link using untrusted key
       const untrustedLink =
-        await window.electronAPI.generateSDLPLink(untrustedPayload);
+        await window.electronAPI.generateUntrustedSDLPLink(untrustedPayload);
 
       // Populate valid example
       const validPayloadElement = document.getElementById('valid-payload');
@@ -729,6 +728,7 @@ document.addEventListener('DOMContentLoaded', () => {
       onSDLPResult: () => {},
       removeAllListeners: () => {},
       generateSDLPLink: async () => 'sdlp://fallback-link',
+      generateUntrustedSDLPLink: async () => 'sdlp://fallback-untrusted-link',
       verifySDLPLink: async () => ({
         valid: false,
         error: { message: 'electronAPI not available' },
