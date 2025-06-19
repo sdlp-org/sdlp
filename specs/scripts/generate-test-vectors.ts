@@ -13,11 +13,11 @@
  *   npm run generate-vectors -- --help
  */
 
-import crypto from 'node:crypto'
-import fs from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { sha256 } from '@noble/hashes/sha256'
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { sha256 } from '@noble/hashes/sha256';
 import type {
   Ed25519PrivateKeyJWK,
   SDLPSigner,
@@ -31,31 +31,31 @@ import type {
   JWSProtectedHeader,
   JWSCompactSerialization,
   PayloadType,
-} from '../src/types.js'
+} from '../src/types.js';
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load test identities with proper typing
 function getKeysPath(): string {
-  const fixturesPath = path.join(__dirname, '..', 'test-fixtures', 'keys.json')
+  const fixturesPath = path.join(__dirname, '..', 'test-fixtures', 'keys.json');
   if (fs.existsSync(fixturesPath)) {
-    return fixturesPath
+    return fixturesPath;
   }
   // Fallback if run from different directory
-  const altPath = path.join(process.cwd(), 'test-fixtures', 'keys.json')
+  const altPath = path.join(process.cwd(), 'test-fixtures', 'keys.json');
   if (fs.existsSync(altPath)) {
-    return altPath
+    return altPath;
   }
   throw new Error(
     'Could not find keys.json file. Make sure to run from specs directory or that test-fixtures/keys.json exists.'
-  )
+  );
 }
 
 function loadTestKeys(): TestKeyFixtures {
-  const keysPath = getKeysPath()
-  const keysData = fs.readFileSync(keysPath, 'utf8')
-  return JSON.parse(keysData) as TestKeyFixtures
+  const keysPath = getKeysPath();
+  const keysData = fs.readFileSync(keysPath, 'utf8');
+  return JSON.parse(keysData) as TestKeyFixtures;
 }
 
 // Utility functions with proper typing
@@ -64,52 +64,55 @@ export function base64urlEncode(buffer: Buffer | Uint8Array | string): string {
     .toString('base64')
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
-    .replace(/=/g, '')
+    .replace(/=/g, '');
 }
 
 export function base64urlDecode(str: string): Buffer {
   // Add padding if needed
-  const padded = str + '='.repeat((4 - (str.length % 4)) % 4)
+  const padded = str + '='.repeat((4 - (str.length % 4)) % 4);
   // Convert base64url to base64
-  const base64 = padded.replace(/-/g, '+').replace(/_/g, '/')
-  return Buffer.from(base64, 'base64')
+  const base64 = padded.replace(/-/g, '+').replace(/_/g, '/');
+  return Buffer.from(base64, 'base64');
 }
 
 export function sha256Hash(data: Buffer | Uint8Array | string): string {
   // Use @noble/hashes for better security and consistency
-  const hash = sha256(data instanceof Buffer ? data : Buffer.from(data))
-  return Buffer.from(hash).toString('hex')
+  const hash = sha256(data instanceof Buffer ? data : Buffer.from(data));
+  return Buffer.from(hash).toString('hex');
 }
 
 // Compression with type safety
-function compressPayload(payload: string, algorithm: CompressionAlgorithm = 'none'): Buffer {
+function compressPayload(
+  payload: string,
+  algorithm: CompressionAlgorithm = 'none'
+): Buffer {
   if (algorithm === 'none') {
-    return Buffer.from(payload, 'utf8')
+    return Buffer.from(payload, 'utf8');
   }
   // For MVP, we'll only support 'none' compression
-  throw new Error(`Unsupported compression algorithm: ${algorithm}`)
+  throw new Error(`Unsupported compression algorithm: ${algorithm}`);
 }
 
 // Ed25519 signing using Node.js crypto with proper typing
 function createEd25519KeyPair(privateKeyJwk: Ed25519PrivateKeyJWK): {
-  privateKey: crypto.KeyObject
+  privateKey: crypto.KeyObject;
 } {
   // Convert JWK private key to Node.js KeyObject format
   const privateKeyDer = Buffer.concat([
     Buffer.from([
-      0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x04, 0x22, 0x04,
-      0x20,
+      0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70,
+      0x04, 0x22, 0x04, 0x20,
     ]),
     base64urlDecode(privateKeyJwk.d),
-  ])
+  ]);
 
   const privateKey = crypto.createPrivateKey({
     key: privateKeyDer,
     format: 'der',
     type: 'pkcs8',
-  })
+  });
 
-  return { privateKey }
+  return { privateKey };
 }
 
 function signJWS(
@@ -117,40 +120,42 @@ function signJWS(
   protectedHeader: JWSProtectedHeader,
   privateKey: crypto.KeyObject
 ): JWSCompactSerialization {
-  const encodedProtected = base64urlEncode(JSON.stringify(protectedHeader))
-  const encodedPayload = base64urlEncode(JSON.stringify(payload))
-  const signingInput = `${encodedProtected}.${encodedPayload}`
+  const encodedProtected = base64urlEncode(JSON.stringify(protectedHeader));
+  const encodedPayload = base64urlEncode(JSON.stringify(payload));
+  const signingInput = `${encodedProtected}.${encodedPayload}`;
 
-  const signature = crypto.sign(null, Buffer.from(signingInput), privateKey)
-  const encodedSignature = base64urlEncode(signature)
+  const signature = crypto.sign(null, Buffer.from(signingInput), privateKey);
+  const encodedSignature = base64urlEncode(signature);
 
   return {
     protected: encodedProtected,
     payload: encodedPayload,
     signature: encodedSignature,
-  }
+  };
 }
 
-export function createSDLPLink(params: CreateSDLPLinkParameters): SDLPLinkString {
-  const payload = params.payload
-  const payloadType = params.payloadType
-  const signer = params.signer
-  const compress = params.compress ?? 'none'
-  const expiresIn = params.expiresIn ?? null
-  const notBefore = params.notBefore
+export function createSDLPLink(
+  params: CreateSDLPLinkParameters
+): SDLPLinkString {
+  const payload = params.payload;
+  const payloadType = params.payloadType;
+  const signer = params.signer;
+  const compress = params.compress ?? 'none';
+  const expiresIn = params.expiresIn ?? null;
+  const notBefore = params.notBefore;
 
   // Step 1: Calculate checksum of original payload
-  const payloadBuffer = Buffer.from(payload, 'utf8')
-  const chk = sha256Hash(payloadBuffer)
+  const payloadBuffer = Buffer.from(payload, 'utf8');
+  const chk = sha256Hash(payloadBuffer);
 
   // Step 2: Compress payload
-  const compressedPayload = compressPayload(payload, compress)
+  const compressedPayload = compressPayload(payload, compress);
 
   // Step 3: Base64URL encode compressed payload
-  const encodedPayload = base64urlEncode(compressedPayload)
+  const encodedPayload = base64urlEncode(compressedPayload);
 
   // Step 4: Create Core Metadata
-  const now = Math.floor(Date.now() / 1000)
+  const now = Math.floor(Date.now() / 1000);
   const coreMetadata: SDLPCoreMetadata = {
     v: 'SDL-1.0',
     sid: signer.did,
@@ -159,47 +164,47 @@ export function createSDLPLink(params: CreateSDLPLinkParameters): SDLPLinkString
     chk: chk,
     ...(expiresIn !== null && { exp: now + expiresIn }),
     ...(notBefore !== undefined && { nbf: notBefore }),
-  }
+  };
 
   // Step 5: Create JWS Protected Header
   const protectedHeader: JWSProtectedHeader = {
     alg: 'EdDSA',
     kid: signer.kid,
-  }
+  };
 
   // Step 6: Sign the Core Metadata
-  const { privateKey } = createEd25519KeyPair(signer.privateKeyJwk)
-  const jws = signJWS(coreMetadata, protectedHeader, privateKey)
+  const { privateKey } = createEd25519KeyPair(signer.privateKeyJwk);
+  const jws = signJWS(coreMetadata, protectedHeader, privateKey);
 
   // Step 7: Base64URL encode the JWS object
   const jwsObject: JWSCompactSerialization = {
     protected: jws.protected,
     payload: jws.payload,
     signature: jws.signature,
-  }
-  const encodedJWS = base64urlEncode(JSON.stringify(jwsObject))
+  };
+  const encodedJWS = base64urlEncode(JSON.stringify(jwsObject));
 
   // Step 8: Assemble final link
-  return `sdlp://${encodedJWS}.${encodedPayload}`
+  return `sdlp://${encodedJWS}.${encodedPayload}`;
 }
 
 // Generate test vectors with full type safety
 export function generateTestVectors(): SDLPTestVectorSuite {
-  const keys = loadTestKeys()
-  const vectors: SDLPTestVector[] = []
+  const keys = loadTestKeys();
+  const vectors: SDLPTestVector[] = [];
 
   // Test case 1: Happy path with did:key
   const didKeySigner: SDLPSigner = {
     did: keys.did_key_identifier,
     kid: `${keys.did_key_identifier}#${keys.did_key_identifier.split(':')[2] ?? 'key'}`,
     privateKeyJwk: keys.ed25519_private_key_jwk,
-  }
+  };
 
   const happyPathDidKey = createSDLPLink({
     payload: 'Hello, World!',
     payloadType: 'text/plain' as PayloadType,
     signer: didKeySigner,
-  })
+  });
 
   vectors.push({
     description: 'Happy path with did:key - A valid link signed with a did:key',
@@ -211,23 +216,24 @@ export function generateTestVectors(): SDLPTestVectorSuite {
       senderDid: keys.did_key_identifier,
       error: null,
     },
-  })
+  });
 
   // Test case 2: Happy path with did:web
   const didWebSigner: SDLPSigner = {
     did: keys.did_web_identifier,
     kid: `${keys.did_web_identifier}#key-1`,
     privateKeyJwk: keys.ed25519_private_key_jwk,
-  }
+  };
 
   const happyPathDidWeb = createSDLPLink({
     payload: 'Hello from ACME Corp!',
     payloadType: 'text/plain' as PayloadType,
     signer: didWebSigner,
-  })
+  });
 
   vectors.push({
-    description: 'Happy path with did:web - A valid link signed with a did:web key',
+    description:
+      'Happy path with did:web - A valid link signed with a did:web key',
     link: happyPathDidWeb,
     expected: {
       valid: true,
@@ -236,41 +242,46 @@ export function generateTestVectors(): SDLPTestVectorSuite {
       senderDid: keys.did_web_identifier,
       error: null,
     },
-  })
+  });
 
   // Test case 3: Invalid signature (manipulate the signature)
   const validLink = createSDLPLink({
     payload: 'Test payload',
     payloadType: 'text/plain' as PayloadType,
     signer: didKeySigner,
-  })
+  });
 
   // Parse and manipulate the signature
-  const [scheme, rest] = validLink.split('://')
+  const [scheme, rest] = validLink.split('://');
   if (!scheme || !rest) {
-    throw new Error('Invalid link format')
+    throw new Error('Invalid link format');
   }
 
-  const [jwsPart, payloadPart] = rest.split('.')
+  const [jwsPart, payloadPart] = rest.split('.');
   if (!jwsPart || !payloadPart) {
-    throw new Error('Invalid link format')
+    throw new Error('Invalid link format');
   }
 
-  const jwsObject = JSON.parse(base64urlDecode(jwsPart).toString()) as JWSCompactSerialization
+  const jwsObject = JSON.parse(
+    base64urlDecode(jwsPart).toString()
+  ) as JWSCompactSerialization;
 
   // Corrupt the signature by changing the last character
-  const lastChar = jwsObject.signature.slice(-1)
-  const corruptedSignature = jwsObject.signature.slice(0, -1) + (lastChar === 'A' ? 'B' : 'A')
+  const lastChar = jwsObject.signature.slice(-1);
+  const corruptedSignature =
+    jwsObject.signature.slice(0, -1) + (lastChar === 'A' ? 'B' : 'A');
   const corruptedJwsObject: JWSCompactSerialization = {
     ...jwsObject,
     signature: corruptedSignature,
-  }
+  };
 
-  const corruptedJWS = base64urlEncode(JSON.stringify(corruptedJwsObject))
-  const invalidSignatureLink = `${scheme}://${corruptedJWS}.${payloadPart}` as SDLPLinkString
+  const corruptedJWS = base64urlEncode(JSON.stringify(corruptedJwsObject));
+  const invalidSignatureLink =
+    `${scheme}://${corruptedJWS}.${payloadPart}` as SDLPLinkString;
 
   vectors.push({
-    description: 'Invalid signature - A link with valid structure but manipulated signature',
+    description:
+      'Invalid signature - A link with valid structure but manipulated signature',
     link: invalidSignatureLink,
     expected: {
       valid: false,
@@ -279,28 +290,31 @@ export function generateTestVectors(): SDLPTestVectorSuite {
       senderDid: null,
       error: 'INVALID_SIGNATURE',
     },
-  })
+  });
 
   // Test case 4: Payload tampering (alter the payload to cause checksum mismatch)
   const validLink2 = createSDLPLink({
     payload: 'Original payload',
     payloadType: 'text/plain' as PayloadType,
     signer: didKeySigner,
-  })
+  });
 
-  const [scheme2, rest2] = validLink2.split('://')
+  const [scheme2, rest2] = validLink2.split('://');
   if (!scheme2 || !rest2) {
-    throw new Error('Invalid link format')
+    throw new Error('Invalid link format');
   }
 
-  const [jwsPart2, payloadPart2] = rest2.split('.')
+  const [jwsPart2, payloadPart2] = rest2.split('.');
   if (!jwsPart2 || !payloadPart2) {
-    throw new Error('Invalid link format')
+    throw new Error('Invalid link format');
   }
 
   // Create a different payload but keep the same JWS (which has the original checksum)
-  const tamperedPayload = base64urlEncode(Buffer.from('Tampered payload', 'utf8'))
-  const tamperedLink = `${scheme2}://${jwsPart2}.${tamperedPayload}` as SDLPLinkString
+  const tamperedPayload = base64urlEncode(
+    Buffer.from('Tampered payload', 'utf8')
+  );
+  const tamperedLink =
+    `${scheme2}://${jwsPart2}.${tamperedPayload}` as SDLPLinkString;
 
   vectors.push({
     description:
@@ -313,7 +327,7 @@ export function generateTestVectors(): SDLPTestVectorSuite {
       senderDid: null,
       error: 'PAYLOAD_CHECKSUM_MISMATCH',
     },
-  })
+  });
 
   // Test case 5: Expired link
   const expiredLink = createSDLPLink({
@@ -321,10 +335,11 @@ export function generateTestVectors(): SDLPTestVectorSuite {
     payloadType: 'text/plain' as PayloadType,
     signer: didKeySigner,
     expiresIn: -3600, // Expired 1 hour ago
-  })
+  });
 
   vectors.push({
-    description: 'Expired link - A validly signed link where the exp timestamp is in the past',
+    description:
+      'Expired link - A validly signed link where the exp timestamp is in the past',
     link: expiredLink,
     expected: {
       valid: false,
@@ -333,14 +348,14 @@ export function generateTestVectors(): SDLPTestVectorSuite {
       senderDid: null,
       error: 'LINK_EXPIRED',
     },
-  })
+  });
 
-  return vectors as SDLPTestVectorSuite
+  return vectors as SDLPTestVectorSuite;
 }
 
 // CLI interface
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const args = process.argv.slice(2)
+  const args = process.argv.slice(2);
 
   if (args.includes('--help') || args.includes('-h')) {
     console.log(`
@@ -359,44 +374,44 @@ Examples:
   tsx generate-test-vectors.ts --output my-vectors.json
   npm run generate-vectors
   npm run generate-vectors -- --output my-vectors.json
-`)
-    process.exit(0)
+`);
+    process.exit(0);
   }
 
   // Parse output option
-  let outputPath = path.join(__dirname, '..', 'mvp-test-vectors.json')
-  const outputIndex = args.indexOf('--output')
+  let outputPath = path.join(__dirname, '..', 'mvp-test-vectors.json');
+  const outputIndex = args.indexOf('--output');
   if (outputIndex !== -1 && args[outputIndex + 1]) {
-    const outputArgument = args[outputIndex + 1]
+    const outputArgument = args[outputIndex + 1];
     if (!outputArgument) {
-      throw new Error('Output path argument is required after --output')
+      throw new Error('Output path argument is required after --output');
     }
-    outputPath = path.resolve(outputArgument)
+    outputPath = path.resolve(outputArgument);
   }
 
   try {
-    console.log('Generating test vectors...')
-    const testVectors = generateTestVectors()
+    console.log('Generating test vectors...');
+    const testVectors = generateTestVectors();
 
-    fs.writeFileSync(outputPath, JSON.stringify(testVectors, null, 2))
-    console.log(`✅ Test vectors generated successfully!`)
-    console.log(`📁 Saved to: ${outputPath}`)
-    console.log(`📊 Generated ${testVectors.length} test vectors`)
+    fs.writeFileSync(outputPath, JSON.stringify(testVectors, null, 2));
+    console.log(`✅ Test vectors generated successfully!`);
+    console.log(`📁 Saved to: ${outputPath}`);
+    console.log(`📊 Generated ${testVectors.length} test vectors`);
 
     // Print summary
-    console.log('\n📋 Test Vector Summary:')
+    console.log('\n📋 Test Vector Summary:');
     testVectors.forEach((vector, index) => {
-      const status = vector.expected.valid ? '✅' : '❌'
-      console.log(`  ${index + 1}. ${status} ${vector.description}`)
-    })
+      const status = vector.expected.valid ? '✅' : '❌';
+      console.log(`  ${index + 1}. ${status} ${vector.description}`);
+    });
   } catch (error) {
     console.error(
       '❌ Error generating test vectors:',
       error instanceof Error ? error.message : 'Unknown error'
-    )
+    );
     if (process.env.DEBUG) {
-      console.error(error instanceof Error ? error.stack : error)
+      console.error(error instanceof Error ? error.stack : error);
     }
-    process.exit(1)
+    process.exit(1);
   }
 }

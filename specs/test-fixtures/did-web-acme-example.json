@@ -13,16 +13,8 @@
       }
     }
   ],
-  "authentication": [
-    "did:web:acme.example#key-1"
-  ],
-  "assertionMethod": [
-    "did:web:acme.example#key-1"
-  ],
-  "capabilityInvocation": [
-    "did:web:acme.example#key-1"
-  ],
-  "capabilityDelegation": [
-    "did:web:acme.example#key-1"
-  ]
+  "authentication": ["did:web:acme.example#key-1"],
+  "assertionMethod": ["did:web:acme.example#key-1"],
+  "capabilityInvocation": ["did:web:acme.example#key-1"],
+  "capabilityDelegation": ["did:web:acme.example#key-1"]
 }

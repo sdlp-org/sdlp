@@ -19,7 +19,7 @@ export interface CreateLinkParameters {
   /** Signer information including private key and key ID */
   signer: Signer;
   /** Compression algorithm to use. Defaults to 'none' for MVP */
-  compress?: "br" | "none";
+  compress?: 'br' | 'none';
   /** Optional expiration time in seconds from now */
   expiresIn?: number;
 }
@@ -83,7 +83,7 @@ export abstract class SdlpError extends Error {
  * Error for DID mismatch between sid and kid
  */
 export class DIDMismatchError extends SdlpError {
-  readonly code = "DID_MISMATCH";
+  readonly code = 'DID_MISMATCH';
 
   constructor(sid: string, kid: string) {
     super(`DID mismatch: sid='${sid}' does not match kid base DID='${kid}'`);
@@ -94,7 +94,7 @@ export class DIDMismatchError extends SdlpError {
  * Error for invalid JWS format
  */
 export class InvalidJWSFormatError extends SdlpError {
-  readonly code = "INVALID_JWS_FORMAT";
+  readonly code = 'INVALID_JWS_FORMAT';
 
   constructor(reason: string) {
     super(`Invalid JWS format: ${reason}`);
@@ -105,10 +105,10 @@ export class InvalidJWSFormatError extends SdlpError {
  * Error for invalid signature
  */
 export class InvalidSignatureError extends SdlpError {
-  readonly code = "INVALID_SIGNATURE";
+  readonly code = 'INVALID_SIGNATURE';
 
   constructor(message?: string) {
-    super(message ?? "Invalid signature");
+    super(message ?? 'Invalid signature');
   }
 }
 
@@ -116,7 +116,7 @@ export class InvalidSignatureError extends SdlpError {
  * Error for payload checksum mismatch
  */
 export class PayloadChecksumMismatchError extends SdlpError {
-  readonly code = "PAYLOAD_CHECKSUM_MISMATCH";
+  readonly code = 'PAYLOAD_CHECKSUM_MISMATCH';
 
   constructor(expected: string, actual: string) {
     super(`Payload checksum mismatch: expected=${expected}, actual=${actual}`);
@@ -127,7 +127,7 @@ export class PayloadChecksumMismatchError extends SdlpError {
  * Error for expired links
  */
 export class LinkExpiredError extends SdlpError {
-  readonly code = "LINK_EXPIRED";
+  readonly code = 'LINK_EXPIRED';
 
   constructor(expiration: number) {
     super(`Link expired at ${new Date(expiration * 1000).toISOString()}`);
@@ -138,7 +138,7 @@ export class LinkExpiredError extends SdlpError {
  * Error for links not yet valid
  */
 export class LinkNotYetValidError extends SdlpError {
-  readonly code = "LINK_NOT_YET_VALID";
+  readonly code = 'LINK_NOT_YET_VALID';
 
   constructor(notBefore: number) {
     super(`Link not valid until ${new Date(notBefore * 1000).toISOString()}`);
@@ -149,7 +149,7 @@ export class LinkNotYetValidError extends SdlpError {
  * Error for unsupported compression
  */
 export class UnsupportedCompressionError extends SdlpError {
-  readonly code = "UNSUPPORTED_COMPRESSION";
+  readonly code = 'UNSUPPORTED_COMPRESSION';
 
   constructor(compression: string) {
     super(`Unsupported compression algorithm: ${compression}`);
@@ -160,7 +160,7 @@ export class UnsupportedCompressionError extends SdlpError {
  * Error for DID resolution failures
  */
 export class DIDResolutionError extends SdlpError {
-  readonly code = "DID_RESOLUTION_FAILED";
+  readonly code = 'DID_RESOLUTION_FAILED';
 
   constructor(didUrl: string, reason: string) {
     super(`Failed to resolve DID '${didUrl}': ${reason}`);
@@ -171,7 +171,7 @@ export class DIDResolutionError extends SdlpError {
  * Error for invalid link format
  */
 export class InvalidLinkFormatError extends SdlpError {
-  readonly code = "INVALID_LINK_FORMAT";
+  readonly code = 'INVALID_LINK_FORMAT';
 
   constructor(reason: string) {
     super(`Invalid link format: ${reason}`);
@@ -189,7 +189,7 @@ export interface CoreMetadata extends Record<string, unknown> {
   /** Payload MIME type */
   type: string;
   /** Compression algorithm used */
-  comp: "br" | "none";
+  comp: 'br' | 'none';
   /** SHA-256 checksum of the original payload */
   chk: string;
   /** Optional expiration timestamp (Unix epoch) */
@@ -203,7 +203,7 @@ export interface CoreMetadata extends Record<string, unknown> {
  */
 export interface JWSProtectedHeader extends Record<string, unknown> {
   /** Signature algorithm */
-  alg: "EdDSA";
+  alg: 'EdDSA';
   /** Key ID (DID URL) */
   kid: string;
 }

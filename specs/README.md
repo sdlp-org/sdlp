@@ -30,13 +30,13 @@ npm test
 
 ## 🔍 Validation Commands
 
-| Command | Purpose |
-|---------|---------|
-| `npm run validate-all` | **Run complete validation suite** |
-| `npm run validate-fixtures` | Validate test fixtures (keys/DIDs) |
-| `npm run validate-test-vectors` | Validate test vectors format |
-| `npm run generate-vectors` | Generate new test vectors |
-| `npm run generate-did-key` | Generate new key pairs |
+| Command                         | Purpose                            |
+| ------------------------------- | ---------------------------------- |
+| `npm run validate-all`          | **Run complete validation suite**  |
+| `npm run validate-fixtures`     | Validate test fixtures (keys/DIDs) |
+| `npm run validate-test-vectors` | Validate test vectors format       |
+| `npm run generate-vectors`      | Generate new test vectors          |
+| `npm run generate-did-key`      | Generate new key pairs             |
 
 **💡 Always run `npm run validate-all` before committing changes!**
 
@@ -63,15 +63,18 @@ specs/
 ## 🎯 Key Files
 
 ### 📋 Protocol Specification
+
 - **`sdlp-v0.1-draft.md`**: The authoritative SDLP protocol specification
 - Defines link format, cryptographic requirements, and security model
 
-### 🧪 Test Vectors  
+### 🧪 Test Vectors
+
 - **`mvp-test-vectors.json`**: Official test vectors for implementation testing
 - Includes happy path, error cases, and edge conditions
 - **Always validated** against specification requirements
 
 ### 🔑 Test Fixtures
+
 - **`test-fixtures/keys.json`**: Cryptographically valid Ed25519 key pairs
 - **`test-fixtures/did-web-acme-example.json`**: Sample DID document
 - **Automatically validated** for mathematical correctness
@@ -106,22 +109,24 @@ specs/
 The validation system prevents these critical issues:
 
 - ❌ **Invalid Key Pairs**: Private/public keys that aren't mathematically related
-- ❌ **Key Mismatches**: Test vectors using different keys than fixtures  
+- ❌ **Key Mismatches**: Test vectors using different keys than fixtures
 - ❌ **Spec Drift**: Implementation formats diverging from specification
 - ❌ **Format Errors**: Wrong version strings, checksum formats, etc.
 
 ## 🔧 Available Scripts
 
 ### 🧪 Testing & Validation
+
 ```bash
 npm run validate-all           # Complete validation suite
 npm run validate-fixtures      # Validate test fixtures
-npm run validate-test-vectors  # Validate test vectors  
+npm run validate-test-vectors  # Validate test vectors
 npm test                      # Run all tests
 npm run test:coverage         # Test with coverage
 ```
 
 ### 🔨 Generation & Development
+
 ```bash
 npm run generate-vectors      # Generate test vectors
 npm run generate-did-key      # Generate key pairs
@@ -131,6 +136,7 @@ npm run build                # Build for production
 ```
 
 ### 📏 Code Quality
+
 ```bash
 npm run lint                 # Lint TypeScript
 npm run format              # Format with Prettier
@@ -140,9 +146,10 @@ npm run typecheck           # TypeScript type checking
 ## 🤖 CI/CD Integration
 
 GitHub Actions automatically:
+
 - ✅ Validates all changes to specs
 - ✅ Runs cryptographic validation
-- ✅ Checks implementation consistency  
+- ✅ Checks implementation consistency
 - ✅ Prevents invalid specs from merging
 
 ## 📖 Documentation
@@ -164,4 +171,4 @@ GitHub Actions automatically:
 3. **Test implementations after changes**: Ensure compatibility
 4. **Document validation rule changes**: Update VALIDATION.md
 
-The validation system is your safety net - use it! 🛡️ 
+The validation system is your safety net - use it! 🛡️

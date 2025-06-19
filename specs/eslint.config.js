@@ -1,30 +1,13 @@
-import js from '@eslint/js'
-import tseslint from '@typescript-eslint/eslint-plugin'
-import tsparser from '@typescript-eslint/parser'
-import importPlugin from 'eslint-plugin-import'
-import securityPlugin from 'eslint-plugin-security'
-import unicornPlugin from 'eslint-plugin-unicorn'
+import js from '@eslint/js';
+import tseslint from '@typescript-eslint/eslint-plugin';
+import tsparser from '@typescript-eslint/parser';
+import importPlugin from 'eslint-plugin-import';
+import securityPlugin from 'eslint-plugin-security';
+import unicornPlugin from 'eslint-plugin-unicorn';
+import baseConfig from '../eslint.config.js';
 
 export default [
-  {
-    ignores: [
-      'dist/',
-      'build/',
-      'node_modules/',
-      'coverage/',
-      '*.d.ts',
-      'vite.config.ts.timestamp-*',
-      '.env*',
-      '*.log',
-      'package-lock.json',
-      'yarn.lock',
-      'pnpm-lock.yaml',
-      '*.legacy.js',
-      '*.old.js',
-    ],
-  },
-
-  // Base configuration for all TypeScript files
+  ...baseConfig,
   {
     files: ['**/*.ts'],
     languageOptions: {
@@ -52,9 +35,7 @@ export default [
       // ESLint recommended rules
       ...js.configs.recommended.rules,
 
-      // ===========================
       // TypeScript Specific Rules
-      // ===========================
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -87,16 +68,9 @@ export default [
       ],
       '@typescript-eslint/no-non-null-assertion': 'error',
       '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-      '@typescript-eslint/no-unsafe-assignment': 'error',
-      '@typescript-eslint/no-unsafe-call': 'error',
-      '@typescript-eslint/no-unsafe-member-access': 'error',
-      '@typescript-eslint/no-unsafe-return': 'error',
-      '@typescript-eslint/restrict-template-expressions': 'error',
 
-      // ===========================
       // General Code Quality Rules
-      // ===========================
-      'no-console': 'off', // Allow console in CLI scripts
+      'no-console': 'off', // Allow console in spec scripts
       'prefer-const': 'error',
       'no-var': 'error',
       eqeqeq: ['error', 'always'],
@@ -109,15 +83,21 @@ export default [
       'no-promise-executor-return': 'error',
       'require-atomic-updates': 'error',
 
-      // ===========================
       // Import/Export Rules
-      // ===========================
       'no-duplicate-imports': 'error',
       'import/no-unresolved': 'off', // TypeScript handles this
       'import/order': [
         'error',
         {
-          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index', 'type'],
+          groups: [
+            'builtin',
+            'external',
+            'internal',
+            'parent',
+            'sibling',
+            'index',
+            'type',
+          ],
           'newlines-between': 'never',
           alphabetize: {
             order: 'asc',
@@ -126,25 +106,21 @@ export default [
         },
       ],
 
-      // ===========================
       // Security Rules
-      // ===========================
       'security/detect-object-injection': 'error',
       'security/detect-non-literal-regexp': 'error',
       'security/detect-unsafe-regex': 'error',
       'security/detect-buffer-noassert': 'error',
-      'security/detect-child-process': 'warn', // We might need this for CLI
+      'security/detect-child-process': 'warn',
       'security/detect-disable-mustache-escape': 'error',
       'security/detect-eval-with-expression': 'error',
       'security/detect-no-csrf-before-method-override': 'error',
-      'security/detect-non-literal-fs-filename': 'warn', // We need fs operations
+      'security/detect-non-literal-fs-filename': 'off', // Scripts need fs operations
       'security/detect-non-literal-require': 'error',
       'security/detect-possible-timing-attacks': 'error',
       'security/detect-pseudoRandomBytes': 'error',
 
-      // ===========================
       // Unicorn Rules (Modern JS/TS best practices)
-      // ===========================
       'unicorn/filename-case': [
         'error',
         {
@@ -182,11 +158,11 @@ export default [
           },
         },
       ],
-      'unicorn/no-null': 'off', // We use null in types
-      'unicorn/prefer-module': 'off', // We need CommonJS for config files
-      'unicorn/prefer-top-level-await': 'off', // Not always appropriate
-      'unicorn/import-style': 'off', // Too opinionated for our use case
-      'unicorn/no-process-exit': 'off', // We need process.exit in CLI scripts
+      'unicorn/no-null': 'off',
+      'unicorn/prefer-module': 'off',
+      'unicorn/prefer-top-level-await': 'off',
+      'unicorn/import-style': 'off',
+      'unicorn/no-process-exit': 'off',
       'unicorn/prefer-node-protocol': 'error',
       'unicorn/prefer-ternary': 'error',
       'unicorn/consistent-destructuring': 'error',
@@ -199,41 +175,10 @@ export default [
       'unicorn/explicit-length-check': 'error',
     },
   },
-
-  // Override for test files
-  {
-    files: ['test/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],
-    rules: {
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/strict-boolean-expressions': 'off',
-      'security/detect-object-injection': 'off',
-      'unicorn/consistent-function-scoping': 'off',
-      'unicorn/no-useless-undefined': 'off',
-    },
-  },
-
-  // Override for config files
-  {
-    files: ['*.config.{js,ts,mjs,cjs}', 'eslint.config.js', 'vite.config.ts'],
-    rules: {
-      'unicorn/prefer-module': 'off',
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      'import/no-default-export': 'off',
-      '@typescript-eslint/explicit-function-return-type': 'off',
-    },
-  },
-
-  // Override for CLI scripts
   {
     files: ['scripts/**/*.ts'],
     rules: {
-      'no-console': 'off',
-      'unicorn/no-process-exit': 'off',
-      'security/detect-child-process': 'off',
-      'security/detect-non-literal-fs-filename': 'off',
-      '@typescript-eslint/strict-boolean-expressions': 'off',
+      '@typescript-eslint/strict-boolean-expressions': 'off', // Scripts can be more lenient
     },
   },
-]
+];

@@ -1,0 +1,30 @@
+{
+  "name": "sdlp-monorepo",
+  "version": "1.0.0",
+  "description": "Secure Deep Link Protocol (SDLP) monorepo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "just lint",
+    "format": "just format",
+    "test": "just test",
+    "check-all": "just check-all"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.28.0",
+    "@typescript-eslint/eslint-plugin": "^8.33.1",
+    "@typescript-eslint/parser": "^8.33.1",
+    "eslint": "^9.28.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-security": "^3.0.1",
+    "eslint-plugin-unicorn": "^59.0.1",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3"
+  },
+  "workspaces": [
+    "specs",
+    "implementations/ts/sdlp-sdk",
+    "implementations/ts/sdlp-cli",
+    "implementations/ts/sdlp-electron-demo"
+  ]
+}

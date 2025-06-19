@@ -92,9 +92,15 @@ Each script provides:
 Scripts export strongly-typed functions for reuse:
 
 ```typescript
-import { generateDidKey } from './scripts/generate-did-key.js'
-import { createSDLPLink, type SDLPSigner } from './scripts/generate-test-vectors.js'
-import { parseSDLPLink, type ParsedSDLPLink } from './scripts/parse-sdlp-link.js'
+import { generateDidKey } from './scripts/generate-did-key.js';
+import {
+  createSDLPLink,
+  type SDLPSigner,
+} from './scripts/generate-test-vectors.js';
+import {
+  parseSDLPLink,
+  type ParsedSDLPLink,
+} from './scripts/parse-sdlp-link.js';
 ```
 
 ## NPM Scripts

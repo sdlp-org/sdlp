@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>SDLP Electron MVP</title>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline';"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+      <header class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">SDLP Electron MVP</h1>
+        <p class="text-gray-600">Secure Deep Link Protocol Demonstration</p>
+      </header>
+
+      <main class="max-w-4xl mx-auto">
+        <!-- Status Section -->
+        <div id="status-section" class="mb-6">
+          <div id="status-card" class="bg-white rounded-lg shadow-md p-6">
+            <div id="loading-state" class="text-center">
+              <div
+                class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"
+              ></div>
+              <p class="text-gray-600">Waiting for SDLP link...</p>
+            </div>
+
+            <div id="success-state" class="hidden">
+              <div class="flex items-center mb-4">
+                <div
+                  class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3"
+                >
+                  <svg
+                    class="w-5 h-5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-lg font-semibold text-green-800">
+                    Link Verified Successfully
+                  </h3>
+                  <p id="sender-info" class="text-sm text-gray-600"></p>
+                </div>
+              </div>
+              <div class="bg-gray-50 rounded p-3 mb-4">
+                <p class="text-sm text-gray-700">
+                  <strong>Command:</strong>
+                  <code
+                    id="command-text"
+                    class="bg-gray-200 px-2 py-1 rounded"
+                  ></code>
+                </p>
+              </div>
+            </div>
+
+            <div id="error-state" class="hidden">
+              <div class="flex items-center mb-4">
+                <div
+                  class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center mr-3"
+                >
+                  <svg
+                    class="w-5 h-5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    ></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-lg font-semibold text-red-800">
+                    Verification Failed
+                  </h3>
+                  <p id="error-message" class="text-sm text-gray-600"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal Section -->
+        <div id="terminal-section" class="hidden">
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+              Command Output
+            </h3>
+            <div class="bg-black rounded-lg p-4">
+              <div id="terminal"></div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script type="module" src="./index.ts"></script>
+  </body>
+</html>

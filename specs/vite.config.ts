@@ -1,12 +1,15 @@
-import { resolve } from 'node:path'
-import { defineConfig } from 'vite'
+import { resolve } from 'node:path';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   build: {
     lib: {
       entry: {
         'generate-did-key': resolve(__dirname, 'scripts/generate-did-key.ts'),
-        'generate-test-vectors': resolve(__dirname, 'scripts/generate-test-vectors.ts'),
+        'generate-test-vectors': resolve(
+          __dirname,
+          'scripts/generate-test-vectors.ts'
+        ),
         'parse-sdlp-link': resolve(__dirname, 'scripts/parse-sdlp-link.ts'),
       },
       formats: ['es', 'cjs'],
@@ -32,4 +35,4 @@ export default defineConfig({
       '@test': resolve(__dirname, './test'),
     },
   },
-})
+});

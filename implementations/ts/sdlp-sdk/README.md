@@ -26,11 +26,13 @@ npm install @sdlp/sdk
 import { createLink } from '@sdlp/sdk';
 
 // Example payload
-const payload = new TextEncoder().encode(JSON.stringify({
-  action: 'open-document',
-  documentId: 'doc-123',
-  permissions: ['read', 'write']
-}));
+const payload = new TextEncoder().encode(
+  JSON.stringify({
+    action: 'open-document',
+    documentId: 'doc-123',
+    permissions: ['read', 'write'],
+  })
+);
 
 // Create a signed link
 const link = await createLink({
@@ -42,11 +44,11 @@ const link = await createLink({
       kty: 'OKP',
       crv: 'Ed25519',
       x: 'O2onvM62pC1io6jQKm8Nc2UyFXcd4kOmOsBIoYtZ2ik',
-      d: 'nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A'
-    }
+      d: 'nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A',
+    },
   },
   compress: 'br', // Use Brotli compression
-  expiresIn: 3600 // Expires in 1 hour
+  expiresIn: 3600, // Expires in 1 hour
 });
 
 console.log('Created SDLP link:', link);
@@ -58,14 +60,16 @@ console.log('Created SDLP link:', link);
 ```typescript
 import { verifyLink } from '@sdlp/sdk';
 
-const result = await verifyLink('sdlp://eyJhbGciOiJFZERTQSIsImtpZCI6ImRpZDprZXk6...');
+const result = await verifyLink(
+  'sdlp://eyJhbGciOiJFZERTQSIsImtpZCI6ImRpZDprZXk6...'
+);
 
 if (result.valid) {
   console.log('✅ Link verified successfully!');
   console.log('Sender DID:', result.sender);
   console.log('Content Type:', result.metadata.type);
   console.log('Payload:', new TextDecoder().decode(result.payload));
-  
+
   // Access the parsed payload
   const data = JSON.parse(new TextDecoder().decode(result.payload));
   console.log('Action:', data.action);
@@ -82,6 +86,7 @@ if (result.valid) {
 Creates and signs a Secure Deep Link according to SDLP v1.0 specification.
 
 **Parameters:**
+
 - `params.payload` (Uint8Array): The raw payload data to include in the link
 - `params.payloadType` (string): MIME type of the payload (e.g., "application/json")
 - `params.signer` (Signer): Signer information including private key and DID URL
@@ -95,12 +100,14 @@ Creates and signs a Secure Deep Link according to SDLP v1.0 specification.
 Verifies a Secure Deep Link with comprehensive security validation.
 
 **Parameters:**
+
 - `link` (string): The SDLP link string to verify
 - `options.resolver` (DIDResolver, optional): Custom DID resolver
 - `options.allowedAlgorithms` (string[], optional): Allowed signature algorithms (default: ['EdDSA'])
 - `options.maxPayloadSize` (number, optional): Maximum payload size in bytes (default: 10MB)
 
 **Returns:** Promise<VerificationResult> - Discriminated union result:
+
 - Success: `{ valid: true, sender, payload, metadata, didDocument? }`
 - Failure: `{ valid: false, error }`
 
@@ -110,21 +117,21 @@ Verifies a Secure Deep Link with comprehensive security validation.
 
 ```typescript
 interface Signer {
-  kid: string;                           // DID URL with key fragment
+  kid: string; // DID URL with key fragment
   privateKeyJwk: Record<string, unknown>; // Private key in JWK format
 }
 
 interface VerificationSuccess {
   readonly valid: true;
-  readonly sender: string;        // Verified sender DID
-  readonly payload: Uint8Array;   // Original payload data
+  readonly sender: string; // Verified sender DID
+  readonly payload: Uint8Array; // Original payload data
   readonly metadata: CoreMetadata; // Link metadata
   readonly didDocument?: DIDDocument;
 }
 
 interface VerificationFailure {
   readonly valid: false;
-  readonly error: SdlpError;      // Structured error with code
+  readonly error: SdlpError; // Structured error with code
 }
 ```
 
@@ -134,15 +141,15 @@ The library provides structured error classes with specific error codes:
 
 ```typescript
 // Error codes and their meanings
-'DID_MISMATCH'              // Sender DID doesn't match key DID
-'INVALID_JWS_FORMAT'        // Malformed JWS structure
-'INVALID_SIGNATURE'         // Cryptographic signature verification failed
-'PAYLOAD_CHECKSUM_MISMATCH' // Payload integrity check failed
-'LINK_EXPIRED'              // Link has expired
-'LINK_NOT_YET_VALID'        // Link not yet valid (nbf)
-'UNSUPPORTED_COMPRESSION'   // Unsupported compression algorithm
-'DID_RESOLUTION_FAILED'     // Could not resolve sender DID
-'INVALID_LINK_FORMAT'       // Malformed link structure
+'DID_MISMATCH'; // Sender DID doesn't match key DID
+'INVALID_JWS_FORMAT'; // Malformed JWS structure
+'INVALID_SIGNATURE'; // Cryptographic signature verification failed
+'PAYLOAD_CHECKSUM_MISMATCH'; // Payload integrity check failed
+'LINK_EXPIRED'; // Link has expired
+'LINK_NOT_YET_VALID'; // Link not yet valid (nbf)
+'UNSUPPORTED_COMPRESSION'; // Unsupported compression algorithm
+'DID_RESOLUTION_FAILED'; // Could not resolve sender DID
+'INVALID_LINK_FORMAT'; // Malformed link structure
 ```
 
 ## Advanced Usage
@@ -163,7 +170,7 @@ const customResolver = new Resolver({
 const result = await verifyLink(link, {
   resolver: customResolver,
   allowedAlgorithms: ['EdDSA', 'ES256K'], // Allow additional algorithms
-  maxPayloadSize: 5 * 1024 * 1024 // 5MB limit
+  maxPayloadSize: 5 * 1024 * 1024, // 5MB limit
 });
 ```
 
@@ -172,7 +179,7 @@ const result = await verifyLink(link, {
 ```typescript
 // Set custom payload size limits for security
 const result = await verifyLink(link, {
-  maxPayloadSize: 1024 * 1024 // 1MB limit
+  maxPayloadSize: 1024 * 1024, // 1MB limit
 });
 
 if (!result.valid && result.error.code === 'PAYLOAD_TOO_LARGE') {
@@ -201,4 +208,4 @@ This library follows the SDLP v1.0 specification. For issues or contributions, p
 
 ## License
 
-[License information to be added] 
+[License information to be added]

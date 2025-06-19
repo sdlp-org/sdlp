@@ -8,9 +8,9 @@ import { verifyCommand } from './commands/verify.js';
 const program = new Command();
 
 program
-    .name('sdlp')
-    .description('CLI for the Secure Deep Link Protocol (SDLP)')
-    .version('1.0.0');
+  .name('sdlp')
+  .description('CLI for the Secure Deep Link Protocol (SDLP)')
+  .version('1.0.0');
 
 // Add commands
 program.addCommand(keygenCommand);
@@ -18,4 +18,4 @@ program.addCommand(signCommand);
 program.addCommand(verifyCommand);
 
 // Parse arguments and execute
-program.parse(); 
+program.parse();
