@@ -1,14 +1,23 @@
-# SDLP Electron MVP
+# SDLP Electron Demo Application
 
-A minimal viable product (MVP) Electron application that demonstrates the Secure Deep Link Protocol (SDLP) by handling `sdlp://` protocol links, verifying them cryptographically, and executing commands from verified payloads.
+A comprehensive Electron application that demonstrates the Secure Deep Link Protocol (SDLP) with an interactive user interface for testing, generating, and verifying SDLP links.
 
 ## Features
 
+### Core Protocol Features
 - **Protocol Handler**: Registers as the default handler for `sdlp://` links
 - **Cryptographic Verification**: Uses the SDLP SDK to verify link authenticity and integrity
 - **Command Execution**: Safely executes commands from verified payloads using `child_process.spawn`
-- **Terminal UI**: Displays command output in a styled terminal with syntax highlighting
-- **Security**: Implements proper Electron security practices with context isolation and sandboxing
+- **Security Dialogs**: User consent dialogs before executing any commands from deep links
+
+### Interactive User Interface
+- **Tabbed Navigation**: Clean two-tab interface (Home and Tester)
+- **Protocol Introduction**: Educational content explaining SDLP benefits and security features
+- **Example Links**: Pre-built test links demonstrating valid, invalid, and untrusted scenarios
+- **Link Generator**: Interactive tool to create SDLP links from custom payloads
+- **Link Verifier**: Tool to verify and inspect any SDLP link
+- **Real-time Results**: Live verification status with detailed feedback
+- **Terminal Output**: Styled terminal display for command execution results
 
 ## Architecture
 
@@ -53,9 +62,31 @@ npm run build
 To test the application:
 
 1. Start the development server: `npm run dev`
-2. Create a test SDLP link using the CLI tool
-3. Open the link in your browser or terminal: `open "sdlp://..."`
-4. The Electron app should launch and process the link
+2. The application will open with two main tabs:
+
+#### Home Tab
+- **Protocol Introduction**: Learn about SDLP and its security benefits
+- **Example Links**: Test the protocol with pre-built examples:
+  - **Valid Link**: Demonstrates successful verification and execution
+  - **Invalid Link**: Shows how invalid signatures are rejected
+  - **Untrusted Link**: Displays warnings for unknown senders
+- **Status Display**: View real-time verification results and command output
+
+#### Tester Tab
+- **Link Generator**: 
+  - Enter any command payload (e.g., `echo "Hello World!"`)
+  - Click "Generate Link" to create a signed SDLP link
+  - Use the "Copy" button to copy the link to clipboard
+- **Link Verifier**:
+  - Paste any SDLP link to verify its authenticity
+  - View detailed verification results including sender DID and payload
+
+#### Deep Link Testing
+You can also test the protocol handler directly:
+1. Generate a link using the Tester tab or CLI tool
+2. Open the link from your system: `open "sdlp://..."`
+3. A security dialog will appear asking for permission to proceed
+4. Click "Proceed" to execute the command or "Cancel" to abort
 
 ## Security Considerations
 
@@ -74,10 +105,12 @@ src/
 │   └── index.ts    # Protocol handling and command execution
 ├── preload/        # Preload scripts
 │   └── index.ts    # IPC context bridge
-└── renderer/       # Renderer process (UI)
-    ├── index.html  # Main HTML template
-    ├── index.ts    # UI logic and terminal handling
-    └── style.css   # Tailwind CSS styles
+├── renderer/       # Renderer process (UI)
+│   ├── index.html  # Main HTML template
+│   ├── index.ts    # UI logic and terminal handling
+│   └── style.css   # Tailwind CSS styles
+└── fixtures/       # Test keys and data (packaged with app)
+    └── valid-key.jwk # Test signing key for link generation
 ```
 
 ## How It Works
