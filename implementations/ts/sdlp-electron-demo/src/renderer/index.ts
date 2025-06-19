@@ -173,9 +173,10 @@ class SDLPRenderer {
         console.log('Untrusted link button clicked!');
         try {
           // Generate a link using the untrusted key
-          const untrustedLink = await window.electronAPI.generateUntrustedSDLPLink(
-            'echo "This is from an untrusted source"'
-          );
+          const untrustedLink =
+            await window.electronAPI.generateUntrustedSDLPLink(
+              'echo "This is from an untrusted source"'
+            );
           await window.electronAPI.processSDLPLinkWithDialog(untrustedLink);
         } catch (error) {
           console.error('Failed to generate untrusted example link:', error);
@@ -623,18 +624,23 @@ class SDLPRenderer {
 
     if (isUntrusted) {
       // Show output in the untrusted command & output section
-      const untrustedOutputSection = document.getElementById('untrusted-output-section');
+      const untrustedOutputSection = document.getElementById(
+        'untrusted-output-section'
+      );
       const untrustedOutput = document.getElementById('untrusted-output');
-      
-      if (untrustedOutputSection) untrustedOutputSection.classList.remove('hidden');
+
+      if (untrustedOutputSection)
+        untrustedOutputSection.classList.remove('hidden');
       if (untrustedOutput) {
         untrustedOutput.innerHTML = htmlOutput;
       }
     } else {
       // Show output in the success command & output section
-      const commandOutputSection = document.getElementById('command-output-section');
+      const commandOutputSection = document.getElementById(
+        'command-output-section'
+      );
       const commandOutput = document.getElementById('command-output');
-      
+
       if (commandOutputSection) commandOutputSection.classList.remove('hidden');
       if (commandOutput) {
         commandOutput.innerHTML = htmlOutput;

@@ -114,20 +114,20 @@ function truncateSDLPLink(link: string, maxLength: number = 100): string {
   if (link.length <= maxLength) {
     return link;
   }
-  
+
   // For SDLP links, show the protocol and first/last parts
   if (link.startsWith('sdlp://')) {
     const linkContent = link.substring(7); // Remove 'sdlp://'
     if (linkContent.length <= maxLength - 7) {
       return link;
     }
-    
+
     const prefixLength = Math.floor((maxLength - 10) / 2); // Account for 'sdlp://' and '...'
     const suffixLength = Math.floor((maxLength - 10) / 2);
-    
+
     return `sdlp://${linkContent.substring(0, prefixLength)}...${linkContent.substring(linkContent.length - suffixLength)}`;
   }
-  
+
   // For other links, simple truncation
   return link.substring(0, maxLength - 3) + '...';
 }
@@ -160,29 +160,32 @@ function setupIpcHandlers() {
   });
 
   // Handle SDLP link generation (untrusted)
-  ipcMain.handle('generate-untrusted-sdlp-link', async (_event, payload: string) => {
-    try {
-      const { createLink } = await import('@sdlp/sdk');
+  ipcMain.handle(
+    'generate-untrusted-sdlp-link',
+    async (_event, payload: string) => {
+      try {
+        const { createLink } = await import('@sdlp/sdk');
 
-      if (!untrustedKey) {
-        throw new Error('Untrusted key not available for link generation');
+        if (!untrustedKey) {
+          throw new Error('Untrusted key not available for link generation');
+        }
+
+        const link = await createLink({
+          payload: new TextEncoder().encode(payload),
+          payloadType: 'text/plain',
+          signer: {
+            kid: untrustedKey.kid,
+            privateKeyJwk: untrustedKey,
+          },
+          compress: 'none',
+        });
+        return link;
+      } catch (error) {
+        console.error('Failed to generate untrusted SDLP link:', error);
+        throw error;
       }
-
-      const link = await createLink({
-        payload: new TextEncoder().encode(payload),
-        payloadType: 'text/plain',
-        signer: {
-          kid: untrustedKey.kid,
-          privateKeyJwk: untrustedKey,
-        },
-        compress: 'none',
-      });
-      return link;
-    } catch (error) {
-      console.error('Failed to generate untrusted SDLP link:', error);
-      throw error;
     }
-  });
+  );
 
   // Handle SDLP link verification
   ipcMain.handle('verify-sdlp-link', async (_event, link: string) => {
@@ -202,7 +205,10 @@ function setupIpcHandlers() {
     'process-sdlp-link-with-dialog',
     async (_event, link: string, forceUntrusted: boolean = false) => {
       try {
-        console.log('IPC handler: Processing SDLP link via same path as protocol handler:', link);
+        console.log(
+          'IPC handler: Processing SDLP link via same path as protocol handler:',
+          link
+        );
         // Use exactly the same function call as the protocol handlers
         await processSDLPLink(link, forceUntrusted);
       } catch (error) {
@@ -237,7 +243,8 @@ async function processSDLPLink(
     if (!result.valid) {
       dialogTitle = '❌ Invalid SDLP Link';
       const truncatedLink = truncateSDLPLink(url, 80);
-      const linkDisplay = url.length > 80 ? `${truncatedLink} (truncated)` : truncatedLink;
+      const linkDisplay =
+        url.length > 80 ? `${truncatedLink} (truncated)` : truncatedLink;
       dialogDetail = `Link: ${linkDisplay}
 
 Error: ${result.error?.message || 'Unknown error'}
@@ -251,11 +258,12 @@ This link failed verification and cannot be trusted.`;
       // TODO: In a real implementation, this should check against a configurable trust store
       // or a list of known senders, not hardcoded values.
       const senderKey = result.sender || '';
-      
+
       // Check if the sender is our trusted key
       const trustedKeyId = trustedKey?.kid || '';
-      const isTrustedSender = trustedKeyId && senderKey.includes(trustedKeyId.split('#')[0]);
-      
+      const isTrustedSender =
+        trustedKeyId && senderKey.includes(trustedKeyId.split('#')[0]);
+
       isTrusted = !forceUntrusted && isTrustedSender;
 
       const trustIndicator = isTrusted ? '✅' : '⚠️';
@@ -264,7 +272,8 @@ This link failed verification and cannot be trusted.`;
         : 'Unknown/Untrusted Sender';
 
       const truncatedLink = truncateSDLPLink(url, 80);
-      const linkDisplay = url.length > 80 ? `${truncatedLink} (truncated)` : truncatedLink;
+      const linkDisplay =
+        url.length > 80 ? `${truncatedLink} (truncated)` : truncatedLink;
 
       if (isTrusted) {
         dialogTitle = `${trustIndicator} SDLP Link from Trusted Source`;
@@ -296,7 +305,9 @@ This link is cryptographically valid but comes from an unknown or untrusted sour
     }
 
     // Show blocker dialog with copy button for full link
-    const buttons = canProceed ? ['Proceed', 'Copy Full Link', 'Cancel'] : ['Copy Full Link', 'OK'];
+    const buttons = canProceed
+      ? ['Proceed', 'Copy Full Link', 'Cancel']
+      : ['Copy Full Link', 'OK'];
     const response = await dialog.showMessageBox(mainWindow!, {
       type: 'none',
       title: 'SDLP Link Processing',
@@ -309,7 +320,10 @@ This link is cryptographically valid but comes from an unknown or untrusted sour
     });
 
     // Handle copy button - just copy silently without confirmation dialog
-    if ((canProceed && response.response === 1) || (!canProceed && response.response === 0)) {
+    if (
+      (canProceed && response.response === 1) ||
+      (!canProceed && response.response === 0)
+    ) {
       clipboard.writeText(url);
       return;
     }
@@ -429,7 +443,10 @@ if (process.platform === 'darwin') {
   // macOS
   app.on('open-url', (event, url) => {
     event.preventDefault();
-    console.log('Protocol handler: Processing SDLP link via same path as IPC handler:', url);
+    console.log(
+      'Protocol handler: Processing SDLP link via same path as IPC handler:',
+      url
+    );
     if (url.startsWith('sdlp://')) {
       processSDLPLink(url);
     }
@@ -439,7 +456,10 @@ if (process.platform === 'darwin') {
   const sdlpUrl = process.argv.find(arg => arg.startsWith('sdlp://'));
   if (sdlpUrl) {
     app.whenReady().then(() => {
-      console.log('Command line: Processing SDLP link via same path as IPC handler:', sdlpUrl);
+      console.log(
+        'Command line: Processing SDLP link via same path as IPC handler:',
+        sdlpUrl
+      );
       processSDLPLink(sdlpUrl!);
     });
   }
