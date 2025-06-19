@@ -5,12 +5,14 @@ A comprehensive Electron application that demonstrates the Secure Deep Link Prot
 ## Features
 
 ### Core Protocol Features
+
 - **Protocol Handler**: Registers as the default handler for `sdlp://` links
 - **Cryptographic Verification**: Uses the SDLP SDK to verify link authenticity and integrity
 - **Command Execution**: Safely executes commands from verified payloads using `child_process.spawn`
 - **Security Dialogs**: User consent dialogs before executing any commands from deep links
 
 ### Interactive User Interface
+
 - **Tabbed Navigation**: Clean two-tab interface (Home and Tester)
 - **Protocol Introduction**: Educational content explaining SDLP benefits and security features
 - **Example Links**: Pre-built test links demonstrating valid, invalid, and untrusted scenarios
@@ -65,6 +67,7 @@ To test the application:
 2. The application will open with two main tabs:
 
 #### Home Tab
+
 - **Protocol Introduction**: Learn about SDLP and its security benefits
 - **Example Links**: Test the protocol with pre-built examples:
   - **Valid Link**: Demonstrates successful verification and execution
@@ -73,7 +76,8 @@ To test the application:
 - **Status Display**: View real-time verification results and command output
 
 #### Tester Tab
-- **Link Generator**: 
+
+- **Link Generator**:
   - Enter any command payload (e.g., `echo "Hello World!"`)
   - Click "Generate Link" to create a signed SDLP link
   - Use the "Copy" button to copy the link to clipboard
@@ -82,7 +86,9 @@ To test the application:
   - View detailed verification results including sender DID and payload
 
 #### Deep Link Testing
+
 You can also test the protocol handler directly:
+
 1. Generate a link using the Tester tab or CLI tool
 2. Open the link from your system: `open "sdlp://..."`
 3. A security dialog will appear asking for permission to proceed

@@ -28,8 +28,13 @@ for (const keyPath of possibleKeyPaths) {
 }
 
 if (!testKey) {
-  console.warn('Could not load test key for link generation from any of the attempted paths:', possibleKeyPaths);
-  console.warn('The application will still work for verification, but link generation will be disabled.');
+  console.warn(
+    'Could not load test key for link generation from any of the attempted paths:',
+    possibleKeyPaths
+  );
+  console.warn(
+    'The application will still work for verification, but link generation will be disabled.'
+  );
 }
 
 function createWindow(): void {
@@ -67,7 +72,7 @@ function setupIpcHandlers() {
   ipcMain.handle('generate-sdlp-link', async (_event, payload: string) => {
     try {
       const { createLink } = await import('@sdlp/sdk');
-      
+
       if (!testKey) {
         throw new Error('Test key not available for link generation');
       }
@@ -77,9 +82,9 @@ function setupIpcHandlers() {
         payloadType: 'text/plain',
         signer: {
           kid: testKey.kid,
-          privateKeyJwk: testKey
+          privateKeyJwk: testKey,
         },
-        compress: 'none'
+        compress: 'none',
       });
       return link;
     } catch (error) {
@@ -101,18 +106,24 @@ function setupIpcHandlers() {
   });
 
   // Handle SDLP link processing with dialog (for test links)
-  ipcMain.handle('process-sdlp-link-with-dialog', async (_event, link: string, forceUntrusted: boolean = false) => {
-    try {
-      // This will trigger the same flow as a real deep link
-      await processSDLPLink(link, forceUntrusted);
-    } catch (error) {
-      console.error('Failed to process SDLP link with dialog:', error);
-      throw error;
+  ipcMain.handle(
+    'process-sdlp-link-with-dialog',
+    async (_event, link: string, forceUntrusted: boolean = false) => {
+      try {
+        // This will trigger the same flow as a real deep link
+        await processSDLPLink(link, forceUntrusted);
+      } catch (error) {
+        console.error('Failed to process SDLP link with dialog:', error);
+        throw error;
+      }
     }
-  });
+  );
 }
 
-async function processSDLPLink(url: string, forceUntrusted: boolean = false): Promise<void> {
+async function processSDLPLink(
+  url: string,
+  forceUntrusted: boolean = false
+): Promise<void> {
   try {
     console.log('Processing SDLP link:', url);
 
@@ -133,19 +144,22 @@ async function processSDLPLink(url: string, forceUntrusted: boolean = false): Pr
       dialogType = 'error';
     } else {
       const payload = new TextDecoder().decode(result.payload);
-      
+
       // Determine trust level - for demo purposes, we'll consider our test key as trusted
-      // In a real implementation, this would check against a trust store or known senders
+      // TODO: In a real implementation, this should check against a configurable trust store
+      // or a list of known senders, not hardcoded values.
       const senderKey = result.sender || '';
-      isTrusted = !forceUntrusted && (
-        senderKey.includes('test-key-1') || 
-        senderKey.includes('trusted') ||
-        senderKey.includes('z6MkozXRpKZqLRoLWE6dUTWpSp2Sw2nRrEY') // Our actual test key identifier
-      );
-      
+      isTrusted =
+        !forceUntrusted &&
+        (senderKey.includes('test-key-1') ||
+          senderKey.includes('trusted') ||
+          senderKey.includes('z6MkozXRpKZqLRoLWE6dUTWpSp2Sw2nRrEY')); // Our actual test key identifier
+
       const trustIndicator = isTrusted ? '✅' : '⚠️';
-      const trustStatus = isTrusted ? 'Trusted Sender' : 'Unknown/Untrusted Sender';
-      
+      const trustStatus = isTrusted
+        ? 'Trusted Sender'
+        : 'Unknown/Untrusted Sender';
+
       if (isTrusted) {
         dialogMessage = `${trustIndicator} SDLP Link from Trusted Source\n\nLink: ${url}\n\nSender: ${result.sender}\nStatus: ${trustStatus}\n\nPayload: ${payload}\n\nThis link has been cryptographically verified and comes from a trusted source. Do you want to proceed with executing the command?`;
         dialogType = 'info';
@@ -153,7 +167,7 @@ async function processSDLPLink(url: string, forceUntrusted: boolean = false): Pr
         dialogMessage = `${trustIndicator} SDLP Link from Unknown Source\n\nLink: ${url}\n\nSender: ${result.sender}\nStatus: ${trustStatus}\n\nPayload: ${payload}\n\nThis link is cryptographically valid but comes from an unknown or untrusted source. Proceed with caution. Do you want to continue?`;
         dialogType = 'warning';
       }
-      
+
       canProceed = true;
     }
 
@@ -182,7 +196,9 @@ async function processSDLPLink(url: string, forceUntrusted: boolean = false): Pr
     const payload = new TextDecoder().decode(result.payload);
     console.log('Command payload:', payload);
 
-    // Better command parsing - handle quoted strings properly
+    // SECURITY: In a production application, never execute arbitrary commands from a payload.
+    // This is for demonstration purposes only. A real application should have a strict
+    // allowlist of commands and sanitize all arguments.
     const trimmedPayload = payload.trim();
 
     // For this MVP, we'll use a simple approach: if it starts with 'echo', handle it specially
@@ -238,7 +254,9 @@ async function processSDLPLink(url: string, forceUntrusted: boolean = false): Pr
         output: output,
         exitCode: code,
         switchToHome: true,
-        message: isTrusted ? undefined : 'This link is valid but from an untrusted source'
+        message: isTrusted
+          ? undefined
+          : 'This link is valid but from an untrusted source',
       });
     });
 
@@ -250,13 +268,13 @@ async function processSDLPLink(url: string, forceUntrusted: boolean = false): Pr
     });
   } catch (error) {
     console.error('Error processing SDLP link:', error);
-    
+
     // Show error dialog
     await dialog.showMessageBox(mainWindow!, {
       type: 'error',
       title: 'SDLP Processing Error',
       message: `❌ Failed to process SDLP link\n\nLink: ${url}\n\nError: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      buttons: ['OK']
+      buttons: ['OK'],
     });
   }
 }

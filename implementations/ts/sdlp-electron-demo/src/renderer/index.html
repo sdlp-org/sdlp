@@ -12,18 +12,22 @@
   <body class="bg-gray-100 min-h-screen">
     <div class="container mx-auto px-4 py-8">
       <header class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">SDLP Demo Application</h1>
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">
+          SDLP Demo Application
+        </h1>
         <p class="text-gray-600">Secure Deep Link Protocol Demonstration</p>
       </header>
 
       <main class="max-w-6xl mx-auto">
         <!-- Tab Navigation -->
         <div class="mb-6">
-          <nav class="flex space-x-1 bg-white rounded-lg shadow-sm p-1">
+          <nav class="flex space-x-1 bg-white rounded-lg shadow-sm p-1" role="tablist">
             <button
               id="home-tab"
               class="tab-button flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 bg-blue-500 text-white"
               data-tab="home"
+              role="tab"
+              aria-selected="true"
             >
               Home
             </button>
@@ -31,6 +35,8 @@
               id="examples-tab"
               class="tab-button flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 text-gray-500 hover:text-gray-700"
               data-tab="examples"
+              role="tab"
+              aria-selected="false"
             >
               Examples
             </button>
@@ -38,6 +44,8 @@
               id="tools-tab"
               class="tab-button flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 text-gray-500 hover:text-gray-700"
               data-tab="tools"
+              role="tab"
+              aria-selected="false"
             >
               Tools
             </button>
@@ -45,49 +53,96 @@
         </div>
 
         <!-- Home Tab Content -->
-        <div id="home-content" class="tab-content">
+        <div id="home-content" class="tab-content" role="tabpanel" aria-labelledby="home-tab">
           <!-- Status Section - Main Area -->
           <div id="status-section">
             <div id="status-card" class="bg-white rounded-lg shadow-md p-6">
               <div id="loading-state" class="text-center">
-                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                <div
+                  class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                >
+                  <svg
+                    class="w-8 h-8 text-blue-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    ></path>
                   </svg>
                 </div>
-                <h3 class="text-lg font-medium text-gray-800 mb-2">Ready to Verify Links</h3>
-                <p class="text-gray-600">Click on an example link or open an SDLP link from your system</p>
+                <h3 class="text-lg font-medium text-gray-800 mb-2">
+                  Ready to Verify Links
+                </h3>
+                <p class="text-gray-600">
+                  Click on an example link or open an SDLP link from your system
+                </p>
               </div>
 
               <div id="success-state" class="hidden">
                 <div class="flex items-center mb-4">
-                  <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  <div
+                    class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <svg
+                      class="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M5 13l4 4L19 7"
+                      ></path>
                     </svg>
                   </div>
                   <div>
-                    <h3 class="text-lg font-semibold text-green-800">Link Verified Successfully</h3>
+                    <h3 class="text-lg font-semibold text-green-800">
+                      Link Verified Successfully
+                    </h3>
                     <p id="sender-info" class="text-sm text-gray-600"></p>
                   </div>
                 </div>
                 <div class="bg-gray-50 rounded p-3 mb-4">
                   <p class="text-sm text-gray-700">
                     <strong>Command:</strong>
-                    <code id="command-text" class="bg-gray-200 px-2 py-1 rounded"></code>
+                    <code
+                      id="command-text"
+                      class="bg-gray-200 px-2 py-1 rounded"
+                    ></code>
                   </p>
                 </div>
               </div>
 
               <div id="error-state" class="hidden">
                 <div class="flex items-center mb-4">
-                  <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center mr-3">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  <div
+                    class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <svg
+                      class="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      ></path>
                     </svg>
                   </div>
                   <div>
-                    <h3 class="text-lg font-semibold text-red-800">Verification Failed</h3>
+                    <h3 class="text-lg font-semibold text-red-800">
+                      Verification Failed
+                    </h3>
                     <p id="error-message" class="text-sm text-gray-600"></p>
                   </div>
                 </div>
@@ -95,25 +150,46 @@
 
               <div id="untrusted-state" class="hidden">
                 <div class="flex items-center mb-4">
-                  <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                  <div
+                    class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <svg
+                      class="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                      ></path>
                     </svg>
                   </div>
                   <div>
-                    <h3 class="text-lg font-semibold text-yellow-800">Valid but Untrusted Link</h3>
+                    <h3 class="text-lg font-semibold text-yellow-800">
+                      Valid but Untrusted Link
+                    </h3>
                     <p id="untrusted-info" class="text-sm text-gray-600"></p>
                   </div>
                 </div>
                 <div class="bg-gray-50 rounded p-3 mb-4">
                   <p class="text-sm text-gray-700">
                     <strong>Command:</strong>
-                    <code id="untrusted-command-text" class="bg-gray-200 px-2 py-1 rounded"></code>
+                    <code
+                      id="untrusted-command-text"
+                      class="bg-gray-200 px-2 py-1 rounded"
+                    ></code>
                   </p>
                 </div>
-                <div class="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4">
+                <div
+                  class="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4"
+                >
                   <p class="text-sm text-yellow-800">
-                    <strong>⚠️ Warning:</strong> This link is cryptographically valid but comes from an unknown or untrusted source. Proceed with caution.
+                    <strong>⚠️ Warning:</strong> This link is cryptographically
+                    valid but comes from an unknown or untrusted source. Proceed
+                    with caution.
                   </p>
                 </div>
               </div>
@@ -123,7 +199,9 @@
           <!-- Terminal Section -->
           <div id="terminal-section" class="hidden mt-6">
             <div class="bg-white rounded-lg shadow-md p-6">
-              <h3 class="text-lg font-semibold text-gray-800 mb-4">Command Output</h3>
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                Command Output
+              </h3>
               <div class="bg-black rounded-lg p-4">
                 <div id="terminal"></div>
               </div>
@@ -135,22 +213,38 @@
             <h2 class="text-2xl font-bold text-gray-800 mb-4">What is SDLP?</h2>
             <div class="prose text-gray-600">
               <p class="mb-4">
-                The <strong>Secure Deep Link Protocol (SDLP)</strong> is a cryptographic protocol that ensures the integrity and authenticity of deep links. Unlike regular URLs, SDLP links are digitally signed, allowing you to verify:
+                The <strong>Secure Deep Link Protocol (SDLP)</strong> is a
+                cryptographic protocol that ensures the integrity and
+                authenticity of deep links. Unlike regular URLs, SDLP links are
+                digitally signed, allowing you to verify:
               </p>
               <ul class="list-disc list-inside mb-4 space-y-2">
-                <li><strong>Who sent the link</strong> - Cryptographic proof of the sender's identity</li>
-                <li><strong>Content integrity</strong> - Guarantee that the payload hasn't been tampered with</li>
-                <li><strong>Trust level</strong> - Clear indication of whether the sender is trusted</li>
+                <li>
+                  <strong>Who sent the link</strong> - Cryptographic proof of
+                  the sender's identity
+                </li>
+                <li>
+                  <strong>Content integrity</strong> - Guarantee that the
+                  payload hasn't been tampered with
+                </li>
+                <li>
+                  <strong>Trust level</strong> - Clear indication of whether the
+                  sender is trusted
+                </li>
               </ul>
               <p>
-                This prevents common attacks like link tampering, phishing, and man-in-the-middle modifications that plague traditional deep links.
+                This prevents common attacks like link tampering, phishing, and
+                man-in-the-middle modifications that plague traditional deep
+                links.
               </p>
             </div>
           </div>
 
           <!-- Getting Started -->
           <div class="bg-white rounded-lg shadow-md p-6 mt-6">
-            <h3 class="text-xl font-semibold text-gray-800 mb-4">Getting Started</h3>
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">
+              Getting Started
+            </h3>
             <p class="text-gray-600 mb-4">
               Explore the SDLP protocol through interactive examples and tools:
             </p>
@@ -158,7 +252,8 @@
               <div class="border rounded-lg p-4">
                 <h4 class="font-medium text-blue-700 mb-2">📋 Examples</h4>
                 <p class="text-sm text-gray-600 mb-3">
-                  View detailed examples of SDLP links with formatted payloads, keys, and verification results.
+                  View detailed examples of SDLP links with formatted payloads,
+                  keys, and verification results.
                 </p>
                 <button
                   id="go-to-examples"
@@ -170,7 +265,8 @@
               <div class="border rounded-lg p-4">
                 <h4 class="font-medium text-green-700 mb-2">🛠️ Tools</h4>
                 <p class="text-sm text-gray-600 mb-3">
-                  Generate your own SDLP links and verify existing ones with our interactive tools.
+                  Generate your own SDLP links and verify existing ones with our
+                  interactive tools.
                 </p>
                 <button
                   id="go-to-tools"
@@ -184,14 +280,18 @@
         </div>
 
         <!-- Examples Tab Content -->
-        <div id="examples-content" class="tab-content hidden">
+        <div id="examples-content" class="tab-content hidden" role="tabpanel" aria-labelledby="examples-tab">
           <div class="space-y-6">
             <!-- Valid Link Example -->
             <div class="bg-white rounded-lg shadow-md p-6">
               <div class="flex items-center justify-between mb-4">
                 <div>
-                  <h3 class="text-xl font-semibold text-green-700">✅ Valid SDLP Link</h3>
-                  <p class="text-gray-600">A properly signed link that will verify successfully</p>
+                  <h3 class="text-xl font-semibold text-green-700">
+                    ✅ Valid SDLP Link
+                  </h3>
+                  <p class="text-gray-600">
+                    A properly signed link that will verify successfully
+                  </p>
                 </div>
                 <button
                   id="example-valid-link"
@@ -200,26 +300,37 @@
                   Test This Link
                 </button>
               </div>
-              
+
               <div class="space-y-4">
                 <div>
                   <h4 class="font-medium text-gray-800 mb-2">Payload</h4>
                   <div class="bg-gray-50 rounded-lg p-3">
-                    <pre id="valid-payload" class="text-sm text-gray-700 font-mono"></pre>
+                    <pre
+                      id="valid-payload"
+                      class="text-sm text-gray-700 font-mono"
+                    ></pre>
                   </div>
                 </div>
-                
+
                 <div>
-                  <h4 class="font-medium text-gray-800 mb-2">Signing Key (Public)</h4>
+                  <h4 class="font-medium text-gray-800 mb-2">
+                    Signing Key (Public)
+                  </h4>
                   <div class="bg-gray-50 rounded-lg p-3">
-                    <pre id="valid-key" class="text-sm text-gray-700 font-mono"></pre>
+                    <pre
+                      id="valid-key"
+                      class="text-sm text-gray-700 font-mono"
+                    ></pre>
                   </div>
                 </div>
-                
+
                 <div>
                   <h4 class="font-medium text-gray-800 mb-2">SDLP Link</h4>
                   <div class="bg-gray-50 rounded-lg p-3 overflow-hidden">
-                    <pre id="valid-link" class="text-sm text-gray-700 font-mono break-all whitespace-pre-wrap"></pre>
+                    <pre
+                      id="valid-link"
+                      class="text-sm text-gray-700 font-mono break-all whitespace-pre-wrap"
+                    ></pre>
                   </div>
                 </div>
               </div>
@@ -229,8 +340,12 @@
             <div class="bg-white rounded-lg shadow-md p-6">
               <div class="flex items-center justify-between mb-4">
                 <div>
-                  <h3 class="text-xl font-semibold text-red-700">❌ Invalid SDLP Link</h3>
-                  <p class="text-gray-600">A link with a bad signature that will fail verification</p>
+                  <h3 class="text-xl font-semibold text-red-700">
+                    ❌ Invalid SDLP Link
+                  </h3>
+                  <p class="text-gray-600">
+                    A link with a bad signature that will fail verification
+                  </p>
                 </div>
                 <button
                   id="example-invalid-link"
@@ -239,25 +354,32 @@
                   Test This Link
                 </button>
               </div>
-              
+
               <div class="space-y-4">
                 <div>
                   <h4 class="font-medium text-gray-800 mb-2">Payload</h4>
                   <div class="bg-gray-50 rounded-lg p-3">
-                    <pre class="text-sm text-gray-700 font-mono">echo "This link has been tampered with!"</pre>
+                    <pre class="text-sm text-gray-700 font-mono">
+echo "This link has been tampered with!"</pre
+                    >
                   </div>
                 </div>
-                
+
                 <div>
-                  <h4 class="font-medium text-gray-800 mb-2">SDLP Link (Corrupted)</h4>
+                  <h4 class="font-medium text-gray-800 mb-2">
+                    SDLP Link (Corrupted)
+                  </h4>
                   <div class="bg-gray-50 rounded-lg p-3">
-                    <pre class="text-sm text-gray-700 font-mono break-all">sdlp://invalid-signature-example</pre>
+                    <pre class="text-sm text-gray-700 font-mono break-all">
+sdlp://invalid-signature-example</pre
+                    >
                   </div>
                 </div>
-                
+
                 <div class="bg-red-50 border border-red-200 rounded-lg p-3">
                   <p class="text-sm text-red-800">
-                    <strong>⚠️ Note:</strong> This link has been intentionally corrupted to demonstrate signature verification failure.
+                    <strong>⚠️ Note:</strong> This link has been intentionally
+                    corrupted to demonstrate signature verification failure.
                   </p>
                 </div>
               </div>
@@ -267,8 +389,12 @@
             <div class="bg-white rounded-lg shadow-md p-6">
               <div class="flex items-center justify-between mb-4">
                 <div>
-                  <h3 class="text-xl font-semibold text-yellow-700">⚠️ Untrusted SDLP Link</h3>
-                  <p class="text-gray-600">A valid link from an unknown/untrusted source</p>
+                  <h3 class="text-xl font-semibold text-yellow-700">
+                    ⚠️ Untrusted SDLP Link
+                  </h3>
+                  <p class="text-gray-600">
+                    A valid link from an unknown/untrusted source
+                  </p>
                 </div>
                 <button
                   id="example-untrusted-link"
@@ -277,32 +403,47 @@
                   Test This Link
                 </button>
               </div>
-              
+
               <div class="space-y-4">
                 <div>
                   <h4 class="font-medium text-gray-800 mb-2">Payload</h4>
                   <div class="bg-gray-50 rounded-lg p-3">
-                    <pre id="untrusted-payload" class="text-sm text-gray-700 font-mono"></pre>
+                    <pre
+                      id="untrusted-payload"
+                      class="text-sm text-gray-700 font-mono"
+                    ></pre>
                   </div>
                 </div>
-                
+
                 <div>
-                  <h4 class="font-medium text-gray-800 mb-2">Signing Key (Public)</h4>
+                  <h4 class="font-medium text-gray-800 mb-2">
+                    Signing Key (Public)
+                  </h4>
                   <div class="bg-gray-50 rounded-lg p-3">
-                    <pre id="untrusted-key" class="text-sm text-gray-700 font-mono"></pre>
+                    <pre
+                      id="untrusted-key"
+                      class="text-sm text-gray-700 font-mono"
+                    ></pre>
                   </div>
                 </div>
-                
+
                 <div>
                   <h4 class="font-medium text-gray-800 mb-2">SDLP Link</h4>
                   <div class="bg-gray-50 rounded-lg p-3 overflow-hidden">
-                    <pre id="untrusted-link" class="text-sm text-gray-700 font-mono break-all whitespace-pre-wrap"></pre>
+                    <pre
+                      id="untrusted-link"
+                      class="text-sm text-gray-700 font-mono break-all whitespace-pre-wrap"
+                    ></pre>
                   </div>
                 </div>
-                
-                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+
+                <div
+                  class="bg-yellow-50 border border-yellow-200 rounded-lg p-3"
+                >
                   <p class="text-sm text-yellow-800">
-                    <strong>⚠️ Note:</strong> This link is cryptographically valid but comes from an unknown sender. Always verify the source before proceeding.
+                    <strong>⚠️ Note:</strong> This link is cryptographically
+                    valid but comes from an unknown sender. Always verify the
+                    source before proceeding.
                   </p>
                 </div>
               </div>
@@ -311,16 +452,23 @@
         </div>
 
         <!-- Tools Tab Content -->
-        <div id="tools-content" class="tab-content hidden">
+        <div id="tools-content" class="tab-content hidden" role="tabpanel" aria-labelledby="tools-tab">
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Link Generator -->
             <div class="bg-white rounded-lg shadow-md p-6">
-              <h3 class="text-xl font-semibold text-gray-800 mb-4">🔗 Link Generator</h3>
-              <p class="text-gray-600 mb-4">Create a signed SDLP link from your payload</p>
-              
+              <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                🔗 Link Generator
+              </h3>
+              <p class="text-gray-600 mb-4">
+                Create a signed SDLP link from your payload
+              </p>
+
               <div class="space-y-4">
                 <div>
-                  <label for="payload-input" class="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    for="payload-input"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Payload (Command to execute)
                   </label>
                   <textarea
@@ -330,22 +478,25 @@
                     placeholder='echo "Hello from SDLP!"'
                   ></textarea>
                 </div>
-                
+
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <p class="text-sm text-blue-800">
-                    <strong>🔑 Signing Key:</strong> Links will be signed with the trusted demo key, making them appear as trusted sources.
+                    <strong>🔑 Signing Key:</strong> Links will be signed with
+                    the trusted demo key, making them appear as trusted sources.
                   </p>
                 </div>
-                
+
                 <button
                   id="generate-link-btn"
                   class="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
                 >
                   Generate SDLP Link
                 </button>
-                
+
                 <div id="generated-link-section" class="hidden">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Generated Link</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >Generated Link</label
+                  >
                   <div class="flex mb-3">
                     <input
                       id="generated-link"
@@ -372,12 +523,19 @@
 
             <!-- Link Verifier -->
             <div class="bg-white rounded-lg shadow-md p-6">
-              <h3 class="text-xl font-semibold text-gray-800 mb-4">🔍 Link Verifier</h3>
-              <p class="text-gray-600 mb-4">Verify the authenticity of an SDLP link</p>
-              
+              <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                🔍 Link Verifier
+              </h3>
+              <p class="text-gray-600 mb-4">
+                Verify the authenticity of an SDLP link
+              </p>
+
               <div class="space-y-4">
                 <div>
-                  <label for="link-input" class="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    for="link-input"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     SDLP Link
                   </label>
                   <textarea
@@ -387,14 +545,14 @@
                     placeholder="Paste an SDLP link here..."
                   ></textarea>
                 </div>
-                
+
                 <button
                   id="verify-link-btn"
                   class="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
                 >
                   Verify Link
                 </button>
-                
+
                 <div id="verification-result" class="hidden">
                   <div class="border rounded-lg p-4">
                     <div id="verification-status"></div>
