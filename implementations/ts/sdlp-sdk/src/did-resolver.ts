@@ -8,6 +8,29 @@ import bs58 from 'bs58';
 const fetch = globalThis.fetch;
 
 /**
+ * Helper function to check if we're in a test environment
+ */
+function isTestEnvironment(): boolean {
+  return process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
+}
+
+/**
+ * Helper function to check if a DID is a test domain
+ */
+function isTestDomain(did: string): boolean {
+  return did.includes('acme.example') || did.includes('.example');
+}
+
+/**
+ * Helper function to conditionally log warnings (only in non-test environments for non-test domains)
+ */
+function logWarningIfAppropriate(did: string, message: string, error?: unknown): void {
+  if (!isTestDomain(did) && !isTestEnvironment()) {
+    console.warn(message, error);
+  }
+}
+
+/**
  * DID Document structure
  */
 export interface DidDocument {
@@ -55,10 +78,7 @@ export async function resolveDid(
       throw new Error(`Unsupported DID method: ${did}`);
     }
   } catch (error) {
-    // Only log errors for non-test domains
-    if (!did.includes('acme.example') && !did.includes('.example')) {
-      console.warn(`Failed to resolve DID ${did}:`, error);
-    }
+    logWarningIfAppropriate(did, `Failed to resolve DID ${did}:`, error);
     return null;
   }
 }
@@ -102,7 +122,7 @@ function resolveDidKey(did: string): Record<string, unknown> | null {
       x: base64url(publicKeyBytes),
     };
   } catch (error) {
-    console.warn(`Failed to parse did:key ${did}:`, error);
+    logWarningIfAppropriate(did, `Failed to parse did:key ${did}:`, error);
     return null;
   }
 }
@@ -117,8 +137,8 @@ async function resolveDidWeb(
     // Extract domain from did:web:domain format
     const domain = did.replace('did:web:', '');
 
-    // Handle test domains gracefully in test environments
-    if (domain === 'acme.example' || domain.endsWith('.example')) {
+    // Handle test domains gracefully
+    if (isTestDomain(did)) {
       return null; // Fail silently for test domains
     }
 
@@ -166,11 +186,7 @@ async function resolveDidWeb(
 
     throw new Error('No compatible verification method found in DID document');
   } catch (error) {
-    // Only log errors for non-test domains
-    const domain = did.replace('did:web:', '');
-    if (!domain.endsWith('.example')) {
-      console.warn(`Failed to resolve did:web ${did}:`, error);
-    }
+    logWarningIfAppropriate(did, `Failed to resolve did:web ${did}:`, error);
     return null;
   }
 }
