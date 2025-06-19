@@ -99,9 +99,20 @@ function setupIpcHandlers() {
       throw error;
     }
   });
+
+  // Handle SDLP link processing with dialog (for test links)
+  ipcMain.handle('process-sdlp-link-with-dialog', async (_event, link: string, forceUntrusted: boolean = false) => {
+    try {
+      // This will trigger the same flow as a real deep link
+      await processSDLPLink(link, forceUntrusted);
+    } catch (error) {
+      console.error('Failed to process SDLP link with dialog:', error);
+      throw error;
+    }
+  });
 }
 
-async function processSDLPLink(url: string): Promise<void> {
+async function processSDLPLink(url: string, forceUntrusted: boolean = false): Promise<void> {
   try {
     console.log('Processing SDLP link:', url);
 
@@ -203,6 +214,7 @@ async function processSDLPLink(url: string): Promise<void> {
         command: payload,
         output: output,
         exitCode: code,
+        switchToHome: true,
       });
     });
 
