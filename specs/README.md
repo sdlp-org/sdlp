@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="../assets/logo.png" alt="Project Logo" width="200"/>
+</div>
+
 # SDLP Specifications
 
 This directory contains the **authoritative SDLP specification**, test fixtures, test vectors, and validation tools.

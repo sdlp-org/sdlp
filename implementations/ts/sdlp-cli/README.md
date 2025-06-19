@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="../../../../assets/logo.png" alt="Project Logo" width="200"/>
+</div>
+
 # SDLP CLI
 
 A command-line interface for the Secure Deep Link Protocol (SDLP) v1.0.

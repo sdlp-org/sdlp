@@ -1,15 +1,30 @@
 import { Terminal } from '@xterm/xterm';
 import { getHighlighter } from 'shiki';
 
+// Define a type for the data received from the main process
+interface SDLPResult {
+  status: 'success' | 'untrusted' | 'error';
+  from?: string;
+  command?: string;
+  output?: string;
+  exitCode?: number;
+  message?: string;
+  switchToHome?: boolean;
+}
+
 // Extend the Window interface to include our electronAPI
 declare global {
   interface Window {
     electronAPI: {
-      onSDLPResult: (callback: (data: any) => void) => void;
+      onSDLPResult: (callback: (data: SDLPResult) => void) => void;
       removeAllListeners: (channel: string) => void;
       generateSDLPLink: (payload: string) => Promise<string>;
+      generateUntrustedSDLPLink: (payload: string) => Promise<string>;
       verifySDLPLink: (link: string) => Promise<any>;
-      processSDLPLinkWithDialog: (link: string, forceUntrusted?: boolean) => Promise<void>;
+      processSDLPLinkWithDialog: (
+        link: string,
+        forceUntrusted?: boolean
+      ) => Promise<void>;
     };
   }
 }
@@ -49,10 +64,13 @@ class SDLPRenderer {
   private setupTabNavigation() {
     const tabButtons = document.querySelectorAll('.tab-button');
     console.log('Found tab buttons:', tabButtons.length);
-    
+
     tabButtons.forEach((button, index) => {
-      console.log(`Setting up tab button ${index}:`, button.getAttribute('data-tab'));
-      button.addEventListener('click', (e) => {
+      console.log(
+        `Setting up tab button ${index}:`,
+        button.getAttribute('data-tab')
+      );
+      button.addEventListener('click', e => {
         console.log('Tab button clicked:', e.target);
         const target = e.target as HTMLButtonElement;
         const tabName = target.getAttribute('data-tab');
@@ -125,7 +143,9 @@ class SDLPRenderer {
         console.log('Valid link button clicked!');
         try {
           // Generate a valid link using our test fixtures
-          const validLink = await window.electronAPI.generateSDLPLink('echo "Hello from a valid SDLP link!"');
+          const validLink = await window.electronAPI.generateSDLPLink(
+            'echo "Hello from a valid SDLP link!"'
+          );
           await window.electronAPI.processSDLPLinkWithDialog(validLink);
         } catch (error) {
           console.error('Failed to generate valid example link:', error);
@@ -152,9 +172,11 @@ class SDLPRenderer {
       untrustedLinkBtn.addEventListener('click', async () => {
         console.log('Untrusted link button clicked!');
         try {
-          // For the untrusted example, we'll generate a valid link but mark it as untrusted
-          const untrustedLink = await window.electronAPI.generateSDLPLink('echo "This is from an untrusted source"');
-          await window.electronAPI.processSDLPLinkWithDialog(untrustedLink, true);
+          // Generate a link using the untrusted key
+          const untrustedLink = await window.electronAPI.generateUntrustedSDLPLink(
+            'echo "This is from an untrusted source"'
+          );
+          await window.electronAPI.processSDLPLinkWithDialog(untrustedLink);
         } catch (error) {
           console.error('Failed to generate untrusted example link:', error);
         }
@@ -167,9 +189,15 @@ class SDLPRenderer {
   private setupTesterFunctionality() {
     // Link Generator
     const generateBtn = document.getElementById('generate-link-btn');
-    const payloadInput = document.getElementById('payload-input') as HTMLTextAreaElement;
-    const generatedLinkSection = document.getElementById('generated-link-section');
-    const generatedLinkInput = document.getElementById('generated-link') as HTMLInputElement;
+    const payloadInput = document.getElementById(
+      'payload-input'
+    ) as HTMLTextAreaElement;
+    const generatedLinkSection = document.getElementById(
+      'generated-link-section'
+    );
+    const generatedLinkInput = document.getElementById(
+      'generated-link'
+    ) as HTMLInputElement;
     const copyBtn = document.getElementById('copy-link-btn');
 
     if (generateBtn && payloadInput) {
@@ -185,18 +213,21 @@ class SDLPRenderer {
           generateBtn.setAttribute('disabled', 'true');
 
           const link = await window.electronAPI.generateSDLPLink(payload);
-          
+
           if (generatedLinkInput) {
             generatedLinkInput.value = link;
           }
-          
+
           if (generatedLinkSection) {
             generatedLinkSection.classList.remove('hidden');
           }
         } catch (error) {
           console.error('Failed to generate link:', error);
           // Show error in UI instead of alert
-          this.showNotification('Failed to generate link: ' + (error as Error).message, 'error');
+          this.showNotification(
+            'Failed to generate link: ' + (error as Error).message,
+            'error'
+          );
         } finally {
           generateBtn.textContent = 'Generate SDLP Link';
           generateBtn.removeAttribute('disabled');
@@ -221,7 +252,9 @@ class SDLPRenderer {
     }
 
     // Open generated link button
-    const openGeneratedLinkBtn = document.getElementById('open-generated-link-btn');
+    const openGeneratedLinkBtn = document.getElementById(
+      'open-generated-link-btn'
+    );
     if (openGeneratedLinkBtn && generatedLinkInput) {
       openGeneratedLinkBtn.addEventListener('click', async () => {
         const link = generatedLinkInput.value.trim();
@@ -230,7 +263,10 @@ class SDLPRenderer {
             await window.electronAPI.processSDLPLinkWithDialog(link);
           } catch (error) {
             console.error('Failed to open generated link:', error);
-            this.showNotification('Failed to open link: ' + (error as Error).message, 'error');
+            this.showNotification(
+              'Failed to open link: ' + (error as Error).message,
+              'error'
+            );
           }
         }
       });
@@ -238,7 +274,9 @@ class SDLPRenderer {
 
     // Link Verifier
     const verifyBtn = document.getElementById('verify-link-btn');
-    const linkInput = document.getElementById('link-input') as HTMLTextAreaElement;
+    const linkInput = document.getElementById(
+      'link-input'
+    ) as HTMLTextAreaElement;
     const verificationResult = document.getElementById('verification-result');
     const verificationStatus = document.getElementById('verification-status');
     const verificationDetails = document.getElementById('verification-details');
@@ -256,9 +294,13 @@ class SDLPRenderer {
           verifyBtn.setAttribute('disabled', 'true');
 
           const result = await window.electronAPI.verifySDLPLink(link);
-          
-          this.displayVerificationResult(result, verificationStatus, verificationDetails);
-          
+
+          this.displayVerificationResult(
+            result,
+            verificationStatus,
+            verificationDetails
+          );
+
           if (verificationResult) {
             verificationResult.classList.remove('hidden');
           }
@@ -269,7 +311,7 @@ class SDLPRenderer {
             verificationStatus,
             verificationDetails
           );
-          
+
           if (verificationResult) {
             verificationResult.classList.remove('hidden');
           }
@@ -281,7 +323,11 @@ class SDLPRenderer {
     }
   }
 
-  private displayVerificationResult(result: any, statusElement: HTMLElement | null, detailsElement: HTMLElement | null) {
+  private displayVerificationResult(
+    result: any,
+    statusElement: HTMLElement | null,
+    detailsElement: HTMLElement | null
+  ) {
     if (!statusElement || !detailsElement) return;
 
     // Get the actions element
@@ -298,8 +344,10 @@ class SDLPRenderer {
           <span class="font-medium text-green-800">Valid Link</span>
         </div>
       `;
-      
-      const payload = result.payload ? new TextDecoder().decode(result.payload) : 'N/A';
+
+      const payload = result.payload
+        ? new TextDecoder().decode(result.payload)
+        : 'N/A';
       detailsElement.innerHTML = `
         <div class="space-y-2">
           <div><strong>Sender:</strong> ${result.sender || 'Unknown'}</div>
@@ -310,24 +358,34 @@ class SDLPRenderer {
       // Show the "Open Link" button for valid links
       if (verificationActions) {
         verificationActions.classList.remove('hidden');
-        
+
         // Set up the open verified link button if not already set up
-        const openVerifiedLinkBtn = document.getElementById('open-verified-link-btn');
+        const openVerifiedLinkBtn = document.getElementById(
+          'open-verified-link-btn'
+        );
         if (openVerifiedLinkBtn) {
           // Remove any existing listeners to avoid duplicates
           const newBtn = openVerifiedLinkBtn.cloneNode(true) as HTMLElement;
-          openVerifiedLinkBtn.parentNode?.replaceChild(newBtn, openVerifiedLinkBtn);
-          
+          openVerifiedLinkBtn.parentNode?.replaceChild(
+            newBtn,
+            openVerifiedLinkBtn
+          );
+
           // Add the click listener
           newBtn.addEventListener('click', async () => {
-            const linkInput = document.getElementById('link-input') as HTMLTextAreaElement;
+            const linkInput = document.getElementById(
+              'link-input'
+            ) as HTMLTextAreaElement;
             const link = linkInput?.value.trim();
             if (link) {
               try {
                 await window.electronAPI.processSDLPLinkWithDialog(link);
               } catch (error) {
                 console.error('Failed to open verified link:', error);
-                this.showNotification('Failed to open link: ' + (error as Error).message, 'error');
+                this.showNotification(
+                  'Failed to open link: ' + (error as Error).message,
+                  'error'
+                );
               }
             }
           });
@@ -344,7 +402,7 @@ class SDLPRenderer {
           <span class="font-medium text-red-800">Invalid Link</span>
         </div>
       `;
-      
+
       detailsElement.innerHTML = `
         <div class="text-red-600">
           <strong>Error:</strong> ${result.error?.message || 'Unknown error'}
@@ -358,7 +416,10 @@ class SDLPRenderer {
     }
   }
 
-  private async processSDLPLinkAsNormal(link: string, forceUntrusted: boolean = false) {
+  private async processSDLPLinkAsNormal(
+    link: string,
+    forceUntrusted: boolean = false
+  ) {
     // Send the link to the main process to trigger the normal deep link flow
     // This will show the dialog and then process the link normally
     try {
@@ -371,14 +432,17 @@ class SDLPRenderer {
     }
   }
 
-  private async simulateNormalFlow(link: string, forceUntrusted: boolean = false) {
+  private async simulateNormalFlow(
+    link: string,
+    forceUntrusted: boolean = false
+  ) {
     // Switch to home tab to show results
     this.switchTab('home');
-    
+
     // Simulate the deep link processing that would normally happen in main process
     try {
       const result = await window.electronAPI.verifySDLPLink(link);
-      
+
       if (result.valid && forceUntrusted) {
         // Show as untrusted for demo purposes
         this.handleSDLPResult({
@@ -386,13 +450,13 @@ class SDLPRenderer {
           from: result.sender,
           command: new TextDecoder().decode(result.payload),
           message: 'This link is valid but from an untrusted source',
-          switchToHome: true
+          switchToHome: true,
         });
       } else if (result.valid) {
         // For the example, simulate the actual command output
         const command = new TextDecoder().decode(result.payload);
         let simulatedOutput = '';
-        
+
         // Simulate the output based on the command
         if (command.includes('echo')) {
           // Extract the echo message and simulate the output
@@ -409,31 +473,31 @@ class SDLPRenderer {
         } else {
           simulatedOutput = `Simulated output for: ${command}`;
         }
-        
+
         this.handleSDLPResult({
           status: 'success',
           from: result.sender,
           command: command,
           output: simulatedOutput,
-          switchToHome: true
+          switchToHome: true,
         });
       } else {
         this.handleSDLPResult({
           status: 'error',
           message: result.error?.message || 'Invalid link',
-          switchToHome: true
+          switchToHome: true,
         });
       }
     } catch (error) {
       this.handleSDLPResult({
         status: 'error',
         message: (error as Error).message,
-        switchToHome: true
+        switchToHome: true,
       });
     }
   }
 
-  private handleSDLPResult(data: any) {
+  private handleSDLPResult(data: SDLPResult) {
     console.log('Received SDLP result:', data);
 
     // Switch to home tab if requested (for deep link interception)
@@ -447,15 +511,15 @@ class SDLPRenderer {
     if (data.status === 'success') {
       this.showSuccessState(data);
       if (data.output) {
-        this.showTerminalOutput(data.output);
+        this.showTerminalOutput(data.output, false);
       }
     } else if (data.status === 'untrusted') {
       this.showUntrustedState(data);
       if (data.output) {
-        this.showTerminalOutput(data.output);
+        this.showTerminalOutput(data.output, true);
       }
     } else if (data.status === 'error') {
-      this.showErrorState(data.message);
+      this.showErrorState(data.message || 'An unknown error occurred.');
     }
   }
 
@@ -491,7 +555,7 @@ class SDLPRenderer {
     if (untrustedInfo) untrustedInfo.textContent = '';
   }
 
-  private showSuccessState(data: any) {
+  private showSuccessState(data: SDLPResult) {
     // Show success state
     const successState = document.getElementById('success-state');
     if (successState) successState.classList.remove('hidden');
@@ -501,37 +565,39 @@ class SDLPRenderer {
     if (senderInfo) {
       // Determine if sender is trusted (same logic as main process)
       const senderKey = data.from || '';
-      const isTrusted = senderKey.includes('test-key-1') || 
-                       senderKey.includes('trusted') ||
-                       senderKey.includes('z6MkozXRpKZqLRoLWE6dUTWpSp2Sw2nRrEY');
-      const trustIndicator = isTrusted ? '✅' : '⚠️';
+      const isTrusted =
+        senderKey.includes('test-key-1') ||
+        senderKey.includes('trusted') ||
+        senderKey.includes('z6MkozXRpKZqLRoLWE6dUTWpSp2Sw2nRrEY');
       const trustStatus = isTrusted ? 'Trusted' : 'Unknown';
-      
-      senderInfo.innerHTML = `${trustIndicator} Verified from: <strong>${data.from}</strong> (${trustStatus})`;
+
+      senderInfo.innerHTML = `<strong>${data.from}</strong> (${trustStatus})`;
     }
 
     // Update command text
     const commandText = document.getElementById('command-text');
     if (commandText) {
-      commandText.textContent = data.command;
+      commandText.textContent = data.command || '';
     }
   }
 
-  private showUntrustedState(data: any) {
+  private showUntrustedState(data: SDLPResult) {
     // Show untrusted state
     const untrustedState = document.getElementById('untrusted-state');
     if (untrustedState) untrustedState.classList.remove('hidden');
 
-    // Update untrusted info
+    // Update untrusted info (sender information)
     const untrustedInfo = document.getElementById('untrusted-info');
     if (untrustedInfo) {
-      untrustedInfo.textContent = `From: ${data.from} - ${data.message}`;
+      untrustedInfo.innerHTML = `<strong>${data.from}</strong> (Untrusted Source)`;
     }
 
     // Update command text
-    const untrustedCommandText = document.getElementById('untrusted-command-text');
+    const untrustedCommandText = document.getElementById(
+      'untrusted-command-text'
+    );
     if (untrustedCommandText) {
-      untrustedCommandText.textContent = data.command;
+      untrustedCommandText.textContent = data.command || '';
     }
   }
 
@@ -547,31 +613,47 @@ class SDLPRenderer {
     }
   }
 
-  private showTerminalOutput(output: string) {
-    // Show terminal section
-    const terminalSection = document.getElementById('terminal-section');
-    if (terminalSection) terminalSection.classList.remove('hidden');
+  private showTerminalOutput(output: string, isUntrusted: boolean = false) {
+    const cleanOutput = output.trim();
+    const htmlOutput = cleanOutput
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\n/g, '<br>');
 
-    // Get the terminal element and display output directly as HTML
-    const terminalElement = document.getElementById('terminal');
-    if (terminalElement) {
-      // Clean up the output and convert to HTML
-      const cleanOutput = output.trim();
-      const htmlOutput = cleanOutput
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/\n/g, '<br>');
-
-      terminalElement.innerHTML = `<div class="terminal-content text-green-400 font-mono">${htmlOutput}</div>`;
+    if (isUntrusted) {
+      // Show output in the untrusted command & output section
+      const untrustedOutputSection = document.getElementById('untrusted-output-section');
+      const untrustedOutput = document.getElementById('untrusted-output');
+      
+      if (untrustedOutputSection) untrustedOutputSection.classList.remove('hidden');
+      if (untrustedOutput) {
+        untrustedOutput.innerHTML = htmlOutput;
+      }
+    } else {
+      // Show output in the success command & output section
+      const commandOutputSection = document.getElementById('command-output-section');
+      const commandOutput = document.getElementById('command-output');
+      
+      if (commandOutputSection) commandOutputSection.classList.remove('hidden');
+      if (commandOutput) {
+        commandOutput.innerHTML = htmlOutput;
+      }
     }
+
+    // Keep the old terminal section for backward compatibility, but hide it
+    const terminalSection = document.getElementById('terminal-section');
+    if (terminalSection) terminalSection.classList.add('hidden');
   }
 
-  private showNotification(message: string, type: 'success' | 'error' | 'warning' = 'error') {
+  private showNotification(
+    message: string,
+    type: 'success' | 'error' | 'warning' = 'error'
+  ) {
     // Create a simple notification system using console for now
     // In a real implementation, you might want to show a toast or modal
     console.log(`[${type.toUpperCase()}] ${message}`);
-    
+
     // For now, we'll just log to console, but you could implement a proper notification UI here
     // This is a simple fallback to avoid using alert()
   }
@@ -582,9 +664,11 @@ class SDLPRenderer {
       const validPayload = 'echo "Hello from a valid SDLP link!"';
       const untrustedPayload = 'echo "This is from an untrusted source"';
 
-      // Generate the valid link
+      // Generate the valid link using trusted key
       const validLink = await window.electronAPI.generateSDLPLink(validPayload);
-      const untrustedLink = await window.electronAPI.generateSDLPLink(untrustedPayload);
+      // Generate the untrusted link using untrusted key
+      const untrustedLink =
+        await window.electronAPI.generateUntrustedSDLPLink(untrustedPayload);
 
       // Populate valid example
       const validPayloadElement = document.getElementById('valid-payload');
@@ -612,7 +696,8 @@ class SDLPRenderer {
       }
 
       // Populate untrusted example
-      const untrustedPayloadElement = document.getElementById('untrusted-payload');
+      const untrustedPayloadElement =
+        document.getElementById('untrusted-payload');
       const untrustedLinkElement = document.getElementById('untrusted-link');
       const untrustedKeyElement = document.getElementById('untrusted-key');
 
@@ -635,7 +720,6 @@ class SDLPRenderer {
       if (untrustedLinkElement) {
         untrustedLinkElement.textContent = untrustedLink;
       }
-
     } catch (error) {
       console.error('Failed to populate examples:', error);
     }
@@ -645,22 +729,28 @@ class SDLPRenderer {
 // Initialize the renderer when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM loaded, initializing SDLP renderer...');
-  
+
   // Check if electronAPI is available
   if (typeof window.electronAPI === 'undefined') {
-    console.error('electronAPI is not available! Preload script may not be working.');
+    console.error(
+      'electronAPI is not available! Preload script may not be working.'
+    );
     // Create a fallback for development
     window.electronAPI = {
       onSDLPResult: () => {},
       removeAllListeners: () => {},
       generateSDLPLink: async () => 'sdlp://fallback-link',
-      verifySDLPLink: async () => ({ valid: false, error: { message: 'electronAPI not available' } }),
-      processSDLPLinkWithDialog: async () => {}
+      generateUntrustedSDLPLink: async () => 'sdlp://fallback-untrusted-link',
+      verifySDLPLink: async () => ({
+        valid: false,
+        error: { message: 'electronAPI not available' },
+      }),
+      processSDLPLinkWithDialog: async () => {},
     };
   } else {
     console.log('electronAPI is available');
   }
-  
+
   try {
     new SDLPRenderer();
     console.log('SDLP renderer initialized successfully');
@@ -670,10 +760,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Add some global error handling
-window.addEventListener('error', (event) => {
+window.addEventListener('error', event => {
   console.error('Global error:', event.error);
 });
 
-window.addEventListener('unhandledrejection', (event) => {
+window.addEventListener('unhandledrejection', event => {
   console.error('Unhandled promise rejection:', event.reason);
 });

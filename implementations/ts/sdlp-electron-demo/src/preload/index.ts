@@ -12,10 +12,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
   generateSDLPLink: async (payload: string): Promise<string> => {
     return await ipcRenderer.invoke('generate-sdlp-link', payload);
   },
+  generateUntrustedSDLPLink: async (payload: string): Promise<string> => {
+    return await ipcRenderer.invoke('generate-untrusted-sdlp-link', payload);
+  },
   verifySDLPLink: async (link: string): Promise<any> => {
     return await ipcRenderer.invoke('verify-sdlp-link', link);
   },
-  processSDLPLinkWithDialog: async (link: string, forceUntrusted: boolean = false): Promise<void> => {
-    return await ipcRenderer.invoke('process-sdlp-link-with-dialog', link, forceUntrusted);
+  processSDLPLinkWithDialog: async (
+    link: string,
+    forceUntrusted: boolean = false
+  ): Promise<void> => {
+    return await ipcRenderer.invoke(
+      'process-sdlp-link-with-dialog',
+      link,
+      forceUntrusted
+    );
   },
 });

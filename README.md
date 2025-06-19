@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="assets/logo.png" alt="Project Logo" width="200"/>
+</div>
+
 # Secure Deep Link Protocol (SDLP) - MVP Implementation
 
 This repository contains the MVP implementation of the Secure Deep Link Protocol, a cryptographically signed deep link mechanism using Decentralized Identifiers (DIDs) for sender authentication and payload integrity verification.

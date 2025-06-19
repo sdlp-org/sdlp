@@ -2,34 +2,81 @@ import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import { join } from 'path';
 import { spawn } from 'child_process';
 import { readFileSync } from 'fs';
+import { clipboard } from 'electron';
 
 const isDev = process.env.NODE_ENV === 'development';
 
+// Set application name as early as possible - before any other app operations
+app.setName('Secure Deep Link Demo');
+
+// For macOS, also try to set the application name in the dock immediately
+if (process.platform === 'darwin') {
+  // Try to set dock name early
+  try {
+    app.dock?.setIcon(join(__dirname, '../../resources/icon.png'));
+  } catch (error) {
+    // Icon might not be available yet, will try again later
+  }
+}
+
 let mainWindow: BrowserWindow | null = null;
 
-// Load the test key for generating example links
-// Use the packaged key file that's distributed with the application
-const possibleKeyPaths = [
+// Load the test keys for generating example links
+// Use the packaged key files that are distributed with the application
+const trustedKeyPaths = [
   join(__dirname, '../../fixtures/valid-key.jwk'), // Packaged with the app
   join(process.cwd(), 'fixtures/valid-key.jwk'), // Development fallback
   join(__dirname, '../../../sdlp-cli/fixtures/valid-key.jwk'), // External fallback
 ];
 
-let testKey: any = null;
+const untrustedKeyPaths = [
+  join(__dirname, '../../fixtures/untrusted-key.jwk'), // Packaged with the app
+  join(process.cwd(), 'fixtures/untrusted-key.jwk'), // Development fallback
+];
 
-for (const keyPath of possibleKeyPaths) {
+let trustedKey: any = null;
+let untrustedKey: any = null;
+
+// Load trusted key
+for (const keyPath of trustedKeyPaths) {
   try {
-    testKey = JSON.parse(readFileSync(keyPath, 'utf-8'));
-    console.log('Successfully loaded test key from:', keyPath);
+    trustedKey = JSON.parse(readFileSync(keyPath, 'utf-8'));
+    console.log('Successfully loaded trusted key from:', keyPath);
     break;
   } catch (error) {
     // Continue to next path
   }
 }
 
-if (!testKey) {
-  console.warn('Could not load test key for link generation from any of the attempted paths:', possibleKeyPaths);
-  console.warn('The application will still work for verification, but link generation will be disabled.');
+// Load untrusted key
+for (const keyPath of untrustedKeyPaths) {
+  try {
+    untrustedKey = JSON.parse(readFileSync(keyPath, 'utf-8'));
+    console.log('Successfully loaded untrusted key from:', keyPath);
+    break;
+  } catch (error) {
+    // Continue to next path
+  }
+}
+
+if (!trustedKey) {
+  console.warn(
+    'Could not load trusted key for link generation from any of the attempted paths:',
+    trustedKeyPaths
+  );
+}
+
+if (!untrustedKey) {
+  console.warn(
+    'Could not load untrusted key for link generation from any of the attempted paths:',
+    untrustedKeyPaths
+  );
+}
+
+if (!trustedKey && !untrustedKey) {
+  console.warn(
+    'No keys available for link generation. The application will still work for verification, but link generation will be disabled.'
+  );
 }
 
 function createWindow(): void {
@@ -38,6 +85,7 @@ function createWindow(): void {
     height: 800,
     show: false,
     autoHideMenuBar: true,
+    icon: join(__dirname, '../../resources/icon.png'),
     webPreferences: {
       preload: join(__dirname, '../preload/index.mjs'),
       sandbox: false,
@@ -61,29 +109,77 @@ function createWindow(): void {
   }
 }
 
+// Helper function to truncate SDLP links for display in dialogs
+function truncateSDLPLink(link: string, maxLength: number = 100): string {
+  if (link.length <= maxLength) {
+    return link;
+  }
+  
+  // For SDLP links, show the protocol and first/last parts
+  if (link.startsWith('sdlp://')) {
+    const linkContent = link.substring(7); // Remove 'sdlp://'
+    if (linkContent.length <= maxLength - 7) {
+      return link;
+    }
+    
+    const prefixLength = Math.floor((maxLength - 10) / 2); // Account for 'sdlp://' and '...'
+    const suffixLength = Math.floor((maxLength - 10) / 2);
+    
+    return `sdlp://${linkContent.substring(0, prefixLength)}...${linkContent.substring(linkContent.length - suffixLength)}`;
+  }
+  
+  // For other links, simple truncation
+  return link.substring(0, maxLength - 3) + '...';
+}
+
 // Setup IPC handlers
 function setupIpcHandlers() {
-  // Handle SDLP link generation
+  // Handle SDLP link generation (trusted)
   ipcMain.handle('generate-sdlp-link', async (_event, payload: string) => {
     try {
       const { createLink } = await import('@sdlp/sdk');
-      
-      if (!testKey) {
-        throw new Error('Test key not available for link generation');
+
+      if (!trustedKey) {
+        throw new Error('Trusted key not available for link generation');
       }
 
       const link = await createLink({
         payload: new TextEncoder().encode(payload),
         payloadType: 'text/plain',
         signer: {
-          kid: testKey.kid,
-          privateKeyJwk: testKey
+          kid: trustedKey.kid,
+          privateKeyJwk: trustedKey,
         },
-        compress: 'none'
+        compress: 'none',
       });
       return link;
     } catch (error) {
       console.error('Failed to generate SDLP link:', error);
+      throw error;
+    }
+  });
+
+  // Handle SDLP link generation (untrusted)
+  ipcMain.handle('generate-untrusted-sdlp-link', async (_event, payload: string) => {
+    try {
+      const { createLink } = await import('@sdlp/sdk');
+
+      if (!untrustedKey) {
+        throw new Error('Untrusted key not available for link generation');
+      }
+
+      const link = await createLink({
+        payload: new TextEncoder().encode(payload),
+        payloadType: 'text/plain',
+        signer: {
+          kid: untrustedKey.kid,
+          privateKeyJwk: untrustedKey,
+        },
+        compress: 'none',
+      });
+      return link;
+    } catch (error) {
+      console.error('Failed to generate untrusted SDLP link:', error);
       throw error;
     }
   });
@@ -101,18 +197,26 @@ function setupIpcHandlers() {
   });
 
   // Handle SDLP link processing with dialog (for test links)
-  ipcMain.handle('process-sdlp-link-with-dialog', async (_event, link: string, forceUntrusted: boolean = false) => {
-    try {
-      // This will trigger the same flow as a real deep link
-      await processSDLPLink(link, forceUntrusted);
-    } catch (error) {
-      console.error('Failed to process SDLP link with dialog:', error);
-      throw error;
+  // This MUST use exactly the same code path as external protocol links
+  ipcMain.handle(
+    'process-sdlp-link-with-dialog',
+    async (_event, link: string, forceUntrusted: boolean = false) => {
+      try {
+        console.log('IPC handler: Processing SDLP link via same path as protocol handler:', link);
+        // Use exactly the same function call as the protocol handlers
+        await processSDLPLink(link, forceUntrusted);
+      } catch (error) {
+        console.error('Failed to process SDLP link with dialog:', error);
+        throw error;
+      }
     }
-  });
+  );
 }
 
-async function processSDLPLink(url: string, forceUntrusted: boolean = false): Promise<void> {
+async function processSDLPLink(
+  url: string,
+  forceUntrusted: boolean = false
+): Promise<void> {
   try {
     console.log('Processing SDLP link:', url);
 
@@ -123,49 +227,92 @@ async function processSDLPLink(url: string, forceUntrusted: boolean = false): Pr
     const result = await verifyLink(url);
     console.log('Verification result:', result);
 
-    let dialogMessage: string;
-    let dialogType: 'info' | 'warning' | 'error' = 'info';
+    let dialogType: 'info' | 'warning' | 'error' | 'none' = 'info';
     let canProceed = false;
     let isTrusted = false;
 
+    let dialogTitle: string;
+    let dialogDetail: string;
+
     if (!result.valid) {
-      dialogMessage = `❌ Invalid SDLP Link\n\nLink: ${url}\n\nError: ${result.error?.message || 'Unknown error'}\n\nThis link failed verification and cannot be trusted.`;
-      dialogType = 'error';
+      dialogTitle = '❌ Invalid SDLP Link';
+      const truncatedLink = truncateSDLPLink(url, 80);
+      const linkDisplay = url.length > 80 ? `${truncatedLink} (truncated)` : truncatedLink;
+      dialogDetail = `Link: ${linkDisplay}
+
+Error: ${result.error?.message || 'Unknown error'}
+
+This link failed verification and cannot be trusted.`;
+      dialogType = 'none';
     } else {
       const payload = new TextDecoder().decode(result.payload);
-      
-      // Determine trust level - for demo purposes, we'll consider our test key as trusted
-      // In a real implementation, this would check against a trust store or known senders
+
+      // Determine trust level based on sender key
+      // TODO: In a real implementation, this should check against a configurable trust store
+      // or a list of known senders, not hardcoded values.
       const senderKey = result.sender || '';
-      isTrusted = !forceUntrusted && (
-        senderKey.includes('test-key-1') || 
-        senderKey.includes('trusted') ||
-        senderKey.includes('z6MkozXRpKZqLRoLWE6dUTWpSp2Sw2nRrEY') // Our actual test key identifier
-      );
       
+      // Check if the sender is our trusted key
+      const trustedKeyId = trustedKey?.kid || '';
+      const isTrustedSender = trustedKeyId && senderKey.includes(trustedKeyId.split('#')[0]);
+      
+      isTrusted = !forceUntrusted && isTrustedSender;
+
       const trustIndicator = isTrusted ? '✅' : '⚠️';
-      const trustStatus = isTrusted ? 'Trusted Sender' : 'Unknown/Untrusted Sender';
-      
+      const trustStatus = isTrusted
+        ? 'Trusted Sender'
+        : 'Unknown/Untrusted Sender';
+
+      const truncatedLink = truncateSDLPLink(url, 80);
+      const linkDisplay = url.length > 80 ? `${truncatedLink} (truncated)` : truncatedLink;
+
       if (isTrusted) {
-        dialogMessage = `${trustIndicator} SDLP Link from Trusted Source\n\nLink: ${url}\n\nSender: ${result.sender}\nStatus: ${trustStatus}\n\nPayload: ${payload}\n\nThis link has been cryptographically verified and comes from a trusted source. Do you want to proceed with executing the command?`;
-        dialogType = 'info';
+        dialogTitle = `${trustIndicator} SDLP Link from Trusted Source`;
+        dialogDetail = `Link: ${linkDisplay}
+
+Sender:
+${result.sender || 'N/A'}
+Status: ${trustStatus}
+
+Payload: ${payload}
+
+This link has been cryptographically verified and comes from a trusted source. Do you want to proceed with executing the command?`;
+        dialogType = 'none';
       } else {
-        dialogMessage = `${trustIndicator} SDLP Link from Unknown Source\n\nLink: ${url}\n\nSender: ${result.sender}\nStatus: ${trustStatus}\n\nPayload: ${payload}\n\nThis link is cryptographically valid but comes from an unknown or untrusted source. Proceed with caution. Do you want to continue?`;
-        dialogType = 'warning';
+        dialogTitle = `${trustIndicator} SDLP Link from Unknown Source`;
+        dialogDetail = `Link: ${linkDisplay}
+
+Sender:
+${result.sender || 'N/A'}
+Status: ${trustStatus}
+
+Payload: ${payload}
+
+This link is cryptographically valid but comes from an unknown or untrusted source. Proceed with caution. Do you want to continue?`;
+        dialogType = 'none';
       }
-      
+
       canProceed = true;
     }
 
-    // Show blocker dialog
+    // Show blocker dialog with copy button for full link
+    const buttons = canProceed ? ['Proceed', 'Copy Full Link', 'Cancel'] : ['Copy Full Link', 'OK'];
     const response = await dialog.showMessageBox(mainWindow!, {
-      type: dialogType,
+      type: 'none',
       title: 'SDLP Link Processing',
-      message: dialogMessage,
-      buttons: canProceed ? ['Proceed', 'Cancel'] : ['OK'],
-      defaultId: canProceed ? 1 : 0, // Default to Cancel/OK
-      cancelId: canProceed ? 1 : 0,
+      message: dialogTitle,
+      detail: dialogDetail,
+      icon: join(__dirname, '../../resources/icon.png'),
+      buttons: buttons,
+      defaultId: canProceed ? 2 : 1, // Default to Cancel/OK
+      cancelId: canProceed ? 2 : 1,
     });
+
+    // Handle copy button - just copy silently without confirmation dialog
+    if ((canProceed && response.response === 1) || (!canProceed && response.response === 0)) {
+      clipboard.writeText(url);
+      return;
+    }
 
     if (!canProceed || response.response !== 0) {
       // User cancelled or link was invalid
@@ -182,7 +329,9 @@ async function processSDLPLink(url: string, forceUntrusted: boolean = false): Pr
     const payload = new TextDecoder().decode(result.payload);
     console.log('Command payload:', payload);
 
-    // Better command parsing - handle quoted strings properly
+    // SECURITY: In a production application, never execute arbitrary commands from a payload.
+    // This is for demonstration purposes only. A real application should have a strict
+    // allowlist of commands and sanitize all arguments.
     const trimmedPayload = payload.trim();
 
     // For this MVP, we'll use a simple approach: if it starts with 'echo', handle it specially
@@ -238,7 +387,9 @@ async function processSDLPLink(url: string, forceUntrusted: boolean = false): Pr
         output: output,
         exitCode: code,
         switchToHome: true,
-        message: isTrusted ? undefined : 'This link is valid but from an untrusted source'
+        message: isTrusted
+          ? undefined
+          : 'This link is valid but from an untrusted source',
       });
     });
 
@@ -250,14 +401,23 @@ async function processSDLPLink(url: string, forceUntrusted: boolean = false): Pr
     });
   } catch (error) {
     console.error('Error processing SDLP link:', error);
-    
-    // Show error dialog
-    await dialog.showMessageBox(mainWindow!, {
-      type: 'error',
+
+    // Show error dialog with copy button
+    const response = await dialog.showMessageBox(mainWindow!, {
+      type: 'none',
       title: 'SDLP Processing Error',
-      message: `❌ Failed to process SDLP link\n\nLink: ${url}\n\nError: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      buttons: ['OK']
+      message: '❌ Failed to process SDLP link',
+      detail: `Link: ${truncateSDLPLink(url, 80)}
+
+Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      buttons: ['Copy Full Link', 'OK'],
+      icon: join(__dirname, '../../resources/icon.png'),
     });
+
+    // Handle copy button in error dialog - just copy silently
+    if (response.response === 0) {
+      clipboard.writeText(url);
+    }
   }
 }
 
@@ -269,6 +429,7 @@ if (process.platform === 'darwin') {
   // macOS
   app.on('open-url', (event, url) => {
     event.preventDefault();
+    console.log('Protocol handler: Processing SDLP link via same path as IPC handler:', url);
     if (url.startsWith('sdlp://')) {
       processSDLPLink(url);
     }
@@ -278,12 +439,16 @@ if (process.platform === 'darwin') {
   const sdlpUrl = process.argv.find(arg => arg.startsWith('sdlp://'));
   if (sdlpUrl) {
     app.whenReady().then(() => {
-      processSDLPLink(sdlpUrl);
+      console.log('Command line: Processing SDLP link via same path as IPC handler:', sdlpUrl);
+      processSDLPLink(sdlpUrl!);
     });
   }
 }
 
 app.whenReady().then(() => {
+  if (process.platform === 'darwin') {
+    app.dock.setIcon(join(__dirname, '../../resources/icon.png'));
+  }
   setupIpcHandlers();
   createWindow();
 
