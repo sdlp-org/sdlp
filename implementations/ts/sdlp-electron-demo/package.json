@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Electron MVP application for SDLP protocol demonstration",
   "main": "out/main/index.js",
+  "type": "module",
   "author": "",
   "license": "ISC",
   "scripts": {
