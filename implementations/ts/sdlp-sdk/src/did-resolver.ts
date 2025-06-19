@@ -24,7 +24,11 @@ function isTestDomain(did: string): boolean {
 /**
  * Helper function to conditionally log warnings (only in non-test environments for non-test domains)
  */
-function logWarningIfAppropriate(did: string, message: string, error?: unknown): void {
+function logWarningIfAppropriate(
+  did: string,
+  message: string,
+  error?: unknown
+): void {
   if (!isTestDomain(did) && !isTestEnvironment()) {
     console.warn(message, error);
   }

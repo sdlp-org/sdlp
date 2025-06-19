@@ -9,4 +9,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeAllListeners: (channel: string) => {
     ipcRenderer.removeAllListeners(channel);
   },
+  generateSDLPLink: async (payload: string): Promise<string> => {
+    return await ipcRenderer.invoke('generate-sdlp-link', payload);
+  },
+  verifySDLPLink: async (link: string): Promise<any> => {
+    return await ipcRenderer.invoke('verify-sdlp-link', link);
+  },
+  processSDLPLinkWithDialog: async (link: string, forceUntrusted: boolean = false): Promise<void> => {
+    return await ipcRenderer.invoke('process-sdlp-link-with-dialog', link, forceUntrusted);
+  },
 });
