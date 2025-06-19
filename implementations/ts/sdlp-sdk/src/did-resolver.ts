@@ -2,7 +2,7 @@
  * DID Resolution module for resolving DIDs to their verification methods
  */
 
-import bs58 from "bs58";
+import bs58 from 'bs58';
 
 // Import fetch for Node.js compatibility
 const fetch = globalThis.fetch;
@@ -11,7 +11,7 @@ const fetch = globalThis.fetch;
  * DID Document structure
  */
 export interface DidDocument {
-  "@context"?: string | string[];
+  '@context'?: string | string[];
   id: string;
   verificationMethod?: VerificationMethod[];
   authentication?: (string | VerificationMethod)[];
@@ -44,19 +44,19 @@ export interface DidResolutionResult {
  * Resolves a DID to extract the public key for verification
  */
 export async function resolveDid(
-  did: string,
+  did: string
 ): Promise<Record<string, unknown> | null> {
   try {
-    if (did.startsWith("did:key:")) {
+    if (did.startsWith('did:key:')) {
       return resolveDidKey(did);
-    } else if (did.startsWith("did:web:")) {
+    } else if (did.startsWith('did:web:')) {
       return await resolveDidWeb(did);
     } else {
       throw new Error(`Unsupported DID method: ${did}`);
     }
   } catch (error) {
     // Only log errors for non-test domains
-    if (!did.includes("acme.example") && !did.includes(".example")) {
+    if (!did.includes('acme.example') && !did.includes('.example')) {
       console.warn(`Failed to resolve DID ${did}:`, error);
     }
     return null;
@@ -69,19 +69,19 @@ export async function resolveDid(
 function resolveDidKey(did: string): Record<string, unknown> | null {
   try {
     // Extract the multibase encoded key from the DID
-    const keyPart = did.replace("did:key:", "");
+    const keyPart = did.replace('did:key:', '');
 
     // For did:key, we need to decode the multibase + multicodec format
     // This is a simplified implementation for Ed25519 keys
-    if (!keyPart.startsWith("z")) {
-      throw new Error("did:key must use base58btc encoding (z prefix)");
+    if (!keyPart.startsWith('z')) {
+      throw new Error('did:key must use base58btc encoding (z prefix)');
     }
 
     const decoded = bs58.decode(keyPart.slice(1)); // Remove 'z' prefix
 
     // Check for Ed25519 multicodec prefix (0xed)
     if (decoded.length < 33 || decoded[0] !== 0xed) {
-      throw new Error("Unsupported key type in did:key");
+      throw new Error('Unsupported key type in did:key');
     }
 
     // Extract the 32-byte Ed25519 public key
@@ -90,15 +90,15 @@ function resolveDidKey(did: string): Record<string, unknown> | null {
     // Convert to base64url for JWK format
     const base64url = (bytes: Uint8Array): string => {
       return Buffer.from(bytes)
-        .toString("base64")
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=/g, "");
+        .toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
     };
 
     return {
-      kty: "OKP",
-      crv: "Ed25519",
+      kty: 'OKP',
+      crv: 'Ed25519',
       x: base64url(publicKeyBytes),
     };
   } catch (error) {
@@ -111,14 +111,14 @@ function resolveDidKey(did: string): Record<string, unknown> | null {
  * Resolves a did:web identifier by fetching the DID document
  */
 async function resolveDidWeb(
-  did: string,
+  did: string
 ): Promise<Record<string, unknown> | null> {
   try {
     // Extract domain from did:web:domain format
-    const domain = did.replace("did:web:", "");
+    const domain = did.replace('did:web:', '');
 
     // Handle test domains gracefully in test environments
-    if (domain === "acme.example" || domain.endsWith(".example")) {
+    if (domain === 'acme.example' || domain.endsWith('.example')) {
       return null; // Fail silently for test domains
     }
 
@@ -127,11 +127,11 @@ async function resolveDidWeb(
 
     // Fetch the DID document with security constraints
     const response = await fetch(url, {
-      method: "GET",
-      redirect: "error", // Do not follow redirects for security
+      method: 'GET',
+      redirect: 'error', // Do not follow redirects for security
       headers: {
-        Accept: "application/json",
-        "User-Agent": "sdlp-sdk/0.1.0",
+        Accept: 'application/json',
+        'User-Agent': 'sdlp-sdk/0.1.0',
       },
       // Set a reasonable timeout
       signal: AbortSignal.timeout(10000), // 10 second timeout
@@ -146,7 +146,7 @@ async function resolveDidWeb(
     // Validate the DID document
     if (didDocument.id !== did) {
       throw new Error(
-        `DID document id mismatch: expected ${did}, got ${didDocument.id}`,
+        `DID document id mismatch: expected ${did}, got ${didDocument.id}`
       );
     }
 
@@ -156,19 +156,19 @@ async function resolveDidWeb(
       if (method.publicKeyJwk) {
         // Validate that this is an Ed25519 key
         if (
-          method.publicKeyJwk.kty === "OKP" &&
-          method.publicKeyJwk.crv === "Ed25519"
+          method.publicKeyJwk.kty === 'OKP' &&
+          method.publicKeyJwk.crv === 'Ed25519'
         ) {
           return method.publicKeyJwk;
         }
       }
     }
 
-    throw new Error("No compatible verification method found in DID document");
+    throw new Error('No compatible verification method found in DID document');
   } catch (error) {
     // Only log errors for non-test domains
-    const domain = did.replace("did:web:", "");
-    if (!domain.endsWith(".example")) {
+    const domain = did.replace('did:web:', '');
+    if (!domain.endsWith('.example')) {
       console.warn(`Failed to resolve did:web ${did}:`, error);
     }
     return null;
@@ -180,7 +180,7 @@ async function resolveDidWeb(
  */
 export function extractDidFromKid(kid: string): string {
   // kid format: "did:method:identifier#key-id"
-  const hashIndex = kid.indexOf("#");
+  const hashIndex = kid.indexOf('#');
   if (hashIndex === -1) {
     throw new Error(`Invalid kid format: ${kid}`);
   }

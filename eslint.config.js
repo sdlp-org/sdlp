@@ -1,18 +1,34 @@
 // Base ESLint configuration for SDLP repository
 // Individual packages can extend this configuration with package-specific rules
 
-import js from '@eslint/js';
-
 export default [
-  js.configs.recommended,
   {
-    files: ['**/*.{js,mjs,cjs,ts}'],
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      'out/**',
+      'build/**',
+      'coverage/**',
+      '*.d.ts',
+      'vite.config.ts.timestamp-*',
+      '.env*',
+      '*.log',
+      'package-lock.json',
+      'yarn.lock',
+      'pnpm-lock.yaml',
+      '*.legacy.js',
+      '*.old.js',
+    ],
+  },
+
+  // Base configuration for JavaScript files
+  {
+    files: ['**/*.{js,mjs,cjs}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
     },
     rules: {
-      // Basic code quality rules
       'prefer-const': 'error',
       'no-var': 'error',
       'no-debugger': 'error',
@@ -21,21 +37,28 @@ export default [
       'curly': ['error', 'all'],
     },
   },
+
+  // Override for test files
   {
-    files: ['**/*.test.{js,ts}', '**/*.spec.{js,ts}'],
+    files: ['**/*.test.{js,ts}', '**/*.spec.{js,ts}', 'test/**/*.ts', 'tests/**/*.ts'],
     rules: {
       'no-console': 'off',
     },
   },
+
+  // Override for config files
   {
-    ignores: [
-      'node_modules/**',
-      'dist/**',
-      'out/**',
-      'build/**',
-      'coverage/**',
-      '*.config.js',
-      '*.config.ts',
-    ],
+    files: ['*.config.{js,ts,mjs,cjs}', 'eslint.config.js', 'vite.config.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+
+  // Override for scripts
+  {
+    files: ['scripts/**/*.ts'],
+    rules: {
+      'no-console': 'off',
+    },
   },
 ];

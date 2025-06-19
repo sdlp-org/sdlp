@@ -77,14 +77,17 @@ sdlp keygen [options]
 ```
 
 **Options:**
+
 - `-o, --out <file>` - Output file for the private key (JWK format) (default: "private.jwk")
 
 **Output:**
+
 - Creates a JWK file containing the private key
 - Displays the generated DID:key identifier
 - The DID can be shared publicly; keep the private key secure
 
 **Example:**
+
 ```bash
 $ sdlp keygen --out alice-key.jwk
 ✅ Key pair generated successfully!
@@ -101,19 +104,23 @@ sdlp sign --payload-file <file> --type <mime-type> [options]
 ```
 
 **Required Options:**
+
 - `--payload-file <file>` - Path to the payload file to sign
 - `--type <type>` - MIME type of the payload (e.g., application/json, text/plain)
 
 **Optional Options:**
+
 - `--signer-key <file>` - Path to the private key file (JWK format)
 - `--compression <comp>` - Compression algorithm: br, gz, zstd, none (default: "br")
 - `--expires <exp>` - Expiration time (ISO 8601 format or seconds from now)
 - `--not-before <nbf>` - Not before time (ISO 8601 format or seconds from now)
 
 **Output:**
+
 - Prints the SDLP link to stdout
 
 **Examples:**
+
 ```bash
 # Basic signing
 $ sdlp sign --payload-file data.json --type application/json --signer-key key.jwk
@@ -138,17 +145,21 @@ sdlp verify [link] [options]
 ```
 
 **Arguments:**
+
 - `[link]` - SDLP link to verify (if not provided, reads from stdin)
 
 **Options:**
+
 - `--json` - Output verification result in JSON format
 - `--max-payload-size <size>` - Maximum payload size in bytes (default: 1048576 = 1MB)
 
 **Output:**
+
 - On success: Verification details (to stderr) and payload (to stdout)
 - On failure: Error message (to stderr) and exit code 1
 
 **Examples:**
+
 ```bash
 # Verify from stdin (human-readable output)
 $ echo "sdlp://eyJ..." | sdlp verify
@@ -190,6 +201,7 @@ $ sdlp verify --max-payload-size 1024 "sdlp://eyJ..."
 The CLI provides clear error messages for common issues:
 
 ### Key Generation Errors
+
 ```bash
 $ sdlp keygen --out /invalid/path/key.jwk
 ❌ Error generating key pair:
@@ -197,6 +209,7 @@ Error: ENOENT: no such file or directory, open '/invalid/path/key.jwk'
 ```
 
 ### Signing Errors
+
 ```bash
 $ sdlp sign --payload-file missing.json --type application/json --signer-key key.jwk
 ❌ Error creating link:
@@ -204,6 +217,7 @@ Error: ENOENT: no such file or directory, open 'missing.json'
 ```
 
 ### Verification Errors
+
 ```bash
 $ echo "invalid-link" | sdlp verify
 ❌ Link verification failed:
@@ -229,6 +243,7 @@ The private key file is stored in JSON Web Key (JWK) format:
 ```
 
 **Important Security Notes:**
+
 - Keep the private key file secure and never share it
 - The `kid` field contains the full DID URL with key identifier
 - The DID portion (before #) can be shared publicly
@@ -237,6 +252,7 @@ The private key file is stored in JSON Web Key (JWK) format:
 ### SDLP Link Format
 
 SDLP links follow this format:
+
 ```
 sdlp://<base64url-encoded-jws-metadata>.<base64url-encoded-payload>
 ```
@@ -255,6 +271,7 @@ The CLI supports multiple compression algorithms:
 - **none** - No compression
 
 Choose compression based on your needs:
+
 - Use `br` for maximum space efficiency
 - Use `none` for small payloads or debugging
 - Use `gz` for maximum compatibility
@@ -264,11 +281,13 @@ Choose compression based on your needs:
 The CLI supports the following DID methods:
 
 ### did:key
+
 - **Format**: `did:key:z<base58-encoded-public-key>`
 - **Usage**: Self-sovereign, cryptographically derived identities
 - **Security**: No external dependencies, keys are the identity
 
 ### did:web (verification only)
+
 - **Format**: `did:web:domain.com`
 - **Usage**: Domain-based identities with web-hosted DID documents
 - **Security**: Relies on HTTPS and domain control
@@ -328,7 +347,9 @@ const link = execSync(
 ).trim();
 
 // Verify the link
-const result = execSync(`echo "${link}" | sdlp verify --json`, { encoding: 'utf8' });
+const result = execSync(`echo "${link}" | sdlp verify --json`, {
+  encoding: 'utf8',
+});
 const verification = JSON.parse(result.split('\n')[0]);
 
 console.log('Verified:', verification.valid);
@@ -340,31 +361,39 @@ console.log('Sender:', verification.sender);
 ### Common Issues
 
 **1. Permission denied when writing key file**
+
 ```bash
 $ sdlp keygen --out /etc/my-key.jwk
 ❌ Error generating key pair: Error: EACCES: permission denied
 ```
-*Solution*: Choose a writable directory or run with appropriate permissions.
+
+_Solution_: Choose a writable directory or run with appropriate permissions.
 
 **2. Invalid MIME type**
+
 ```bash
 $ sdlp sign --payload-file data.txt --type invalid/type --signer-key key.jwk
 ```
-*Solution*: Use standard MIME types like `text/plain`, `application/json`, etc.
+
+_Solution_: Use standard MIME types like `text/plain`, `application/json`, etc.
 
 **3. Link verification fails**
+
 ```bash
 $ echo "corrupted-link" | sdlp verify
 ❌ Link verification failed: Error: Invalid link format
 ```
-*Solution*: Ensure the link is complete and uncorrupted.
+
+_Solution_: Ensure the link is complete and uncorrupted.
 
 **4. DID resolution timeout**
+
 ```bash
 $ echo "sdlp://..." | sdlp verify
 ❌ Link verification failed: Error: DID resolution timeout
 ```
-*Solution*: Check network connectivity for did:web identities.
+
+_Solution_: Check network connectivity for did:web identities.
 
 ### Debug Mode
 
@@ -406,6 +435,7 @@ npm run format
 ### Testing
 
 The CLI includes comprehensive tests:
+
 - Unit tests for argument parsing and command logic
 - End-to-end tests for complete workflows
 - Error handling and edge case tests
@@ -428,6 +458,7 @@ npm run test:coverage # Coverage report
 ## Specifications
 
 This CLI implements:
+
 - [SDLP v1.0 Specification](../../../specs/sdlp-v0.1-draft.md)
 - [RFC 7515 - JSON Web Signature (JWS)](https://tools.ietf.org/html/rfc7515)
 - [W3C Decentralized Identifiers (DIDs) v1.0](https://www.w3.org/TR/did-core/)
@@ -435,4 +466,4 @@ This CLI implements:
 
 ## License
 
-This CLI is part of the SDLP reference implementation. 
+This CLI is part of the SDLP reference implementation.

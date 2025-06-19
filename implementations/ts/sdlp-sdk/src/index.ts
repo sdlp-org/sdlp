@@ -6,8 +6,8 @@
  */
 
 // Export main functions
-export { createLink } from "./create-link.js";
-export { verifyLink } from "./verify-link.js";
+export { createLink } from './create-link.js';
+export { verifyLink } from './verify-link.js';
 
 // Export types and interfaces
 export type {
@@ -25,7 +25,7 @@ export type {
   DIDResolver,
   DIDResolutionResult,
   DIDDocument,
-} from "./types.js";
+} from './types.js';
 
 // Export error classes as values
 export {
@@ -39,4 +39,4 @@ export {
   UnsupportedCompressionError,
   DIDResolutionError,
   InvalidLinkFormatError,
-} from "./types.js";
+} from './types.js';

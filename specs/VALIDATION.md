@@ -19,6 +19,7 @@ This validation system prevents these issues from recurring.
 **Purpose**: Ensures test fixtures are cryptographically valid and consistent.
 
 **Validates**:
+
 - ✅ JWK format correctness (OKP/Ed25519)
 - ✅ Private/public key mathematical relationship
 - ✅ Signature generation and verification
@@ -32,6 +33,7 @@ This validation system prevents these issues from recurring.
 **Purpose**: Ensures test vectors conform to SDLP specification format.
 
 **Validates**:
+
 - ✅ SDLP link structure (`sdlp://`)
 - ✅ JWS format (protected/payload/signature)
 - ✅ Algorithm specification (EdDSA)
@@ -49,6 +51,7 @@ This validation system prevents these issues from recurring.
 **Purpose**: Runs all validations in dependency order.
 
 **Process**:
+
 1. **Fixtures First**: Validates test fixtures
 2. **Vectors Second**: Only if fixtures pass
 3. **Summary Report**: Clear pass/fail status
@@ -70,6 +73,7 @@ npm run validate-all
 ### CI/CD Pipeline
 
 GitHub Actions automatically validates on:
+
 - Push to `main`/`develop`
 - Pull requests affecting `specs/`
 - Manual workflow dispatch
@@ -200,12 +204,12 @@ npm run validate-all
 
 ### Common Issues
 
-| Error | Cause | Solution |
-|-------|--------|----------|
-| "Private key does not derive..." | Invalid key pair | Run `npm run generate-did-key` |
-| "Version must be 'SDL-1.0'..." | Wrong version string | Update generation script |
-| "chk must be 64-char hex..." | Wrong checksum format | Fix generation to use hex |
-| "DID key does not match..." | DID/key mismatch | Regenerate fixtures |
+| Error                            | Cause                 | Solution                       |
+| -------------------------------- | --------------------- | ------------------------------ |
+| "Private key does not derive..." | Invalid key pair      | Run `npm run generate-did-key` |
+| "Version must be 'SDL-1.0'..."   | Wrong version string  | Update generation script       |
+| "chk must be 64-char hex..."     | Wrong checksum format | Fix generation to use hex      |
+| "DID key does not match..."      | DID/key mismatch      | Regenerate fixtures            |
 
 ### Debugging Steps
 
@@ -249,4 +253,4 @@ Planned validation improvements:
 
 ---
 
-**Remember**: The validation system is your safety net. Use it early and often to prevent the debugging pain we experienced during initial implementation! 🛡️ 
+**Remember**: The validation system is your safety net. Use it early and often to prevent the debugging pain we experienced during initial implementation! 🛡️
