@@ -126,14 +126,34 @@ async function processSDLPLink(url: string, forceUntrusted: boolean = false): Pr
     let dialogMessage: string;
     let dialogType: 'info' | 'warning' | 'error' = 'info';
     let canProceed = false;
+    let isTrusted = false;
 
     if (!result.valid) {
       dialogMessage = `❌ Invalid SDLP Link\n\nLink: ${url}\n\nError: ${result.error?.message || 'Unknown error'}\n\nThis link failed verification and cannot be trusted.`;
       dialogType = 'error';
     } else {
       const payload = new TextDecoder().decode(result.payload);
-      dialogMessage = `🔗 SDLP Link Received\n\nLink: ${url}\n\nSender: ${result.sender}\n\nPayload: ${payload}\n\nThis link has been cryptographically verified. Do you want to proceed with executing the command?`;
-      dialogType = 'info';
+      
+      // Determine trust level - for demo purposes, we'll consider our test key as trusted
+      // In a real implementation, this would check against a trust store or known senders
+      const senderKey = result.sender || '';
+      isTrusted = !forceUntrusted && (
+        senderKey.includes('test-key-1') || 
+        senderKey.includes('trusted') ||
+        senderKey.includes('z6MkozXRpKZqLRoLWE6dUTWpSp2Sw2nRrEY') // Our actual test key identifier
+      );
+      
+      const trustIndicator = isTrusted ? '✅' : '⚠️';
+      const trustStatus = isTrusted ? 'Trusted Sender' : 'Unknown/Untrusted Sender';
+      
+      if (isTrusted) {
+        dialogMessage = `${trustIndicator} SDLP Link from Trusted Source\n\nLink: ${url}\n\nSender: ${result.sender}\nStatus: ${trustStatus}\n\nPayload: ${payload}\n\nThis link has been cryptographically verified and comes from a trusted source. Do you want to proceed with executing the command?`;
+        dialogType = 'info';
+      } else {
+        dialogMessage = `${trustIndicator} SDLP Link from Unknown Source\n\nLink: ${url}\n\nSender: ${result.sender}\nStatus: ${trustStatus}\n\nPayload: ${payload}\n\nThis link is cryptographically valid but comes from an unknown or untrusted source. Proceed with caution. Do you want to continue?`;
+        dialogType = 'warning';
+      }
+      
       canProceed = true;
     }
 
@@ -208,13 +228,17 @@ async function processSDLPLink(url: string, forceUntrusted: boolean = false): Pr
     childProcess.on('close', code => {
       const output = stdout + (stderr ? '\n--- STDERR ---\n' + stderr : '');
 
+      // Send appropriate status based on trust level
+      const status = isTrusted ? 'success' : 'untrusted';
+
       mainWindow?.webContents.send('sdlp-result', {
-        status: 'success',
-        from: result.sender,
+        status: status,
+        from: result.sender || 'Unknown',
         command: payload,
         output: output,
         exitCode: code,
         switchToHome: true,
+        message: isTrusted ? undefined : 'This link is valid but from an untrusted source'
       });
     });
 

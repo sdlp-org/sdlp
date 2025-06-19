@@ -220,6 +220,22 @@ class SDLPRenderer {
       });
     }
 
+    // Open generated link button
+    const openGeneratedLinkBtn = document.getElementById('open-generated-link-btn');
+    if (openGeneratedLinkBtn && generatedLinkInput) {
+      openGeneratedLinkBtn.addEventListener('click', async () => {
+        const link = generatedLinkInput.value.trim();
+        if (link) {
+          try {
+            await window.electronAPI.processSDLPLinkWithDialog(link);
+          } catch (error) {
+            console.error('Failed to open generated link:', error);
+            this.showNotification('Failed to open link: ' + (error as Error).message, 'error');
+          }
+        }
+      });
+    }
+
     // Link Verifier
     const verifyBtn = document.getElementById('verify-link-btn');
     const linkInput = document.getElementById('link-input') as HTMLTextAreaElement;
@@ -268,6 +284,9 @@ class SDLPRenderer {
   private displayVerificationResult(result: any, statusElement: HTMLElement | null, detailsElement: HTMLElement | null) {
     if (!statusElement || !detailsElement) return;
 
+    // Get the actions element
+    const verificationActions = document.getElementById('verification-actions');
+
     if (result.valid) {
       statusElement.innerHTML = `
         <div class="flex items-center">
@@ -287,6 +306,33 @@ class SDLPRenderer {
           <div><strong>Payload:</strong> <code class="bg-gray-100 px-2 py-1 rounded">${payload}</code></div>
         </div>
       `;
+
+      // Show the "Open Link" button for valid links
+      if (verificationActions) {
+        verificationActions.classList.remove('hidden');
+        
+        // Set up the open verified link button if not already set up
+        const openVerifiedLinkBtn = document.getElementById('open-verified-link-btn');
+        if (openVerifiedLinkBtn) {
+          // Remove any existing listeners to avoid duplicates
+          const newBtn = openVerifiedLinkBtn.cloneNode(true) as HTMLElement;
+          openVerifiedLinkBtn.parentNode?.replaceChild(newBtn, openVerifiedLinkBtn);
+          
+          // Add the click listener
+          newBtn.addEventListener('click', async () => {
+            const linkInput = document.getElementById('link-input') as HTMLTextAreaElement;
+            const link = linkInput?.value.trim();
+            if (link) {
+              try {
+                await window.electronAPI.processSDLPLinkWithDialog(link);
+              } catch (error) {
+                console.error('Failed to open verified link:', error);
+                this.showNotification('Failed to open link: ' + (error as Error).message, 'error');
+              }
+            }
+          });
+        }
+      }
     } else {
       statusElement.innerHTML = `
         <div class="flex items-center">
@@ -304,6 +350,11 @@ class SDLPRenderer {
           <strong>Error:</strong> ${result.error?.message || 'Unknown error'}
         </div>
       `;
+
+      // Hide the "Open Link" button for invalid links
+      if (verificationActions) {
+        verificationActions.classList.add('hidden');
+      }
     }
   }
 
@@ -400,6 +451,9 @@ class SDLPRenderer {
       }
     } else if (data.status === 'untrusted') {
       this.showUntrustedState(data);
+      if (data.output) {
+        this.showTerminalOutput(data.output);
+      }
     } else if (data.status === 'error') {
       this.showErrorState(data.message);
     }
@@ -442,10 +496,18 @@ class SDLPRenderer {
     const successState = document.getElementById('success-state');
     if (successState) successState.classList.remove('hidden');
 
-    // Update sender info
+    // Update sender info with trust indicator
     const senderInfo = document.getElementById('sender-info');
     if (senderInfo) {
-      senderInfo.textContent = `Verified from: ${data.from}`;
+      // Determine if sender is trusted (same logic as main process)
+      const senderKey = data.from || '';
+      const isTrusted = senderKey.includes('test-key-1') || 
+                       senderKey.includes('trusted') ||
+                       senderKey.includes('z6MkozXRpKZqLRoLWE6dUTWpSp2Sw2nRrEY');
+      const trustIndicator = isTrusted ? '✅' : '⚠️';
+      const trustStatus = isTrusted ? 'Trusted' : 'Unknown';
+      
+      senderInfo.innerHTML = `${trustIndicator} Verified from: <strong>${data.from}</strong> (${trustStatus})`;
     }
 
     // Update command text
@@ -464,6 +526,12 @@ class SDLPRenderer {
     const untrustedInfo = document.getElementById('untrusted-info');
     if (untrustedInfo) {
       untrustedInfo.textContent = `From: ${data.from} - ${data.message}`;
+    }
+
+    // Update command text
+    const untrustedCommandText = document.getElementById('untrusted-command-text');
+    if (untrustedCommandText) {
+      untrustedCommandText.textContent = data.command;
     }
   }
 
