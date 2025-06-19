@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="../../../../assets/logo.png" alt="Project Logo" width="200"/>
+</div>
+
 # SDLP Electron Demo Application
 
 A comprehensive Electron application that demonstrates the Secure Deep Link Protocol (SDLP) with an interactive user interface for testing, generating, and verifying SDLP links.

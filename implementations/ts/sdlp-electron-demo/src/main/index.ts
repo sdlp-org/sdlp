@@ -43,6 +43,7 @@ function createWindow(): void {
     height: 800,
     show: false,
     autoHideMenuBar: true,
+    icon: join(__dirname, '../../resources/icon.png'),
     webPreferences: {
       preload: join(__dirname, '../preload/index.mjs'),
       sandbox: false,
@@ -134,14 +135,17 @@ async function processSDLPLink(
     const result = await verifyLink(url);
     console.log('Verification result:', result);
 
-    let dialogMessage: string;
-    let dialogType: 'info' | 'warning' | 'error' = 'info';
+    let dialogType: 'info' | 'warning' | 'error' | 'none' = 'info';
     let canProceed = false;
     let isTrusted = false;
 
+    let dialogTitle: string;
+    let dialogDetail: string;
+
     if (!result.valid) {
-      dialogMessage = `❌ Invalid SDLP Link\n\nLink: ${url}\n\nError: ${result.error?.message || 'Unknown error'}\n\nThis link failed verification and cannot be trusted.`;
-      dialogType = 'error';
+      dialogTitle = '❌ Invalid SDLP Link';
+      dialogDetail = `Link: ${url}\n\nError: ${result.error?.message || 'Unknown error'}\n\nThis link failed verification and cannot be trusted.`;
+      dialogType = 'none';
     } else {
       const payload = new TextDecoder().decode(result.payload);
 
@@ -161,11 +165,31 @@ async function processSDLPLink(
         : 'Unknown/Untrusted Sender';
 
       if (isTrusted) {
-        dialogMessage = `${trustIndicator} SDLP Link from Trusted Source\n\nLink: ${url}\n\nSender: ${result.sender}\nStatus: ${trustStatus}\n\nPayload: ${payload}\n\nThis link has been cryptographically verified and comes from a trusted source. Do you want to proceed with executing the command?`;
-        dialogType = 'info';
+        dialogTitle = `${trustIndicator} SDLP Link from Trusted Source`;
+        // Format the dialog detail to match the desired layout from Image 2
+        dialogDetail = `Link: ${url}
+
+Sender:
+${result.sender || 'N/A'}
+Status: ${trustStatus}
+
+Payload: ${payload}
+
+This link has been cryptographically verified and comes from a trusted source. Do you want to proceed with executing the command?`;
+        dialogType = 'none';
       } else {
-        dialogMessage = `${trustIndicator} SDLP Link from Unknown Source\n\nLink: ${url}\n\nSender: ${result.sender}\nStatus: ${trustStatus}\n\nPayload: ${payload}\n\nThis link is cryptographically valid but comes from an unknown or untrusted source. Proceed with caution. Do you want to continue?`;
-        dialogType = 'warning';
+        dialogTitle = `${trustIndicator} SDLP Link from Unknown Source`;
+        // Format the dialog detail to match the desired layout from Image 2
+        dialogDetail = `Link: ${url}
+
+Sender:
+${result.sender || 'N/A'}
+Status: ${trustStatus}
+
+Payload: ${payload}
+
+This link is cryptographically valid but comes from an unknown or untrusted source. Proceed with caution. Do you want to continue?`;
+        dialogType = 'none';
       }
 
       canProceed = true;
@@ -173,9 +197,11 @@ async function processSDLPLink(
 
     // Show blocker dialog
     const response = await dialog.showMessageBox(mainWindow!, {
-      type: dialogType,
+      type: 'none',
       title: 'SDLP Link Processing',
-      message: dialogMessage,
+      message: dialogTitle,
+      detail: dialogDetail,
+      icon: join(__dirname, '../../resources/icon.png'),
       buttons: canProceed ? ['Proceed', 'Cancel'] : ['OK'],
       defaultId: canProceed ? 1 : 0, // Default to Cancel/OK
       cancelId: canProceed ? 1 : 0,
@@ -271,10 +297,12 @@ async function processSDLPLink(
 
     // Show error dialog
     await dialog.showMessageBox(mainWindow!, {
-      type: 'error',
+      type: 'none',
       title: 'SDLP Processing Error',
-      message: `❌ Failed to process SDLP link\n\nLink: ${url}\n\nError: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      message: '❌ Failed to process SDLP link',
+      detail: `Link: ${url}\n\nError: ${error instanceof Error ? error.message : 'Unknown error'}`,
       buttons: ['OK'],
+      icon: join(__dirname, '../../resources/icon.png'),
     });
   }
 }
@@ -296,12 +324,18 @@ if (process.platform === 'darwin') {
   const sdlpUrl = process.argv.find(arg => arg.startsWith('sdlp://'));
   if (sdlpUrl) {
     app.whenReady().then(() => {
-      processSDLPLink(sdlpUrl);
+      processSDLPLink(sdlpUrl!);
     });
   }
 }
 
+// Set application name early to ensure it shows in dock
+app.setName('SDLP Electron Demo');
+
 app.whenReady().then(() => {
+  if (process.platform === 'darwin') {
+    app.dock.setIcon(join(__dirname, '../../resources/icon.png'));
+  }
   setupIpcHandlers();
   createWindow();
 

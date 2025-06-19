@@ -1,5 +1,6 @@
 {
-  "name": "sdlp-electron-mvp",
+  "name": "sdlp-demo",
+  "productName": "SDLP Demo",
   "version": "0.1.0",
   "description": "Electron MVP application for SDLP protocol demonstration",
   "main": "out/main/index.js",
@@ -20,6 +21,26 @@
     "lint": "eslint . --ext .ts,.js",
     "lint:fix": "eslint . --ext .ts,.js --fix",
     "format": "prettier --write ."
+  },
+  "build": {
+    "appId": "com.sdlp.demo",
+    "productName": "SDLP Electron Demo",
+    "files": [
+      "out/**/*",
+      "resources/**/*"
+    ],
+    "directories": {
+      "buildResources": "resources"
+    },
+    "mac": {
+      "icon": "resources/icon.png"
+    },
+    "win": {
+      "icon": "resources/icon.png"
+    },
+    "linux": {
+      "icon": "resources/icon.png"
+    }
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",

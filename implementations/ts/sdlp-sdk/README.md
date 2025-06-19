@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="../../../../assets/logo.png" alt="Project Logo" width="200"/>
+</div>
+
 # SDLP SDK v1.0
 
 A TypeScript reference implementation of the Secure Deep Link Protocol (SDLP) v1.0 specification.
