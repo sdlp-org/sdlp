@@ -1,0 +1,32 @@
+{
+  "name": "sdlp-electron-mvp",
+  "version": "0.1.0",
+  "description": "Electron MVP application for SDLP protocol demonstration",
+  "main": "out/main/index.js",
+  "author": "",
+  "license": "ISC",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "build:win": "npm run build && electron-builder --win",
+    "build:mac": "npm run build && electron-builder --mac",
+    "build:linux": "npm run build && electron-builder --linux"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "autoprefixer": "^10.4.16",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "electron-vite": "^2.0.0",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.3.6",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "@sdlp/sdk": "file:../sdlp-sdk",
+    "@xterm/xterm": "^5.5.0",
+    "shiki": "^0.14.7"
+  }
+}

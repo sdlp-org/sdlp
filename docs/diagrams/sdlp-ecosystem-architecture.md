@@ -125,11 +125,13 @@ sequenceDiagram
 
     User->>CLI: sdlp verify <link>
     CLI->>SDK: verifyLink(link, options)
-    SDK->>SDK: Parse link structure
-    SDK->>DIDResolver: Resolve sender DID
+    SDK->>SDK: 1. Strict URI Parse & Validate
+    Note over SDK: Must be exactly 2 parts separated by '.'
+    SDK->>SDK: 2. Decode JWS structure
+    SDK->>DIDResolver: 3. Resolve sender DID
     DIDResolver-->>SDK: Return DID document
-    SDK->>JOSE: Verify JWS signature
-    SDK->>SDK: Decompress and validate payload
+    SDK->>JOSE: 4. Verify JWS signature
+    SDK->>SDK: 5. Decompress and validate payload
     SDK-->>CLI: Return verification result
     CLI-->>User: Display sender info and payload
 ```
@@ -148,4 +150,4 @@ sequenceDiagram
 3. **Implement**: Use `createLink()` and `verifyLink()` functions
 4. **Customize**: Extend with application-specific validation
 
-This architecture ensures a cohesive ecosystem where each component serves specific needs while building on shared foundations. 
+This architecture ensures a cohesive ecosystem where each component serves specific needs while building on shared foundations.

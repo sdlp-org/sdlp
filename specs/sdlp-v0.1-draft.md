@@ -138,7 +138,11 @@ The protocol aims to maximize usable payload within typical URL length limits.
 
 ### 3.8. Receiver Workflow Summary
 
-1. Parse the deep link: extract scheme, split by the first . into part1_b64 and part2_b64.
+1. **Strictly Parse the Deep Link:**
+   a. Extract the scheme and verify it is the expected one (e.g., `sdlp://`).
+   b. Remove the scheme prefix (`sdlp://`) to get the link's content.
+   c. Split the content string by the `.` delimiter. The result MUST be an array of exactly two non-empty strings: `part1_b64` (the JWS) and `part2_b64` (the payload).
+   d. If the link does not conform to this exact structure, it is invalid; ABORT.
 2. Base64URL decode part1_b64 to get the JWS Metadata Object (JSON).
 3. Parse JWS: Extract protected (string), payload (string), and signature (string) segments.
 4. Decode Headers & Core Metadata: Base64URL decode the protected segment (JWS Protected Header) and payload segment (Core Metadata). Parse the resulting JSONs.

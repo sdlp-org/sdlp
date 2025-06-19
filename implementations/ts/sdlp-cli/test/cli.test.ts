@@ -42,11 +42,11 @@ function spawnCommand(args: string[], input?: string): Promise<{ code: number; s
             resolve({ code: code ?? 0, stdout, stderr });
         });
 
-        child.on('error', (error) => {
-            reject(error);
+        child.on('error', (err) => {
+            reject(err);
         });
 
-        if (input) {
+        if (typeof input === 'string' && input.length > 0) {
             child.stdin.write(input);
             child.stdin.end();
         }
@@ -58,7 +58,7 @@ describe('SDLP CLI', () => {
         // Ensure CLI is built
         try {
             execSync('npm run build', { stdio: 'inherit' });
-        } catch (error) {
+        } catch {
             throw new Error('Failed to build CLI');
         }
 
@@ -284,6 +284,18 @@ describe('SDLP CLI', () => {
             expect(result.code).toBe(1);
             expect(result.stderr).toContain('❌ Link verification failed');
         });
+
+        it('should fail verification for a link with trailing data', async () => {
+            // This test case addresses the security vulnerability where appending arbitrary data
+            // to a valid SDLP link does not cause verification to fail
+            const tamperedLink = "sdlp://part1.part2.extradata";
+
+            const result = await spawnCommand(['verify', tamperedLink]);
+
+            expect(result.code).toBe(1);
+            expect(result.stderr).toContain('❌ Link verification failed');
+            expect(result.stderr).toContain('Error:');
+        });
     });
 
     describe('Integration Tests', () => {
@@ -332,4 +344,4 @@ describe('SDLP CLI', () => {
             }
         });
     });
-}); 
+});

@@ -54,8 +54,8 @@
             "description": "Failure: Not Flattened JWS JSON format",
             "link": "sdlp://eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJ2IjoiU0RMLTEuMCIsInNpZCI6ImRpZDprZXk6ejJEZm9YdGNYaXZpRWY1NzE5ZVJ6a3ZDNkJSVDhTSFlwNkpWV3FIeExDREdwaEQiLCJ0eXBlIjoidGV4dC9wbGFpbiIsImNvbXAiOiJub25lIn0.invalid_compact_jws",
             "expects": "error",
-            "error_type": "INVALID_JWS_FORMAT",
-            "notes": "JWS in compact format instead of required Flattened JSON"
+            "error_type": "INVALID_LINK_FORMAT",
+            "notes": "JWS in compact format instead of required Flattened JSON - rejected by strict parsing"
         },
         {
             "description": "Failure: Invalid signature",

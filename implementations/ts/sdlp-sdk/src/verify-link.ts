@@ -129,7 +129,11 @@ export async function verifyLink(
       jwsObject = JSON.parse(jwsString) as JWSFlattenedFormat;
 
       // Validate JWS structure
-      if (!jwsObject.protected || !jwsObject.payload || !jwsObject.signature) {
+      if (
+        typeof jwsObject.protected !== 'string' || jwsObject.protected.length === 0 ||
+        typeof jwsObject.payload !== 'string' || jwsObject.payload.length === 0 ||
+        typeof jwsObject.signature !== 'string' || jwsObject.signature.length === 0
+      ) {
         return {
           valid: false,
           error: new InvalidJWSFormatError("Missing required JWS fields (protected, payload, signature)"),
@@ -142,13 +146,13 @@ export async function verifyLink(
         new TextDecoder().decode(headerJson),
       ) as JWSProtectedHeader;
 
-      // Validate algorithm is in allowed list
-      if (!allowedAlgorithms.includes(protectedHeader.alg)) {
-        return {
-          valid: false,
-          error: new InvalidSignatureError(`Algorithm '${protectedHeader.alg}' is not in allowed list: ${allowedAlgorithms.join(', ')}`),
-        };
-      }
+  // Validate algorithm is in allowed list
+  if (typeof protectedHeader.alg !== 'string' || !allowedAlgorithms.includes(protectedHeader.alg)) {
+    return {
+      valid: false,
+      error: new InvalidSignatureError(`Algorithm '${protectedHeader.alg ?? 'undefined'}' is not in allowed list: ${allowedAlgorithms.join(', ')}`),
+    };
+  }
 
       // Decode the payload (core metadata)
       const payloadJson = base64urlDecode(jwsObject.payload);
@@ -228,7 +232,7 @@ export async function verifyLink(
     let publicKey: Record<string, unknown>;
     if (verificationMethod.publicKeyJwk) {
       publicKey = verificationMethod.publicKeyJwk;
-    } else if (verificationMethod.publicKeyBase58 && verificationMethod.type === "Ed25519VerificationKey2018") {
+    } else if (typeof verificationMethod.publicKeyBase58 === 'string' && verificationMethod.publicKeyBase58.length > 0 && verificationMethod.type === "Ed25519VerificationKey2018") {
       // Convert publicKeyBase58 to JWK format for Ed25519 keys
       const base58Key = verificationMethod.publicKeyBase58;
       try {
@@ -344,7 +348,8 @@ export async function verifyLink(
 
 /**
  * Parse an SDLP link into its components
- * Must split by the first '.' delimiter as specified in the v1.0 specification
+ * Must split by exactly one '.' delimiter as specified in the v1.0 specification
+ * Enforces strict two-part structure to prevent security vulnerabilities
  */
 function parseSDLPLink(
   link: string,
@@ -355,16 +360,27 @@ function parseSDLPLink(
   }
 
   const content = link.slice(7); // Remove 'sdlp://' prefix
-  const dotIndex = content.indexOf("."); // Find the first dot to split JWS and payload
+  const parts = content.split('.');
 
-  if (dotIndex === -1) {
+  // A valid link MUST consist of exactly two parts
+  if (parts.length !== 2) {
     return null;
   }
 
-  const jwsToken = content.slice(0, dotIndex);
-  const encodedPayload = content.slice(dotIndex + 1);
+  const jwsToken = parts[0];
+  const encodedPayload = parts[1];
 
-  if (!jwsToken || !encodedPayload) {
+  // Both parts must be non-empty and defined
+  if (
+    typeof jwsToken !== 'string' || jwsToken.length === 0 ||
+    typeof encodedPayload !== 'string' || encodedPayload.length === 0
+  ) {
+    return null;
+  }
+
+  // Additionally, ensure the payload contains only valid Base64URL characters
+  const base64UrlRegex = /^[a-zA-Z0-9_-]+$/;
+  if (!base64UrlRegex.test(encodedPayload)) {
     return null;
   }
 
@@ -373,11 +389,30 @@ function parseSDLPLink(
 
 /**
  * Base64URL decode a string to Uint8Array
+ * Strict implementation that validates the input is properly formed Base64URL
  */
 function base64urlDecode(data: string): Uint8Array {
+  // Validate that the input contains only valid Base64URL characters
+  const base64UrlRegex = /^[a-zA-Z0-9_-]*$/;
+  if (!base64UrlRegex.test(data)) {
+    throw new Error("Invalid Base64URL characters");
+  }
+
   // Add padding if needed
   const padded = data + "=".repeat((4 - (data.length % 4)) % 4);
   // Convert base64url to base64
   const base64 = padded.replace(/-/g, "+").replace(/_/g, "/");
-  return new Uint8Array(Buffer.from(base64, "base64"));
+  
+  // Use a more strict approach to validate the Base64 data
+  try {
+    const buffer = Buffer.from(base64, "base64");
+    // Verify that the decoded data, when re-encoded, matches the original
+    const reencoded = buffer.toString("base64");
+    if (reencoded !== base64) {
+      throw new Error("Invalid Base64URL data");
+    }
+    return new Uint8Array(buffer);
+  } catch (error) {
+    throw new Error(`Failed to decode Base64URL: ${error instanceof Error ? error.message : "Unknown error"}`);
+  }
 }

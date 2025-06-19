@@ -1,7 +1,7 @@
 import { writeFileSync } from 'node:fs';
 import bs58 from 'bs58';
 import { Command } from 'commander';
-import { generateKeyPair, exportJWK } from 'jose';
+import { generateKeyPair, exportJWK, type JWK } from 'jose';
 
 export const keygenCommand = new Command('keygen')
     .description('Generate a did:key and save the private key')
@@ -18,7 +18,7 @@ export const keygenCommand = new Command('keygen')
             const publicJWK = await exportJWK(publicKey);
 
             // Generate the did:key identifier
-            const didKey = generateDidKey(publicJWK as unknown as Record<string, unknown>);
+            const didKey = generateDidKey(publicJWK);
 
             // Extract the key identifier (the part after 'did:key:')
             const keyIdentifier = didKey.replace('did:key:', '');
@@ -47,7 +47,7 @@ export const keygenCommand = new Command('keygen')
 /**
  * Generate a did:key identifier from a public JWK
  */
-function generateDidKey(publicJWK: Record<string, unknown>): string {
+function generateDidKey(publicJWK: JWK): string {
     // For Ed25519 keys, we need to extract the x coordinate and encode it
     if (publicJWK.kty !== 'OKP' || publicJWK.crv !== 'Ed25519') {
         throw new Error('Only Ed25519 keys are supported for did:key generation');
@@ -77,15 +77,9 @@ function generateDidKey(publicJWK: Record<string, unknown>): string {
  * Base64URL decode
  */
 function base64urlDecode(str: string): Uint8Array {
-    // Add padding if needed
-    const padded = str + '='.repeat((4 - str.length % 4) % 4);
     // Replace base64url characters with base64
-    const base64 = padded.replace(/-/g, '+').replace(/_/g, '/');
+    const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
     // Decode
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let index = 0; index < binary.length; index++) {
-        bytes[index] = binary.charCodeAt(index);
-    }
-    return bytes;
-} 
+    const buffer = Buffer.from(base64, 'base64');
+    return new Uint8Array(buffer);
+}

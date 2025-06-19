@@ -1,7 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { Command } from 'commander';
-import { createLink } from 'sdlp-sdk';
-import type { Signer } from 'sdlp-sdk';
+import { createLink, type Signer } from 'sdlp-sdk';
+
+interface Jwk {
+    kid: string;
+    alg: string;
+    [key: string]: unknown;
+}
 
 export const signCommand = new Command('sign')
     .description('Sign a payload file and create an SDLP link')
@@ -20,7 +25,7 @@ export const signCommand = new Command('sign')
             const signer = await loadSigner(options.signerKey);
 
             // Parse expiration time
-            const exp = options.expires ? parseTime(options.expires) : undefined;
+            const exp = typeof options.expires === 'string' && options.expires.length > 0 ? parseTime(options.expires) : undefined;
 
             // Create the link
             const createLinkParameters: Parameters<typeof createLink>[0] = {
@@ -30,7 +35,7 @@ export const signCommand = new Command('sign')
                 compress: options.compression === 'none' ? 'none' : 'br',
             };
 
-            if (exp) {
+            if (typeof exp === 'number') {
                 createLinkParameters.expiresIn = exp - Math.floor(Date.now() / 1000);
             }
 
@@ -49,31 +54,31 @@ export const signCommand = new Command('sign')
  * Load a signer from a private key file or environment variable
  */
 async function loadSigner(keyFile?: string): Promise<Signer> {
-    let jwkData: string;
+    let jwkData: string | undefined;
 
-    if (keyFile) {
+    if (typeof keyFile === 'string' && keyFile.length > 0) {
         // Load from file
         jwkData = readFileSync(keyFile, 'utf8');
-    } else if (process.env.SDLP_SIGNER_KEY_JWK) {
+    } else if (typeof process.env.SDLP_SIGNER_KEY_JWK === 'string' && process.env.SDLP_SIGNER_KEY_JWK.length > 0) {
         // Load from environment variable
         jwkData = process.env.SDLP_SIGNER_KEY_JWK;
     } else {
         throw new Error('No signer key provided. Use --signer-key <file> or set SDLP_SIGNER_KEY_JWK environment variable');
     }
 
-    const jwk = JSON.parse(jwkData);
+    const jwk = JSON.parse(jwkData) as Jwk;
 
     // Validate required fields
-    if (!jwk.kid) {
+    if (typeof jwk.kid !== 'string' || jwk.kid.length === 0) {
         throw new Error('Private key must have a "kid" field');
     }
 
-    if (!jwk.alg) {
+    if (typeof jwk.alg !== 'string' || jwk.alg.length === 0) {
         throw new Error('Private key must have an "alg" field');
     }
 
     // Validate kid format
-    const kid = jwk.kid as string;
+    const kid = jwk.kid;
     const kidParts = kid.split('#');
     if (kidParts.length !== 2) {
         throw new Error('Invalid kid format. Expected format: did:method:identifier#fragment');
@@ -102,4 +107,4 @@ function parseTime(timeString: string): number {
     }
 
     throw new Error(`Invalid time format: ${timeString}. Use ISO 8601 format or seconds from now`);
-} 
+}

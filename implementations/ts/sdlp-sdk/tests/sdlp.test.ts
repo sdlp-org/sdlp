@@ -583,5 +583,33 @@ describe("SDLP SDK v1.0", () => {
         expect(result.error.code).toBe("INVALID_LINK_FORMAT");
       }
     });
+
+    it("should fail verification for a link with trailing data", async () => {
+      // This test case addresses the security vulnerability where appending arbitrary data
+      // to a valid SDLP link does not cause verification to fail
+      // Create a link with 3 parts instead of 2 (compact JWS format)
+      const tamperedLink = "sdlp://part1.part2.extradata";
+
+      const result = await verifyLink(tamperedLink);
+      expect(result.valid).toBe(false);
+      if (!result.valid) {
+        expect(result.error).toBeInstanceOf(InvalidLinkFormatError);
+        expect(result.error.code).toBe("INVALID_LINK_FORMAT");
+        expect(result.error.message).toContain("Invalid SDLP link format");
+      }
+    });
+
+    it("should fail verification for a link with invalid Base64URL characters", async () => {
+      // This test case addresses the security vulnerability with invalid Base64URL characters
+      const linkWithInvalidChars = "sdlp://validpart.invalid!!!chars";
+
+      const result = await verifyLink(linkWithInvalidChars);
+      expect(result.valid).toBe(false);
+      if (!result.valid) {
+        expect(result.error).toBeInstanceOf(InvalidLinkFormatError);
+        expect(result.error.code).toBe("INVALID_LINK_FORMAT");
+        expect(result.error.message).toContain("Invalid SDLP link format");
+      }
+    });
   });
 });
