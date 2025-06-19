@@ -2,8 +2,22 @@ import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import { join } from 'path';
 import { spawn } from 'child_process';
 import { readFileSync } from 'fs';
+import { clipboard } from 'electron';
 
 const isDev = process.env.NODE_ENV === 'development';
+
+// Set application name as early as possible - before any other app operations
+app.setName('Secure Deep Link Demo');
+
+// For macOS, also try to set the application name in the dock immediately
+if (process.platform === 'darwin') {
+  // Try to set dock name early
+  try {
+    app.dock?.setIcon(join(__dirname, '../../resources/icon.png'));
+  } catch (error) {
+    // Icon might not be available yet, will try again later
+  }
+}
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -95,6 +109,29 @@ function createWindow(): void {
   }
 }
 
+// Helper function to truncate SDLP links for display in dialogs
+function truncateSDLPLink(link: string, maxLength: number = 100): string {
+  if (link.length <= maxLength) {
+    return link;
+  }
+  
+  // For SDLP links, show the protocol and first/last parts
+  if (link.startsWith('sdlp://')) {
+    const linkContent = link.substring(7); // Remove 'sdlp://'
+    if (linkContent.length <= maxLength - 7) {
+      return link;
+    }
+    
+    const prefixLength = Math.floor((maxLength - 10) / 2); // Account for 'sdlp://' and '...'
+    const suffixLength = Math.floor((maxLength - 10) / 2);
+    
+    return `sdlp://${linkContent.substring(0, prefixLength)}...${linkContent.substring(linkContent.length - suffixLength)}`;
+  }
+  
+  // For other links, simple truncation
+  return link.substring(0, maxLength - 3) + '...';
+}
+
 // Setup IPC handlers
 function setupIpcHandlers() {
   // Handle SDLP link generation (trusted)
@@ -160,11 +197,13 @@ function setupIpcHandlers() {
   });
 
   // Handle SDLP link processing with dialog (for test links)
+  // This MUST use exactly the same code path as external protocol links
   ipcMain.handle(
     'process-sdlp-link-with-dialog',
     async (_event, link: string, forceUntrusted: boolean = false) => {
       try {
-        // This will trigger the same flow as a real deep link
+        console.log('IPC handler: Processing SDLP link via same path as protocol handler:', link);
+        // Use exactly the same function call as the protocol handlers
         await processSDLPLink(link, forceUntrusted);
       } catch (error) {
         console.error('Failed to process SDLP link with dialog:', error);
@@ -197,7 +236,13 @@ async function processSDLPLink(
 
     if (!result.valid) {
       dialogTitle = '❌ Invalid SDLP Link';
-      dialogDetail = `Link: ${url}\n\nError: ${result.error?.message || 'Unknown error'}\n\nThis link failed verification and cannot be trusted.`;
+      const truncatedLink = truncateSDLPLink(url, 80);
+      const linkDisplay = url.length > 80 ? `${truncatedLink} (truncated)` : truncatedLink;
+      dialogDetail = `Link: ${linkDisplay}
+
+Error: ${result.error?.message || 'Unknown error'}
+
+This link failed verification and cannot be trusted.`;
       dialogType = 'none';
     } else {
       const payload = new TextDecoder().decode(result.payload);
@@ -218,10 +263,12 @@ async function processSDLPLink(
         ? 'Trusted Sender'
         : 'Unknown/Untrusted Sender';
 
+      const truncatedLink = truncateSDLPLink(url, 80);
+      const linkDisplay = url.length > 80 ? `${truncatedLink} (truncated)` : truncatedLink;
+
       if (isTrusted) {
         dialogTitle = `${trustIndicator} SDLP Link from Trusted Source`;
-        // Format the dialog detail to match the desired layout from Image 2
-        dialogDetail = `Link: ${url}
+        dialogDetail = `Link: ${linkDisplay}
 
 Sender:
 ${result.sender || 'N/A'}
@@ -233,8 +280,7 @@ This link has been cryptographically verified and comes from a trusted source. D
         dialogType = 'none';
       } else {
         dialogTitle = `${trustIndicator} SDLP Link from Unknown Source`;
-        // Format the dialog detail to match the desired layout from Image 2
-        dialogDetail = `Link: ${url}
+        dialogDetail = `Link: ${linkDisplay}
 
 Sender:
 ${result.sender || 'N/A'}
@@ -249,17 +295,24 @@ This link is cryptographically valid but comes from an unknown or untrusted sour
       canProceed = true;
     }
 
-    // Show blocker dialog
+    // Show blocker dialog with copy button for full link
+    const buttons = canProceed ? ['Proceed', 'Copy Full Link', 'Cancel'] : ['Copy Full Link', 'OK'];
     const response = await dialog.showMessageBox(mainWindow!, {
       type: 'none',
       title: 'SDLP Link Processing',
       message: dialogTitle,
       detail: dialogDetail,
       icon: join(__dirname, '../../resources/icon.png'),
-      buttons: canProceed ? ['Proceed', 'Cancel'] : ['OK'],
-      defaultId: canProceed ? 1 : 0, // Default to Cancel/OK
-      cancelId: canProceed ? 1 : 0,
+      buttons: buttons,
+      defaultId: canProceed ? 2 : 1, // Default to Cancel/OK
+      cancelId: canProceed ? 2 : 1,
     });
+
+    // Handle copy button - just copy silently without confirmation dialog
+    if ((canProceed && response.response === 1) || (!canProceed && response.response === 0)) {
+      clipboard.writeText(url);
+      return;
+    }
 
     if (!canProceed || response.response !== 0) {
       // User cancelled or link was invalid
@@ -349,15 +402,22 @@ This link is cryptographically valid but comes from an unknown or untrusted sour
   } catch (error) {
     console.error('Error processing SDLP link:', error);
 
-    // Show error dialog
-    await dialog.showMessageBox(mainWindow!, {
+    // Show error dialog with copy button
+    const response = await dialog.showMessageBox(mainWindow!, {
       type: 'none',
       title: 'SDLP Processing Error',
       message: '❌ Failed to process SDLP link',
-      detail: `Link: ${url}\n\nError: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      buttons: ['OK'],
+      detail: `Link: ${truncateSDLPLink(url, 80)}
+
+Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      buttons: ['Copy Full Link', 'OK'],
       icon: join(__dirname, '../../resources/icon.png'),
     });
+
+    // Handle copy button in error dialog - just copy silently
+    if (response.response === 0) {
+      clipboard.writeText(url);
+    }
   }
 }
 
@@ -369,6 +429,7 @@ if (process.platform === 'darwin') {
   // macOS
   app.on('open-url', (event, url) => {
     event.preventDefault();
+    console.log('Protocol handler: Processing SDLP link via same path as IPC handler:', url);
     if (url.startsWith('sdlp://')) {
       processSDLPLink(url);
     }
@@ -378,13 +439,11 @@ if (process.platform === 'darwin') {
   const sdlpUrl = process.argv.find(arg => arg.startsWith('sdlp://'));
   if (sdlpUrl) {
     app.whenReady().then(() => {
+      console.log('Command line: Processing SDLP link via same path as IPC handler:', sdlpUrl);
       processSDLPLink(sdlpUrl!);
     });
   }
 }
-
-// Set application name early to ensure it shows in dock
-app.setName('SDLP Electron Demo');
 
 app.whenReady().then(() => {
   if (process.platform === 'darwin') {

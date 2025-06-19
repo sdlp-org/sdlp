@@ -511,12 +511,12 @@ class SDLPRenderer {
     if (data.status === 'success') {
       this.showSuccessState(data);
       if (data.output) {
-        this.showTerminalOutput(data.output);
+        this.showTerminalOutput(data.output, false);
       }
     } else if (data.status === 'untrusted') {
       this.showUntrustedState(data);
       if (data.output) {
-        this.showTerminalOutput(data.output);
+        this.showTerminalOutput(data.output, true);
       }
     } else if (data.status === 'error') {
       this.showErrorState(data.message || 'An unknown error occurred.');
@@ -569,10 +569,9 @@ class SDLPRenderer {
         senderKey.includes('test-key-1') ||
         senderKey.includes('trusted') ||
         senderKey.includes('z6MkozXRpKZqLRoLWE6dUTWpSp2Sw2nRrEY');
-      const trustIndicator = isTrusted ? '✅' : '⚠️';
       const trustStatus = isTrusted ? 'Trusted' : 'Unknown';
 
-      senderInfo.innerHTML = `${trustIndicator} Verified from: <strong>${data.from}</strong> (${trustStatus})`;
+      senderInfo.innerHTML = `<strong>${data.from}</strong> (${trustStatus})`;
     }
 
     // Update command text
@@ -587,10 +586,10 @@ class SDLPRenderer {
     const untrustedState = document.getElementById('untrusted-state');
     if (untrustedState) untrustedState.classList.remove('hidden');
 
-    // Update untrusted info
+    // Update untrusted info (sender information)
     const untrustedInfo = document.getElementById('untrusted-info');
     if (untrustedInfo) {
-      untrustedInfo.textContent = `From: ${data.from} - ${data.message}`;
+      untrustedInfo.innerHTML = `<strong>${data.from}</strong> (Untrusted Source)`;
     }
 
     // Update command text
@@ -614,24 +613,37 @@ class SDLPRenderer {
     }
   }
 
-  private showTerminalOutput(output: string) {
-    // Show terminal section
-    const terminalSection = document.getElementById('terminal-section');
-    if (terminalSection) terminalSection.classList.remove('hidden');
+  private showTerminalOutput(output: string, isUntrusted: boolean = false) {
+    const cleanOutput = output.trim();
+    const htmlOutput = cleanOutput
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\n/g, '<br>');
 
-    // Get the terminal element and display output directly as HTML
-    const terminalElement = document.getElementById('terminal');
-    if (terminalElement) {
-      // Clean up the output and convert to HTML
-      const cleanOutput = output.trim();
-      const htmlOutput = cleanOutput
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/\n/g, '<br>');
-
-      terminalElement.innerHTML = `<div class="terminal-content text-green-400 font-mono">${htmlOutput}</div>`;
+    if (isUntrusted) {
+      // Show output in the untrusted command & output section
+      const untrustedOutputSection = document.getElementById('untrusted-output-section');
+      const untrustedOutput = document.getElementById('untrusted-output');
+      
+      if (untrustedOutputSection) untrustedOutputSection.classList.remove('hidden');
+      if (untrustedOutput) {
+        untrustedOutput.innerHTML = htmlOutput;
+      }
+    } else {
+      // Show output in the success command & output section
+      const commandOutputSection = document.getElementById('command-output-section');
+      const commandOutput = document.getElementById('command-output');
+      
+      if (commandOutputSection) commandOutputSection.classList.remove('hidden');
+      if (commandOutput) {
+        commandOutput.innerHTML = htmlOutput;
+      }
     }
+
+    // Keep the old terminal section for backward compatibility, but hide it
+    const terminalSection = document.getElementById('terminal-section');
+    if (terminalSection) terminalSection.classList.add('hidden');
   }
 
   private showNotification(
