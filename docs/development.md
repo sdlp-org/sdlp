@@ -23,6 +23,32 @@ just test
 
 # Run all quality checks (lint + format + test)
 just check-all
+
+# Simulate CI environment locally (clean install + checks)
+just ci-local
+```
+
+## CI/Local Environment Differences
+
+**Why do some errors only appear in CI?**
+
+CI environments start fresh every time, while local development accumulates state. Common differences:
+
+- **Dependencies**: CI does fresh `npm install`, local may have cached/working `node_modules`
+- **Platform**: CI runs on Ubuntu, local may be macOS/Windows with different binaries
+- **Environment**: CI has no previous state, local has accumulated cache and configurations
+
+**To catch CI issues locally:**
+
+```bash
+# Simulate CI environment (removes node_modules, preserves package-lock.json)
+just ci-local
+
+# For more aggressive cleaning (destructive):
+rm -rf node_modules package-lock.json
+npm cache clean --force
+npm install --legacy-peer-deps
+just check-all
 ```
 
 ## Package Structure

@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
 
       - name: Install Just
@@ -26,37 +26,15 @@ jobs:
           # Install just command runner
           curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
 
+      - name: Update npm
+        run: npm install -g npm@latest
+
       - name: Install dependencies
         run: |
           # Work around npm dependency issues
           # See: https://github.com/npm/cli/issues/4828
           rm -rf node_modules package-lock.json
-          # Install with legacy peer deps to resolve conflicts
-          npm install --legacy-peer-deps
+          npm install
 
       - name: Run all quality checks
         run: just check-all
-
-      - name: Upload test coverage (SDK)
-        uses: codecov/codecov-action@v4
-        with:
-          directory: implementations/ts/sdlp-sdk/coverage
-          fail_ci_if_error: false
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Upload test coverage (CLI)
-        uses: codecov/codecov-action@v4
-        with:
-          directory: implementations/ts/sdlp-cli/coverage
-          fail_ci_if_error: false
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Upload test coverage (Specs)
-        uses: codecov/codecov-action@v4
-        with:
-          directory: specs/coverage
-          fail_ci_if_error: false
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
