@@ -5,6 +5,21 @@
   "description": "Electron MVP application for SDLP protocol demonstration",
   "main": "out/main/index.js",
   "type": "module",
+  "files": [
+    "out",
+    "resources"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sdlp-org/sdlp.git",
+    "directory": "implementations/ts/sdlp-electron-demo"
+  },
+  "bugs": {
+    "url": "https://github.com/sdlp-org/sdlp/issues"
+  },
   "author": "",
   "license": "ISC",
   "scripts": {

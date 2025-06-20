@@ -11,6 +11,20 @@
       "require": "./dist/src/index.js"
     }
   },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sdlp-org/sdlp.git",
+    "directory": "implementations/ts/sdlp-sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/sdlp-org/sdlp/issues"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
