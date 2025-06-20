@@ -168,6 +168,27 @@ describe('SDLP SDK v1.0', () => {
         assertionMethod: [identity.kid],
       });
     }
+
+    // Also set up the specific DID from test vectors if we have the keys
+    if (testIdentities['did:key']) {
+      const testVectorDid =
+        'did:key:z2DfoXtcXiviEf5719eRzkvC6BRT8SHYp6JVWqHxLCDGphD';
+      const testVectorKid = `${testVectorDid}#z2DfoXtcXiviEf5719eRzkvC6BRT8SHYp6JVWqHxLCDGphD`;
+
+      mockDidDocuments.set(testVectorDid, {
+        id: testVectorDid,
+        verificationMethod: [
+          {
+            id: testVectorKid,
+            type: 'Ed25519VerificationKey2018',
+            controller: testVectorDid,
+            publicKeyJwk: testIdentities['did:key'].publicKeyJwk,
+          },
+        ],
+        authentication: [testVectorKid],
+        assertionMethod: [testVectorKid],
+      });
+    }
   });
 
   describe('Test Vector Compliance', () => {
