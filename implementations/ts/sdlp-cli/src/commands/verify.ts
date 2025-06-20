@@ -33,14 +33,14 @@ export const verifyCommand = new Command('verify')
           maxPayloadSize: parseInt(options.maxPayloadSize, 10),
         });
 
-        if (typeof options.json === 'boolean' && options.json) {
+        if (options.json === true) {
           // JSON output for machine consumption
-          if (result.valid) {
+          if (result.valid === true) {
             console.log(
               JSON.stringify({
                 valid: true,
                 sender: result.sender,
-                contentType: result.metadata.type || 'application/octet-stream',
+                contentType: result.metadata.type ?? 'application/octet-stream',
                 payloadSize: result.payload.length,
                 metadata: result.metadata,
               })
@@ -63,7 +63,7 @@ export const verifyCommand = new Command('verify')
           }
         } else {
           // Human-readable output
-          if (result.valid) {
+          if (result.valid === true) {
             console.error(`✅ Link verified successfully!`);
             console.error(`👤 Sender: ${result.sender}`);
             console.error(
@@ -105,7 +105,7 @@ export const verifyCommand = new Command('verify')
           }
         }
       } catch (error) {
-        if (typeof options.json === 'boolean' && options.json) {
+        if (options.json === true) {
           console.log(
             JSON.stringify({
               valid: false,

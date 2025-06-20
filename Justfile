@@ -28,6 +28,15 @@ format:
     @echo "Formatting files in sdlp-electron-demo..."
     cd implementations/ts/sdlp-electron-demo && npm run format
 
+# Build all packages
+build:
+    @echo "Building sdlp-sdk..."
+    cd implementations/ts/sdlp-sdk && npm run build
+    @echo "Building sdlp-cli..."
+    cd implementations/ts/sdlp-cli && npm run build
+    @echo "Building sdlp-electron-demo..."
+    cd implementations/ts/sdlp-electron-demo && npm run build
+
 # Run tests across all packages
 test:
     @echo "Running tests in specs..."
@@ -44,5 +53,11 @@ check-all:
     @echo "Running all quality checks..."
     just lint
     just format
+    just build
     just test
     @echo "All quality checks completed!"
+
+# Simulate CI environment locally (clean install + checks)
+ci-local:
+    @echo "Simulating CI environment locally..."
+    ./scripts/ci-local.sh

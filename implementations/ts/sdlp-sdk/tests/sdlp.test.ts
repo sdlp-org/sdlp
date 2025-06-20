@@ -89,20 +89,21 @@ describe('SDLP SDK v1.0', () => {
     // Load v1.0 test vectors
     try {
       const testVectorsJson = await readFile(
-        '../../../specs/sdlp-test-vectors-v1.json',
+        'specs/sdlp-test-vectors-v1.json',
         'utf-8'
       );
       const testVectorSuite: TestVectorSuite = JSON.parse(testVectorsJson);
       testVectors = testVectorSuite.vectors;
-    } catch {
-      console.warn('Could not load v1.0 test vectors, using empty array');
+      console.log('✅ Successfully loaded test vectors:', testVectors.length);
+    } catch (error) {
+      console.error('❌ Failed to load v1.0 test vectors:', error);
       testVectors = [];
     }
 
     // Load test identities
     try {
       const keysJson = await readFile(
-        './tests/test-fixtures/keys.json',
+        'implementations/ts/sdlp-sdk/tests/test-fixtures/keys.json',
         'utf-8'
       );
       const keys = JSON.parse(keysJson);
@@ -123,8 +124,17 @@ describe('SDLP SDK v1.0', () => {
           publicKeyJwk: keys.ed25519_public_key_jwk,
         },
       };
-    } catch {
-      console.warn('Could not load test fixtures, creating default identities');
+      console.log(
+        '✅ Successfully loaded test identities:',
+        Object.keys(testIdentities)
+      );
+      console.log(
+        '✅ Test vector DID matches fixture DID:',
+        testIdentities['did:key']?.did ===
+          'did:key:z2DfoXtcXiviEf5719eRzkvC6BRT8SHYp6JVWqHxLCDGphD'
+      );
+    } catch (error) {
+      console.error('❌ Failed to load test fixtures:', error);
       testIdentities = {};
     }
   });
@@ -133,10 +143,20 @@ describe('SDLP SDK v1.0', () => {
     // Clear mock DID documents before each test
     mockDidDocuments.clear();
 
+    // Debug: Log what test identities we have
+    console.log('Test identities available:', Object.keys(testIdentities));
+    if (testIdentities['did:key']) {
+      console.log('did:key identity:', {
+        did: testIdentities['did:key'].did,
+        kid: testIdentities['did:key'].kid,
+        publicKeyJwk: testIdentities['did:key'].publicKeyJwk,
+      });
+    }
+
     // Set up test DID documents for the test identities
     if (testIdentities['did:key']) {
       const identity = testIdentities['did:key'];
-      mockDidDocuments.set(identity.did, {
+      const didDoc = {
         id: identity.did,
         verificationMethod: [
           {
@@ -148,7 +168,10 @@ describe('SDLP SDK v1.0', () => {
         ],
         authentication: [identity.kid],
         assertionMethod: [identity.kid],
-      });
+      };
+
+      mockDidDocuments.set(identity.did, didDoc);
+      console.log('Mocked DID document for:', identity.did, didDoc);
     }
 
     if (testIdentities['did:web']) {
@@ -168,6 +191,9 @@ describe('SDLP SDK v1.0', () => {
         assertionMethod: [identity.kid],
       });
     }
+
+    // Debug: Log all mocked DIDs
+    console.log('All mocked DIDs:', Array.from(mockDidDocuments.keys()));
   });
 
   describe('Test Vector Compliance', () => {
@@ -189,9 +215,40 @@ describe('SDLP SDK v1.0', () => {
         console.log(`Running test vector ${index + 1}: ${vector.description}`);
 
         try {
-          const result = await verifyLink(vector.link);
+          // Create a custom resolver that uses our mocked DID documents
+          const customResolver = {
+            resolve: async (did: string) => {
+              const didDocument = mockDidDocuments.get(did);
+              if (!didDocument) {
+                return {
+                  didDocument: null,
+                  didResolutionMetadata: { error: 'notFound' },
+                  didDocumentMetadata: {},
+                };
+              }
+              return {
+                didDocument: didDocument as any, // Type assertion for test mock
+                didResolutionMetadata: { contentType: 'application/did+json' },
+                didDocumentMetadata: {},
+              };
+            },
+          };
+
+          const result = await verifyLink(vector.link, {
+            resolver: customResolver,
+          });
 
           if (vector.expects === 'success') {
+            // Debug output for CI
+            if (!result.valid) {
+              console.error(`Test vector ${index + 1} failed:`, {
+                description: vector.description,
+                error: result.error.message,
+                errorCode: result.error.code,
+                link: `${vector.link.substring(0, 50)}...`,
+              });
+            }
+
             expect(
               result.valid,
               `Test vector ${index + 1} should succeed: ${vector.description}`

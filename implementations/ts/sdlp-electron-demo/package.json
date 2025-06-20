@@ -5,6 +5,21 @@
   "description": "Electron MVP application for SDLP protocol demonstration",
   "main": "out/main/index.js",
   "type": "module",
+  "files": [
+    "out",
+    "resources"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sdlp-org/sdlp.git",
+    "directory": "implementations/ts/sdlp-electron-demo"
+  },
+  "bugs": {
+    "url": "https://github.com/sdlp-org/sdlp/issues"
+  },
   "author": "",
   "license": "ISC",
   "scripts": {
@@ -51,8 +66,8 @@
     "autoprefixer": "^10.4.16",
     "electron": "^28.0.0",
     "electron-builder": "^24.9.1",
-    "electron-rebuild": "^3.2.9",
-    "electron-vite": "^2.0.0",
+    "@electron/rebuild": "^3.6.0",
+    "electron-vite": "^3.1.0",
     "eslint": "^9.28.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-security": "^3.0.1",
