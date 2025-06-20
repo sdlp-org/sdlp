@@ -13,5 +13,5 @@
   "release-type": "node",
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": true,
-  "bootstrap-sha": "ad21cef"
+  "bootstrap-sha": "b5010e45d16d85a364a16cfd2158478ff323e07c"
 }
