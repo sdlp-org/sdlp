@@ -1,0 +1,17 @@
+{
+  "packages": {
+    "implementations/ts/sdlp-sdk": {
+      "package-name": "sdlp-sdk"
+    },
+    "implementations/ts/sdlp-cli": {
+      "package-name": "sdlp-cli"
+    },
+    "implementations/ts/sdlp-electron-demo": {
+      "package-name": "sdlp-demo"
+    }
+  },
+  "release-type": "node",
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": true,
+  "bootstrap-sha": "ad21cef"
+}
