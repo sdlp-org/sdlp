@@ -6,6 +6,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onSDLPResult: (callback: (data: any) => void) => {
     ipcRenderer.on('sdlp-result', (_event, data) => callback(data));
   },
+  onSDLPCommandToExecute: (callback: (data: any) => void) => {
+    ipcRenderer.on('sdlp-command-to-execute', (_event, data) => callback(data));
+  },
   removeAllListeners: (channel: string) => {
     ipcRenderer.removeAllListeners(channel);
   },
@@ -27,5 +30,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
       link,
       forceUntrusted
     );
+  },
+  executeSDLPCommand: async (
+    command: string
+  ): Promise<{ output: string; exitCode: number }> => {
+    return await ipcRenderer.invoke('execute-sdlp-command', command);
   },
 });

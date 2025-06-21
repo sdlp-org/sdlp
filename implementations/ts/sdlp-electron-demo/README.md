@@ -12,8 +12,9 @@ A comprehensive Electron application that demonstrates the Secure Deep Link Prot
 
 - **Protocol Handler**: Registers as the default handler for `sdlp://` links
 - **Cryptographic Verification**: Uses the SDLP SDK to verify link authenticity and integrity
-- **Command Execution**: Safely executes commands from verified payloads using `child_process.spawn`
-- **Security Dialogs**: User consent dialogs before executing any commands from deep links
+- **Two-Step Command Execution**: Decoupled verification and execution with explicit user confirmation
+- **Security Dialogs**: Multi-layered user consent - initial verification dialog plus explicit execution confirmation
+- **Safe Command Execution**: Commands are executed only after user explicitly clicks "Execute Command" button
 
 ### Interactive User Interface
 
@@ -128,9 +129,11 @@ src/
 1. **Protocol Registration**: The app registers as the default handler for `sdlp://` links
 2. **Link Capture**: When a link is opened, the main process captures it via OS events
 3. **Verification**: The SDLP SDK verifies the link's cryptographic signature and integrity
-4. **Command Parsing**: Valid payloads are parsed to extract commands and arguments
-5. **Execution**: Commands are executed using `child_process.spawn` for security
-6. **Display**: Output is sent to the renderer and displayed in a styled terminal
+4. **User Consent**: A security dialog asks for permission to proceed with the verified command
+5. **Command Display**: If approved, the command is sent to the renderer and displayed on the home screen
+6. **Explicit Execution**: User must click the "Execute Command" button to actually run the command
+7. **Safe Execution**: Commands are executed using `child_process.spawn` only after explicit user confirmation
+8. **Output Display**: Results are sent to the renderer and displayed in a styled terminal interface
 
 ## Integration with SDLP Ecosystem
 

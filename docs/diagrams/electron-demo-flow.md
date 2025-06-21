@@ -44,10 +44,15 @@ graph TB
     OS -->|Protocol Event| Protocol
     Protocol -->|Verify Link| SDLP_Main
     SDLP_Main -->|Show Dialog| Dialog
-    Dialog -->|User Choice| Exec
+    Dialog -->|User Choice| IPC_Main
+    IPC_Main -->|Send Command| Bridge
+    Bridge -->|Display Command| UI
+    UI -->|Execute Button| Bridge
+    Bridge -->|Execute Request| IPC_Main
+    IPC_Main -->|Execute| Exec
     Exec -->|Results| IPC_Main
     IPC_Main -->|Send Results| Bridge
-    Bridge -->|Display| UI
+    Bridge -->|Display Output| UI
     
     %% Interactive Flow
     UI <-->|Tab Switch| Tabs
@@ -95,7 +100,8 @@ graph TB
 #### Command Execution
 - Safely executes commands using `child_process.spawn`
 - Captures stdout and stderr for display
-- Only executes after user consent via blocker dialog
+- Two-step process: user consent via blocker dialog, then explicit execution confirmation in UI
+- Commands are displayed to user before execution for additional transparency
 
 ### Renderer Process Components
 
@@ -154,9 +160,13 @@ sequenceDiagram
     Dialog->>User: Request consent
     User->>Dialog: Choose action
     alt User clicks Proceed
-        Dialog->>Main: Execute command
+        Dialog->>Main: Send command to renderer
+        Main->>Renderer: IPC: sdlp-command-to-execute
+        Renderer->>User: Display command + Execute button
+        User->>Renderer: Click Execute button
+        Renderer->>Main: IPC: execute-sdlp-command
         Main->>Main: Spawn process
-        Main->>Renderer: Send results
+        Main->>Renderer: Return execution results
         Renderer->>User: Display output
     else User clicks Cancel
         Dialog->>Main: Cancel action
@@ -203,9 +213,10 @@ sequenceDiagram
 
 ### Security Features by Component
 - **Main Process**: Handles all privileged operations (file system, process spawning)
-- **Renderer Process**: Sandboxed UI with no direct system access
+- **Renderer Process**: Sandboxed UI with no direct system access, requires explicit user action for command execution
 - **Preload Script**: Minimal, secure API surface for IPC communication
 - **Blocker Dialog**: Native OS dialog for secure user consent
+- **Two-Step Execution**: Commands are verified, then displayed, then explicitly executed by user action
 
 ## Integration Points
 

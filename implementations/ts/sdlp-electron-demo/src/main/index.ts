@@ -132,6 +132,19 @@ function truncateSDLPLink(link: string, maxLength: number = 100): string {
   return link.substring(0, maxLength - 3) + '...';
 }
 
+// Helper function to truncate payloads for display in dialogs
+function truncatePayload(payload: string, maxLength: number = 100): string {
+  if (payload.length <= maxLength) {
+    return payload;
+  }
+
+  // For payloads, show the beginning and end parts
+  const prefixLength = Math.floor((maxLength - 3) / 2); // Account for '...'
+  const suffixLength = Math.floor((maxLength - 3) / 2);
+
+  return `${payload.substring(0, prefixLength)}...${payload.substring(payload.length - suffixLength)}`;
+}
+
 // Setup IPC handlers
 function setupIpcHandlers() {
   // Handle SDLP link generation (trusted)
@@ -217,6 +230,56 @@ function setupIpcHandlers() {
       }
     }
   );
+
+  // Handle command execution (new for Phase 9)
+  ipcMain.handle('execute-sdlp-command', async (_event, command: string) => {
+    return new Promise((resolve, reject) => {
+      // SECURITY: This is still for demonstration.
+      const trimmedPayload = command.trim();
+      let cmd: string;
+      let args: string[];
+
+      if (trimmedPayload.startsWith('echo ')) {
+        cmd = 'echo';
+        let echoArg = trimmedPayload.substring(5).trim();
+        if (
+          (echoArg.startsWith('"') && echoArg.endsWith('"')) ||
+          (echoArg.startsWith("'") && echoArg.endsWith("'"))
+        ) {
+          echoArg = echoArg.slice(1, -1);
+        }
+        args = [echoArg];
+      } else {
+        const parts = trimmedPayload.split(/\s+/);
+        cmd = parts[0];
+        args = parts.slice(1);
+      }
+
+      const childProcess = spawn(cmd, args, {
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      childProcess.stdout.on('data', data => {
+        stdout += data.toString();
+      });
+
+      childProcess.stderr.on('data', data => {
+        stderr += data.toString();
+      });
+
+      childProcess.on('close', code => {
+        const output = stdout + (stderr ? '\n--- STDERR ---\n' + stderr : '');
+        resolve({ output, exitCode: code });
+      });
+
+      childProcess.on('error', error => {
+        reject(error);
+      });
+    });
+  });
 }
 
 async function processSDLPLink(
@@ -262,7 +325,7 @@ This link failed verification and cannot be trusted.`;
       // Check if the sender is our trusted key
       const trustedKeyId = trustedKey?.kid || '';
       const isTrustedSender =
-        trustedKeyId && senderKey.includes(trustedKeyId.split('#')[0]);
+        trustedKeyId && senderKey && senderKey.includes(trustedKeyId.split('#')[0]);
 
       isTrusted = !forceUntrusted && isTrustedSender;
 
@@ -275,6 +338,10 @@ This link failed verification and cannot be trusted.`;
       const linkDisplay =
         url.length > 80 ? `${truncatedLink} (truncated)` : truncatedLink;
 
+      const truncatedPayload = truncatePayload(payload, 60);
+      const payloadDisplay =
+        payload.length > 60 ? `${truncatedPayload} (truncated)` : truncatedPayload;
+
       if (isTrusted) {
         dialogTitle = `${trustIndicator} SDLP Link from Trusted Source`;
         dialogDetail = `Link: ${linkDisplay}
@@ -283,7 +350,7 @@ Sender:
 ${result.sender || 'N/A'}
 Status: ${trustStatus}
 
-Payload: ${payload}
+Payload: ${payloadDisplay}
 
 This link has been cryptographically verified and comes from a trusted source. Do you want to proceed with executing the command?`;
         dialogType = 'none';
@@ -295,7 +362,7 @@ Sender:
 ${result.sender || 'N/A'}
 Status: ${trustStatus}
 
-Payload: ${payload}
+Payload: ${payloadDisplay}
 
 This link is cryptographically valid but comes from an unknown or untrusted source. Proceed with caution. Do you want to continue?`;
         dialogType = 'none';
@@ -334,84 +401,21 @@ This link is cryptographically valid but comes from an unknown or untrusted sour
       return;
     }
 
-    // User chose to proceed - execute the command
-    // At this point we know result.valid is true, so we can safely cast
+    // User chose to proceed - send command to renderer for confirmation
     if (!result.valid) {
       throw new Error('Unexpected: result should be valid at this point');
     }
 
     const payload = new TextDecoder().decode(result.payload);
-    console.log('Command payload:', payload);
+    const status = isTrusted ? 'success' : 'untrusted';
 
-    // SECURITY: In a production application, never execute arbitrary commands from a payload.
-    // This is for demonstration purposes only. A real application should have a strict
-    // allowlist of commands and sanitize all arguments.
-    const trimmedPayload = payload.trim();
-
-    // For this MVP, we'll use a simple approach: if it starts with 'echo', handle it specially
-    let command: string;
-    let args: string[];
-
-    if (trimmedPayload.startsWith('echo ')) {
-      command = 'echo';
-      // Extract everything after 'echo ' as a single argument, removing outer quotes if present
-      let echoArg = trimmedPayload.substring(5).trim();
-      if (
-        (echoArg.startsWith('"') && echoArg.endsWith('"')) ||
-        (echoArg.startsWith("'") && echoArg.endsWith("'"))
-      ) {
-        echoArg = echoArg.slice(1, -1);
-      }
-      args = [echoArg];
-    } else {
-      // Fallback to simple space splitting for other commands
-      const parts = trimmedPayload.split(/\s+/);
-      command = parts[0];
-      args = parts.slice(1);
-    }
-
-    console.log('Executing command:', command, 'with args:', args);
-
-    // Execute the command using spawn
-    const childProcess = spawn(command, args, {
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-
-    let stdout = '';
-    let stderr = '';
-
-    childProcess.stdout.on('data', data => {
-      stdout += data.toString();
-    });
-
-    childProcess.stderr.on('data', data => {
-      stderr += data.toString();
-    });
-
-    childProcess.on('close', code => {
-      const output = stdout + (stderr ? '\n--- STDERR ---\n' + stderr : '');
-
-      // Send appropriate status based on trust level
-      const status = isTrusted ? 'success' : 'untrusted';
-
-      mainWindow?.webContents.send('sdlp-result', {
-        status: status,
-        from: result.sender || 'Unknown',
-        command: payload,
-        output: output,
-        exitCode: code,
-        switchToHome: true,
-        message: isTrusted
-          ? undefined
-          : 'This link is valid but from an untrusted source',
-      });
-    });
-
-    childProcess.on('error', error => {
-      mainWindow?.webContents.send('sdlp-result', {
-        status: 'error',
-        message: `Command execution failed: ${error.message}`,
-      });
+    mainWindow?.webContents.send('sdlp-command-to-execute', {
+      status: status,
+      from: result.sender || 'Unknown',
+      command: payload,
+      message: isTrusted
+        ? undefined
+        : 'This link is valid but from an untrusted source',
     });
   } catch (error) {
     console.error('Error processing SDLP link:', error);
@@ -460,7 +464,7 @@ if (process.platform === 'darwin') {
         'Command line: Processing SDLP link via same path as IPC handler:',
         sdlpUrl
       );
-      processSDLPLink(sdlpUrl!);
+      processSDLPLink(sdlpUrl);
     });
   }
 }

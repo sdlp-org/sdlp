@@ -61,3 +61,7 @@ check-all:
 ci-local:
     @echo "Simulating CI environment locally..."
     ./scripts/ci-local.sh
+
+local-demo:
+  @echo "Running local demo..."
+  cd implementations/ts/sdlp-electron-demo && npm run dev

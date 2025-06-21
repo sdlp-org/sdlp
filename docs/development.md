@@ -26,6 +26,9 @@ just check-all
 
 # Simulate CI environment locally (clean install + checks)
 just ci-local
+
+# Run the local SDLP demo application
+just local-demo
 ```
 
 ## CI/Local Environment Differences
