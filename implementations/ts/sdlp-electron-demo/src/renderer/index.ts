@@ -17,6 +17,7 @@ declare global {
   interface Window {
     electronAPI: {
       onSDLPResult: (callback: (data: SDLPResult) => void) => void;
+      onSDLPCommandToExecute: (callback: (data: SDLPResult) => void) => void;
       removeAllListeners: (channel: string) => void;
       generateSDLPLink: (payload: string) => Promise<string>;
       generateUntrustedSDLPLink: (payload: string) => Promise<string>;
@@ -25,6 +26,7 @@ declare global {
         link: string,
         forceUntrusted?: boolean
       ) => Promise<void>;
+      executeSDLPCommand: (command: string) => Promise<{ output: string; exitCode: number }>;
     };
   }
 }
@@ -58,6 +60,11 @@ class SDLPRenderer {
     // Listen for SDLP results from the main process
     window.electronAPI.onSDLPResult(data => {
       this.handleSDLPResult(data);
+    });
+
+    // Listen for SDLP commands to execute (new for Phase 9)
+    window.electronAPI.onSDLPCommandToExecute(data => {
+      this.handleSDLPCommand(data);
     });
   }
 
@@ -498,6 +505,52 @@ class SDLPRenderer {
     }
   }
 
+  private handleSDLPCommand(data: SDLPResult) {
+    console.log('Received SDLP command to execute:', data);
+
+    // Switch to home tab to show the command
+    this.switchTab('home');
+    this.resetToInitialState();
+
+    if (data.status === 'success') {
+      this.showSuccessState(data);
+      // Set up the execute button for trusted commands
+      const executeBtn = document.getElementById('execute-command-btn');
+      if (executeBtn && data.command) {
+        executeBtn.onclick = async () => {
+          try {
+            const result = await window.electronAPI.executeSDLPCommand(data.command!);
+            this.showTerminalOutput(result.output, false);
+          } catch (error) {
+            console.error('Failed to execute command:', error);
+            this.showNotification(
+              'Failed to execute command: ' + (error as Error).message,
+              'error'
+            );
+          }
+        };
+      }
+    } else if (data.status === 'untrusted') {
+      this.showUntrustedState(data);
+      // Set up the execute button for untrusted commands
+      const executeBtn = document.getElementById('execute-untrusted-command-btn');
+      if (executeBtn && data.command) {
+        executeBtn.onclick = async () => {
+          try {
+            const result = await window.electronAPI.executeSDLPCommand(data.command!);
+            this.showTerminalOutput(result.output, true);
+          } catch (error) {
+            console.error('Failed to execute untrusted command:', error);
+            this.showNotification(
+              'Failed to execute command: ' + (error as Error).message,
+              'error'
+            );
+          }
+        };
+      }
+    }
+  }
+
   private handleSDLPResult(data: SDLPResult) {
     console.log('Received SDLP result:', data);
 
@@ -549,11 +602,24 @@ class SDLPRenderer {
     const commandText = document.getElementById('command-text');
     const errorMessage = document.getElementById('error-message');
     const untrustedInfo = document.getElementById('untrusted-info');
+    const untrustedCommandText = document.getElementById('untrusted-command-text');
 
     if (senderInfo) senderInfo.textContent = '';
     if (commandText) commandText.textContent = '';
     if (errorMessage) errorMessage.textContent = '';
     if (untrustedInfo) untrustedInfo.textContent = '';
+    if (untrustedCommandText) untrustedCommandText.textContent = '';
+
+    // Hide and clear output sections
+    const commandOutputSection = document.getElementById('command-output-section');
+    const commandOutput = document.getElementById('command-output');
+    const untrustedOutputSection = document.getElementById('untrusted-output-section');
+    const untrustedOutput = document.getElementById('untrusted-output');
+
+    if (commandOutputSection) commandOutputSection.classList.add('hidden');
+    if (commandOutput) commandOutput.innerHTML = '';
+    if (untrustedOutputSection) untrustedOutputSection.classList.add('hidden');
+    if (untrustedOutput) untrustedOutput.innerHTML = '';
   }
 
   private showSuccessState(data: SDLPResult) {
@@ -744,6 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Create a fallback for development
     window.electronAPI = {
       onSDLPResult: () => {},
+      onSDLPCommandToExecute: () => {},
       removeAllListeners: () => {},
       generateSDLPLink: async () => 'sdlp://fallback-link',
       generateUntrustedSDLPLink: async () => 'sdlp://fallback-untrusted-link',
@@ -752,6 +819,7 @@ document.addEventListener('DOMContentLoaded', () => {
         error: { message: 'electronAPI not available' },
       }),
       processSDLPLinkWithDialog: async () => {},
+      executeSDLPCommand: async () => ({ output: 'electronAPI not available', exitCode: 1 }),
     };
   } else {
     console.log('electronAPI is available');
