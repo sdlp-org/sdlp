@@ -45,6 +45,9 @@ This repository contains multiple TypeScript packages:
 npm install
 just check-all
 
+# Run the interactive demo application
+just local-demo
+
 # Generate a key pair
 cd implementations/ts/sdlp-cli
 npm run build
