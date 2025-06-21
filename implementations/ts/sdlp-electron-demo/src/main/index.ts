@@ -132,6 +132,19 @@ function truncateSDLPLink(link: string, maxLength: number = 100): string {
   return link.substring(0, maxLength - 3) + '...';
 }
 
+// Helper function to truncate payloads for display in dialogs
+function truncatePayload(payload: string, maxLength: number = 100): string {
+  if (payload.length <= maxLength) {
+    return payload;
+  }
+
+  // For payloads, show the beginning and end parts
+  const prefixLength = Math.floor((maxLength - 3) / 2); // Account for '...'
+  const suffixLength = Math.floor((maxLength - 3) / 2);
+
+  return `${payload.substring(0, prefixLength)}...${payload.substring(payload.length - suffixLength)}`;
+}
+
 // Setup IPC handlers
 function setupIpcHandlers() {
   // Handle SDLP link generation (trusted)
@@ -312,7 +325,7 @@ This link failed verification and cannot be trusted.`;
       // Check if the sender is our trusted key
       const trustedKeyId = trustedKey?.kid || '';
       const isTrustedSender =
-        trustedKeyId && senderKey.includes(trustedKeyId.split('#')[0]);
+        trustedKeyId && senderKey && senderKey.includes(trustedKeyId.split('#')[0]);
 
       isTrusted = !forceUntrusted && isTrustedSender;
 
@@ -325,6 +338,10 @@ This link failed verification and cannot be trusted.`;
       const linkDisplay =
         url.length > 80 ? `${truncatedLink} (truncated)` : truncatedLink;
 
+      const truncatedPayload = truncatePayload(payload, 60);
+      const payloadDisplay =
+        payload.length > 60 ? `${truncatedPayload} (truncated)` : truncatedPayload;
+
       if (isTrusted) {
         dialogTitle = `${trustIndicator} SDLP Link from Trusted Source`;
         dialogDetail = `Link: ${linkDisplay}
@@ -333,7 +350,7 @@ Sender:
 ${result.sender || 'N/A'}
 Status: ${trustStatus}
 
-Payload: ${payload}
+Payload: ${payloadDisplay}
 
 This link has been cryptographically verified and comes from a trusted source. Do you want to proceed with executing the command?`;
         dialogType = 'none';
@@ -345,7 +362,7 @@ Sender:
 ${result.sender || 'N/A'}
 Status: ${trustStatus}
 
-Payload: ${payload}
+Payload: ${payloadDisplay}
 
 This link is cryptographically valid but comes from an unknown or untrusted source. Proceed with caution. Do you want to continue?`;
         dialogType = 'none';
