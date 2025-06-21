@@ -31,7 +31,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
       forceUntrusted
     );
   },
-  executeSDLPCommand: async (command: string): Promise<{ output: string; exitCode: number }> => {
+  executeSDLPCommand: async (
+    command: string
+  ): Promise<{ output: string; exitCode: number }> => {
     return await ipcRenderer.invoke('execute-sdlp-command', command);
   },
 });
