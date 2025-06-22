@@ -154,6 +154,76 @@ describe('SDLP CLI', () => {
       expect(key.kid).toMatch(/^did:key:z[A-Za-z0-9]+#z[A-Za-z0-9]+$/);
     });
 
+    it('should convert a PEM key to JWK successfully', async () => {
+      const testPemFile = 'fixtures/test-key.pem';
+      const testJwkFile = 'test-from-pem.jwk';
+
+      const result = await spawnCommand([
+        'keygen',
+        '--from-pem',
+        testPemFile,
+        '--out',
+        testJwkFile,
+      ]);
+
+      expect(result.code).toBe(0);
+      expect(result.stdout).toContain('✅ Key pair converted successfully!');
+      expect(result.stdout).toContain('📁 Private key saved to:');
+      expect(result.stdout).toContain('🔑 DID:');
+      expect(result.stdout).toContain('did:key:');
+      expect(existsSync(testJwkFile)).toBe(true);
+
+      // Validate the converted key file
+      const keyContent = readFileSync(testJwkFile, 'utf8');
+      const key = JSON.parse(keyContent);
+      expect(key).toHaveProperty('kty', 'OKP');
+      expect(key).toHaveProperty('crv', 'Ed25519');
+      expect(key).toHaveProperty('kid');
+      expect(key).toHaveProperty('alg', 'EdDSA');
+      expect(key).toHaveProperty('x'); // Public key component
+      expect(key).toHaveProperty('d'); // Private key component
+      expect(key.kid).toMatch(/^did:key:z[A-Za-z0-9]+#z[A-Za-z0-9]+$/);
+
+      // Clean up
+      if (existsSync(testJwkFile)) {
+        unlinkSync(testJwkFile);
+      }
+    });
+
+    it('should fail when PEM file does not exist', async () => {
+      const result = await spawnCommand([
+        'keygen',
+        '--from-pem',
+        'nonexistent.pem',
+        '--out',
+        'test-output.jwk',
+      ]);
+
+      expect(result.code).toBe(1);
+      expect(result.stderr).toContain('❌ Error converting key pair');
+    });
+
+    it('should fail when PEM file is malformed', async () => {
+      const malformedPemFile = 'malformed-test.pem';
+      writeFileSync(malformedPemFile, 'invalid-pem-content');
+
+      const result = await spawnCommand([
+        'keygen',
+        '--from-pem',
+        malformedPemFile,
+        '--out',
+        'test-output.jwk',
+      ]);
+
+      expect(result.code).toBe(1);
+      expect(result.stderr).toContain('❌ Error converting key pair');
+
+      // Clean up
+      if (existsSync(malformedPemFile)) {
+        unlinkSync(malformedPemFile);
+      }
+    });
+
     it('should fail when output file is not writable', async () => {
       const result = await spawnCommand([
         'keygen',
