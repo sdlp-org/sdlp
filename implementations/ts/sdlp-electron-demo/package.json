@@ -1,7 +1,7 @@
 {
   "name": "sdlp-demo",
   "productName": "Secure Deep Link Demo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Electron MVP application for SDLP protocol demonstration",
   "main": "out/main/index.js",
   "type": "module",
