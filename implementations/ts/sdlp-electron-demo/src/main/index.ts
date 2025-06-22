@@ -325,7 +325,9 @@ This link failed verification and cannot be trusted.`;
       // Check if the sender is our trusted key
       const trustedKeyId = trustedKey?.kid || '';
       const isTrustedSender =
-        trustedKeyId && senderKey && senderKey.includes(trustedKeyId.split('#')[0]);
+        trustedKeyId &&
+        senderKey &&
+        senderKey.includes(trustedKeyId.split('#')[0]);
 
       isTrusted = !forceUntrusted && isTrustedSender;
 
@@ -340,7 +342,9 @@ This link failed verification and cannot be trusted.`;
 
       const truncatedPayload = truncatePayload(payload, 60);
       const payloadDisplay =
-        payload.length > 60 ? `${truncatedPayload} (truncated)` : truncatedPayload;
+        payload.length > 60
+          ? `${truncatedPayload} (truncated)`
+          : truncatedPayload;
 
       if (isTrusted) {
         dialogTitle = `${trustIndicator} SDLP Link from Trusted Source`;
