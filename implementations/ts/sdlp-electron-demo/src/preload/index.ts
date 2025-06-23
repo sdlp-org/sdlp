@@ -9,6 +9,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onSDLPCommandToExecute: (callback: (data: any) => void) => {
     ipcRenderer.on('sdlp-command-to-execute', (_event, data) => callback(data));
   },
+  onSDLPCommandOutput: (callback: (data: any) => void) => {
+    ipcRenderer.on('sdlp-command-output', (_event, data) => callback(data));
+  },
   removeAllListeners: (channel: string) => {
     ipcRenderer.removeAllListeners(channel);
   },

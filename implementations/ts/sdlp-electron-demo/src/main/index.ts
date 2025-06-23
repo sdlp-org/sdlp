@@ -273,7 +273,8 @@ function setupIpcHandlers() {
       });
 
       childProcess.on('close', code => {
-        const output = stdout + (stderr ? '\n--- STDERR ---\n' + stderr : '');
+        const output = stdout + (stderr ? '\n--- STDERR --n' + stderr : '');
+        mainWindow?.webContents.send('sdlp-command-output', { output, exitCode: code });
         resolve({ output, exitCode: code });
       });
 

@@ -32,12 +32,13 @@ The application follows standard Electron architecture with three main processes
 
 - **Main Process** (`src/main/index.ts`): Handles protocol registration, SDLP verification, and command execution
 - **Preload Script** (`src/preload/index.ts`): Securely exposes IPC functionality to the renderer
-- **Renderer Process** (`src/renderer/`): Provides the user interface with terminal display
+- **Renderer Process** (`src/renderer/`): Provides the user interface, built with React.
 
 ## Technology Stack
 
 - **Electron**: Desktop application framework
 - **TypeScript**: Type-safe JavaScript development
+- **React**: A JavaScript library for building user interfaces
 - **Electron Vite**: Modern build tooling for Electron
 - **Tailwind CSS**: Utility-first CSS framework
 - **@xterm/xterm**: Terminal emulator for the web
@@ -117,8 +118,9 @@ src/
 ├── preload/        # Preload scripts
 │   └── index.ts    # IPC context bridge
 ├── renderer/       # Renderer process (UI)
-│   ├── index.html  # Main HTML template
-│   ├── index.ts    # UI logic and terminal handling
+│   ├── components/ # React components
+│   ├── hooks/      # Custom React hooks
+│   ├── main.tsx    # React entry point
 │   └── style.css   # Tailwind CSS styles
 └── fixtures/       # Test keys and data (packaged with app)
     └── valid-key.jwk # Test signing key for link generation
