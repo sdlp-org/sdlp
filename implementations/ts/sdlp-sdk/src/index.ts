@@ -40,3 +40,6 @@ export {
   DIDResolutionError,
   InvalidLinkFormatError,
 } from './types.js';
+
+// Export compression functions
+export { compressBrotli, decompressBrotli } from './compression.js';
