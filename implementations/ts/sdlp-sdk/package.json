@@ -7,8 +7,10 @@
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
-      "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "node": "./dist/src/index.js",
+      "import": "./dist/src/index.browser.js",
+      "browser": "./dist/src/index.browser.js",
+      "default": "./dist/src/index.js"
     }
   },
   "files": [
