@@ -88,6 +88,13 @@ export const keygenCommand = new Command('keygen')
       console.log(`📁 Private key saved to: ${options.out}`);
       console.log(`🔑 DID: ${didIdentifier}`);
       console.log(`🔗 Key ID: ${keyId}`);
+      
+      // Security recommendations
+      console.log('');
+      console.log('🔒 SECURITY RECOMMENDATION:');
+      console.log('- This file contains your private key. Protect it like a password.');
+      console.log('- For production use, consider storing keys in a secure vault (e.g., HashiCorp Vault, AWS KMS) or a hardware security module (HSM).');
+      console.log('- Do not commit private keys to version control.');
 
       // If did:web, also generate the DID document
       if (options.didWeb !== undefined) {
