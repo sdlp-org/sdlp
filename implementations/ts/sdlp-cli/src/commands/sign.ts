@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { type JWK } from 'jose';
 import { Command } from 'commander';
+import { type JWK } from 'jose';
 import { createLink, type Signer } from 'sdlp-sdk';
 
 interface Jwk {

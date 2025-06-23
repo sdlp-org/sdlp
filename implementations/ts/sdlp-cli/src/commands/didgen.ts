@@ -105,7 +105,7 @@ export const didgenCommand = new Command('didgen')
       const didDocumentJson = JSON.stringify(didDocument, null, 2);
 
       // Output the DID document
-      if (options.output) {
+      if (typeof options.output === 'string' && options.output.length > 0) {
         writeFileSync(options.output, didDocumentJson);
         console.log(`✅ DID document generated successfully at ${options.output}`);
       } else {
@@ -137,9 +137,12 @@ function generateDidKey(publicJWK: JWK): string {
     throw new Error('Only Ed25519 keys are supported for did:key generation');
   }
 
-  const x = publicJWK.x as string;
-  if (x === undefined || x === null || x === '') {
+  const x = publicJWK.x;
+  if (typeof x !== 'string') {
     throw new Error('Invalid Ed25519 public key: missing x coordinate');
+  }
+  if (x.length === 0) {
+    throw new Error('Invalid Ed25519 public key: empty x coordinate');
   }
 
   // Decode the base64url x coordinate
