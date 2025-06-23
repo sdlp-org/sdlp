@@ -8,7 +8,6 @@
 // Export main functions
 export { createLink } from './create-link.js';
 export { verifyLink } from './verify-link.js';
-export * from './compression.node.js';
 
 // Export types and interfaces
 export type {

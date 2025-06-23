@@ -12,6 +12,6 @@
     "allowUnusedLabels": false,
     "allowUnreachableCode": false
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "*.config.ts"],
-  "exclude": ["node_modules", "dist", "src/compression.browser.ts", "src/compression.node.ts"]
+  "include": ["src/**/*", "tests/**/*", "*.config.ts"],
+  "exclude": ["node_modules", "dist"]
 }
