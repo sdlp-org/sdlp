@@ -6,8 +6,9 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 const CLI_PATH = join(__dirname, '../src/index.ts');
 
 describe('didgen command', () => {
-  const testKeyFile = 'test-didgen-key.jwk';
-  const testOutputFile = 'test-did-document.json';
+  const testId = Math.random().toString(36).substring(7);
+  const testKeyFile = `test-didgen-key-${testId}.jwk`;
+  const testOutputFile = `test-did-document-${testId}.json`;
 
   beforeEach(() => {
     // Create a test key file
@@ -82,7 +83,7 @@ describe('didgen command', () => {
     expect(() => {
       execSync(
         `npx tsx ${CLI_PATH} didgen --key ${testKeyFile} --method invalid`,
-        { encoding: 'utf-8' }
+        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
       );
     }).toThrow();
   });
@@ -91,7 +92,7 @@ describe('didgen command', () => {
     expect(() => {
       execSync(
         `npx tsx ${CLI_PATH} didgen --key ${testKeyFile} --method web`,
-        { encoding: 'utf-8' }
+        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
       );
     }).toThrow();
   });
@@ -105,7 +106,7 @@ describe('didgen command', () => {
       expect(() => {
         execSync(
           `npx tsx ${CLI_PATH} didgen --key ${invalidKeyFile} --method key`,
-          { encoding: 'utf-8' }
+          { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
         );
       }).toThrow();
     } finally {

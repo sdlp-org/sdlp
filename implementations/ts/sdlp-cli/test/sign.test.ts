@@ -6,9 +6,10 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 const CLI_PATH = join(__dirname, '../src/index.ts');
 
 describe('sign command DID-centric workflow', () => {
-  const testKeyFile = 'test-sign-key.jwk';
-  const testDidDocumentFile = 'test-did-document.json';
-  const testPayloadFile = 'test-payload.txt';
+  const testId = Math.random().toString(36).substring(7);
+  const testKeyFile = `test-sign-key-${testId}.jwk`;
+  const testDidDocumentFile = `test-did-document-${testId}.json`;
+  const testPayloadFile = `test-payload-${testId}.txt`;
 
   beforeEach(() => {
     // Create a test key file
@@ -129,7 +130,7 @@ describe('sign command DID-centric workflow', () => {
       expect(() => {
         execSync(
           `npx tsx ${CLI_PATH} sign --payload-file ${testPayloadFile} --type text/plain --did-document ${testDidDocumentFile} --kid "did:key:z6Mkp7AVwvWxnsNDuSSbf19sgKzrx223WY95AqZyAGifFVyV#z6Mkp7AVwvWxnsNDuSSbf19sgKzrx223WY95AqZyAGifFVyV" --key ${mismatchedKeyFile}`,
-          { encoding: 'utf-8' }
+          { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
         );
       }).toThrow();
     } finally {
@@ -143,7 +144,7 @@ describe('sign command DID-centric workflow', () => {
     expect(() => {
       execSync(
         `npx tsx ${CLI_PATH} sign --payload-file ${testPayloadFile} --type text/plain --did-document ${testDidDocumentFile} --kid "did:key:nonexistent#key" --key ${testKeyFile}`,
-        { encoding: 'utf-8' }
+        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
       );
     }).toThrow();
   });
