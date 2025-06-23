@@ -3,6 +3,7 @@ import { join } from 'path';
 import { spawn } from 'child_process';
 import { readFileSync } from 'fs';
 import { clipboard } from 'electron';
+import { TrustStore } from './trust-store.js';
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -20,6 +21,7 @@ if (process.platform === 'darwin') {
 }
 
 let mainWindow: BrowserWindow | null = null;
+let trustStore: TrustStore;
 
 // Load the test keys for generating example links
 // Use the packaged key files that are distributed with the application
@@ -280,6 +282,54 @@ function setupIpcHandlers() {
       });
     });
   });
+
+  // Trust Store IPC handlers (new for Phase 11)
+  ipcMain.handle('trust-store-is-trusted', async (_event, did: string) => {
+    try {
+      return trustStore.isTrusted(did);
+    } catch (error) {
+      console.error('Failed to check trust status:', error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle('trust-store-add-trusted', async (_event, did: string, label?: string) => {
+    try {
+      trustStore.addTrustedDID(did, label);
+      return true;
+    } catch (error) {
+      console.error('Failed to add trusted DID:', error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle('trust-store-remove-trusted', async (_event, did: string) => {
+    try {
+      return trustStore.removeTrustedDID(did);
+    } catch (error) {
+      console.error('Failed to remove trusted DID:', error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle('trust-store-get-all', async (_event) => {
+    try {
+      return trustStore.getTrustedDIDs();
+    } catch (error) {
+      console.error('Failed to get trusted DIDs:', error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle('trust-store-clear', async (_event) => {
+    try {
+      trustStore.clear();
+      return true;
+    } catch (error) {
+      console.error('Failed to clear trust store:', error);
+      throw error;
+    }
+  });
 }
 
 async function processSDLPLink(
@@ -317,17 +367,11 @@ This link failed verification and cannot be trusted.`;
     } else {
       const payload = new TextDecoder().decode(result.payload);
 
-      // Determine trust level based on sender key
-      // TODO: In a real implementation, this should check against a configurable trust store
-      // or a list of known senders, not hardcoded values.
-      const senderKey = result.sender || '';
-
-      // Check if the sender is our trusted key
-      const trustedKeyId = trustedKey?.kid || '';
-      const isTrustedSender =
-        trustedKeyId &&
-        senderKey &&
-        senderKey.includes(trustedKeyId.split('#')[0]);
+      // Determine trust level using TrustStore
+      const senderDID = result.sender || '';
+      
+      // Check if the sender DID is in our trust store
+      const isTrustedSender = senderDID ? trustStore.isTrusted(senderDID) : false;
 
       isTrusted = !forceUntrusted && isTrustedSender;
 
@@ -375,10 +419,28 @@ This link is cryptographically valid but comes from an unknown or untrusted sour
       canProceed = true;
     }
 
-    // Show blocker dialog with copy button for full link
-    const buttons = canProceed
-      ? ['Proceed', 'Copy Full Link', 'Cancel']
-      : ['Copy Full Link', 'OK'];
+    // Show dialog with appropriate buttons based on trust state
+    let buttons: string[];
+    let defaultId: number;
+    let cancelId: number;
+
+    if (!canProceed) {
+      // Invalid link - only show copy and OK
+      buttons = ['Copy Full Link', 'OK'];
+      defaultId = 1;
+      cancelId = 1;
+    } else if (isTrusted) {
+      // Trusted sender - simple proceed/cancel
+      buttons = ['Proceed', 'Copy Full Link', 'Cancel'];
+      defaultId = 2;
+      cancelId = 2;
+    } else {
+      // Untrusted sender - TOFU options
+      buttons = ['Trust this Sender', 'Proceed Once', 'Copy Full Link', 'Cancel'];
+      defaultId = 3;
+      cancelId = 3;
+    }
+
     const response = await dialog.showMessageBox(mainWindow!, {
       type: 'none',
       title: 'SDLP Link Processing',
@@ -386,23 +448,53 @@ This link is cryptographically valid but comes from an unknown or untrusted sour
       detail: dialogDetail,
       icon: join(__dirname, '../../resources/icon.png'),
       buttons: buttons,
-      defaultId: canProceed ? 2 : 1, // Default to Cancel/OK
-      cancelId: canProceed ? 2 : 1,
+      defaultId: defaultId,
+      cancelId: cancelId,
     });
 
-    // Handle copy button - just copy silently without confirmation dialog
-    if (
-      (canProceed && response.response === 1) ||
-      (!canProceed && response.response === 0)
-    ) {
-      clipboard.writeText(url);
+    // Handle responses based on trust state
+    if (!canProceed) {
+      // Invalid link
+      if (response.response === 0) {
+        clipboard.writeText(url);
+      }
       return;
-    }
-
-    if (!canProceed || response.response !== 0) {
-      // User cancelled or link was invalid
-      console.log('User cancelled or link was invalid');
-      return;
+    } else if (isTrusted) {
+      // Trusted sender
+      if (response.response === 1) {
+        // Copy Full Link
+        clipboard.writeText(url);
+        return;
+      } else if (response.response !== 0) {
+        // Cancel
+        console.log('User cancelled');
+        return;
+      }
+      // response.response === 0 means Proceed - continue below
+    } else {
+      // Untrusted sender - handle TOFU actions
+      if (response.response === 0) {
+        // Trust this Sender
+        if (result.valid) {
+          const senderDID = result.sender || '';
+          if (senderDID) {
+            trustStore.addTrustedDID(senderDID, 'Added via TOFU');
+            console.log('Added sender to trust store:', senderDID);
+          }
+        }
+        // Continue to execute command
+      } else if (response.response === 1) {
+        // Proceed Once - continue without adding to trust store
+        console.log('User chose to proceed once without trusting');
+      } else if (response.response === 2) {
+        // Copy Full Link
+        clipboard.writeText(url);
+        return;
+      } else {
+        // Cancel
+        console.log('User cancelled');
+        return;
+      }
     }
 
     // User chose to proceed - send command to renderer for confirmation
@@ -477,6 +569,10 @@ app.whenReady().then(() => {
   if (process.platform === 'darwin') {
     app.dock.setIcon(join(__dirname, '../../resources/icon.png'));
   }
+  
+  // Initialize TrustStore
+  trustStore = new TrustStore();
+  
   setupIpcHandlers();
   createWindow();
 
