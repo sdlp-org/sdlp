@@ -339,11 +339,11 @@ async function processSDLPLink(
   try {
     console.log('Processing SDLP link:', url);
 
-    // Dynamically import the SDLP SDK
+    // Dynamically import the SDLP SDK and verify the link
+    // Let the SDK naturally detect any failures - no simulation
     const { verifyLink } = await import('@sdlp/sdk');
-
-    // Verify the SDLP link
     const result = await verifyLink(url);
+    
     console.log('Verification result:', result);
 
     let dialogType: 'info' | 'warning' | 'error' | 'none' = 'info';
@@ -365,7 +365,7 @@ Error: ${result.error?.message || 'Unknown error'}
 This link failed verification and cannot be trusted.`;
       dialogType = 'none';
     } else {
-      const payload = new TextDecoder().decode(result.payload);
+      const payload = new TextDecoder().decode(result.payload!);
 
       // Determine trust level using TrustStore
       const senderDID = result.sender || '';

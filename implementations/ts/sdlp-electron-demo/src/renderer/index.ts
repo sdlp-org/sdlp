@@ -29,6 +29,13 @@ declare global {
       executeSDLPCommand: (
         command: string
       ) => Promise<{ output: string; exitCode: number }>;
+      trustStore: {
+        isTrusted: (did: string) => Promise<boolean>;
+        addTrusted: (did: string, label?: string) => Promise<boolean>;
+        removeTrusted: (did: string) => Promise<boolean>;
+        getAll: () => Promise<Record<string, { addedAt: string; label?: string }>>;
+        clear: () => Promise<boolean>;
+      };
     };
   }
 }
@@ -44,7 +51,9 @@ class SDLPRenderer {
     this.setupTabNavigation();
     this.setupExampleLinks();
     this.setupTesterFunctionality();
+    this.setupTrustedKeysManagement();
     this.populateExamples();
+    this.loadTrustedKeys();
   }
 
   private async initializeHighlighter() {
@@ -139,12 +148,13 @@ class SDLPRenderer {
     // We'll create example links using the SDLP SDK
     const validLinkBtn = document.getElementById('example-valid-link');
     const invalidLinkBtn = document.getElementById('example-invalid-link');
-    const untrustedLinkBtn = document.getElementById('example-untrusted-link');
+    const malformedLinkBtn = document.getElementById('example-malformed-link');
+    const expiredLinkBtn = document.getElementById('example-expired-link');
+    const wrongKeyLinkBtn = document.getElementById('example-wrong-key-link');
 
     console.log('Setting up example links...');
     console.log('Valid link button:', validLinkBtn);
     console.log('Invalid link button:', invalidLinkBtn);
-    console.log('Untrusted link button:', untrustedLinkBtn);
 
     if (validLinkBtn) {
       console.log('Adding click listener to valid link button');
@@ -164,35 +174,52 @@ class SDLPRenderer {
       console.error('Valid link button not found!');
     }
 
+    // Payload Tampering Example
     if (invalidLinkBtn) {
       console.log('Adding click listener to invalid link button');
       invalidLinkBtn.addEventListener('click', async () => {
         console.log('Invalid link button clicked!');
-        // Create an invalid link by corrupting a valid one
-        const invalidLink = 'sdlp://invalid-signature-example';
-        await window.electronAPI.processSDLPLinkWithDialog(invalidLink);
+        try {
+          // Generate a valid link first, then corrupt it
+          const validLink = await window.electronAPI.generateSDLPLink('echo "Original payload"');
+          // Corrupt the link by changing some characters in the middle - this will cause real signature verification failure
+          const corruptedLink = validLink.replace(/(.{50})(.{10})/, '$1CORRUPTED');
+          await window.electronAPI.processSDLPLinkWithDialog(corruptedLink);
+        } catch (error) {
+          console.error('Failed to generate corrupted example:', error);
+        }
       });
     } else {
       console.error('Invalid link button not found!');
     }
 
-    if (untrustedLinkBtn) {
-      console.log('Adding click listener to untrusted link button');
-      untrustedLinkBtn.addEventListener('click', async () => {
-        console.log('Untrusted link button clicked!');
+    // Malformed Link Example
+    if (malformedLinkBtn) {
+      console.log('Adding click listener to malformed link button');
+      malformedLinkBtn.addEventListener('click', async () => {
+        console.log('Malformed link button clicked!');
+        // Create a malformed SDLP link that looks realistic but has invalid JWT structure
+        // This will cause the SDLP SDK to naturally fail when trying to parse it
+        const malformedLink = 'sdlp://eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.INVALID_STRUCTURE.signature';
+        await window.electronAPI.processSDLPLinkWithDialog(malformedLink);
+      });
+    }
+
+    // Key Mismatch Example - Create a real key mismatch by using a different signing key
+    if (wrongKeyLinkBtn) {
+      console.log('Adding click listener to wrong key link button');
+      wrongKeyLinkBtn.addEventListener('click', async () => {
+        console.log('Wrong key link button clicked!');
         try {
-          // Generate a link using the untrusted key
-          const untrustedLink =
-            await window.electronAPI.generateUntrustedSDLPLink(
-              'echo "This is from an untrusted source"'
-            );
-          await window.electronAPI.processSDLPLinkWithDialog(untrustedLink);
+          // Generate a link signed with the untrusted key - this creates a real key mismatch
+          // The link will be valid but signed with a different key than expected
+          const keyMismatchLink = await window.electronAPI.generateUntrustedSDLPLink('echo "Key mismatch demo"');
+          
+          await window.electronAPI.processSDLPLinkWithDialog(keyMismatchLink);
         } catch (error) {
-          console.error('Failed to generate untrusted example link:', error);
+          console.error('Failed to generate key mismatch example:', error);
         }
       });
-    } else {
-      console.error('Untrusted link button not found!');
     }
   }
 
@@ -744,17 +771,143 @@ class SDLPRenderer {
     // This is a simple fallback to avoid using alert()
   }
 
+  private setupTrustedKeysManagement() {
+    // Setup refresh button
+    const refreshBtn = document.getElementById('refresh-trusted-keys-btn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        this.loadTrustedKeys();
+      });
+    }
+
+    // Setup clear all button
+    const clearAllBtn = document.getElementById('clear-all-trusted-keys-btn');
+    if (clearAllBtn) {
+      clearAllBtn.addEventListener('click', async () => {
+        if (window.confirm('Are you sure you want to clear all trusted keys?')) {
+          try {
+            await window.electronAPI.trustStore.clear();
+            this.loadTrustedKeys();
+            this.showNotification('All trusted keys cleared', 'success');
+          } catch (error) {
+            console.error('Failed to clear trusted keys:', error);
+            this.showNotification('Failed to clear trusted keys', 'error');
+          }
+        }
+      });
+    }
+  }
+
+  private async loadTrustedKeys() {
+    const loadingElement = document.getElementById('trusted-keys-loading');
+    const emptyElement = document.getElementById('trusted-keys-empty');
+    const listElement = document.getElementById('trusted-keys-list');
+    const actionsElement = document.getElementById('trusted-keys-actions');
+
+    // Show loading state
+    if (loadingElement) loadingElement.classList.remove('hidden');
+    if (emptyElement) emptyElement.classList.add('hidden');
+    if (listElement) listElement.classList.add('hidden');
+    if (actionsElement) actionsElement.classList.add('hidden');
+
+    try {
+      const trustedKeys = await window.electronAPI.trustStore.getAll();
+      const keyCount = Object.keys(trustedKeys).length;
+
+      // Hide loading state
+      if (loadingElement) loadingElement.classList.add('hidden');
+
+      if (keyCount === 0) {
+        // Show empty state
+        if (emptyElement) emptyElement.classList.remove('hidden');
+      } else {
+        // Show keys list and actions
+        if (listElement) {
+          listElement.classList.remove('hidden');
+          this.renderTrustedKeysList(trustedKeys, listElement);
+        }
+        if (actionsElement) actionsElement.classList.remove('hidden');
+      }
+    } catch (error) {
+      console.error('Failed to load trusted keys:', error);
+      // Hide loading state and show error
+      if (loadingElement) loadingElement.classList.add('hidden');
+      if (emptyElement) {
+        emptyElement.classList.remove('hidden');
+        emptyElement.innerHTML = `
+          <div class="text-red-500 mb-2">Failed to load trusted keys</div>
+          <p class="text-sm text-red-400">
+            ${error instanceof Error ? error.message : 'Unknown error'}
+          </p>
+        `;
+      }
+    }
+  }
+
+  private renderTrustedKeysList(trustedKeys: Record<string, { addedAt: string; label?: string }>, container: HTMLElement) {
+    container.innerHTML = '';
+
+    Object.entries(trustedKeys).forEach(([did, info]) => {
+      const keyElement = document.createElement('div');
+      keyElement.className = 'border border-gray-200 rounded-lg p-4 bg-gray-50';
+      
+      const addedDate = new Date(info.addedAt).toLocaleDateString();
+      const shortDid = did.length > 50 ? `${did.substring(0, 30)}...${did.substring(did.length - 20)}` : did;
+      
+      keyElement.innerHTML = `
+        <div class="flex items-start justify-between">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center mb-2">
+              <div class="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
+              <h4 class="font-medium text-gray-800 truncate">
+                ${info.label || 'Trusted Sender'}
+              </h4>
+            </div>
+            <div class="text-sm text-gray-600 mb-1">
+              <strong>DID:</strong> <code class="bg-white px-1 rounded text-xs">${shortDid}</code>
+            </div>
+            <div class="text-xs text-gray-500">
+              Added: ${addedDate}
+            </div>
+          </div>
+          <button 
+            class="remove-trusted-key-btn ml-4 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition-colors"
+            data-did="${did}"
+          >
+            Remove
+          </button>
+        </div>
+      `;
+
+      // Add remove button listener
+      const removeBtn = keyElement.querySelector('.remove-trusted-key-btn') as HTMLButtonElement;
+      if (removeBtn) {
+        removeBtn.addEventListener('click', async () => {
+          const didToRemove = removeBtn.getAttribute('data-did');
+          if (didToRemove && window.confirm(`Remove trust for this sender?\n\n${shortDid}`)) {
+            try {
+              await window.electronAPI.trustStore.removeTrusted(didToRemove);
+              this.loadTrustedKeys();
+              this.showNotification('Trusted key removed', 'success');
+            } catch (error) {
+              console.error('Failed to remove trusted key:', error);
+              this.showNotification('Failed to remove trusted key', 'error');
+            }
+          }
+        });
+      }
+
+      container.appendChild(keyElement);
+    });
+  }
+
   private async populateExamples() {
     try {
       // Generate example links and populate the Examples tab
       const validPayload = 'echo "Hello from a valid SDLP link!"';
-      const untrustedPayload = 'echo "This is from an untrusted source"';
 
       // Generate the valid link using trusted key
       const validLink = await window.electronAPI.generateSDLPLink(validPayload);
-      // Generate the untrusted link using untrusted key
-      const untrustedLink =
-        await window.electronAPI.generateUntrustedSDLPLink(untrustedPayload);
 
       // Populate valid example
       const validPayloadElement = document.getElementById('valid-payload');
@@ -781,30 +934,29 @@ class SDLPRenderer {
 }`;
       }
 
-      // Populate untrusted example
-      const untrustedPayloadElement =
-        document.getElementById('untrusted-payload');
-      const untrustedLinkElement = document.getElementById('untrusted-link');
-      const untrustedKeyElement = document.getElementById('untrusted-key');
-
-      if (untrustedPayloadElement) {
-        untrustedPayloadElement.textContent = untrustedPayload;
+      // Generate realistic links for all failure mode displays
+      const corruptedPayload = 'echo "Original payload"';
+      const originalLink = await window.electronAPI.generateSDLPLink(corruptedPayload);
+      const corruptedLink = originalLink.replace(/(.{50})(.{10})/, '$1CORRUPTED');
+      
+      // Populate corrupted link display
+      const corruptedLinkDisplay = document.getElementById('corrupted-link-display');
+      if (corruptedLinkDisplay) {
+        corruptedLinkDisplay.textContent = corruptedLink;
       }
 
-      if (untrustedKeyElement) {
-        // Show the same key structure for untrusted example
-        untrustedKeyElement.textContent = `{
-  "kty": "OKP",
-  "crv": "Ed25519",
-  "use": "sig",
-  "kid": "test-key-1",
-  "x": "...",
-  "alg": "EdDSA"
-}`;
+      // Generate malformed link display
+      const malformedLinkDisplay = document.getElementById('malformed-link-display');
+      if (malformedLinkDisplay) {
+        malformedLinkDisplay.textContent = 'sdlp://eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.INVALID_STRUCTURE.signature';
       }
 
-      if (untrustedLinkElement) {
-        untrustedLinkElement.textContent = untrustedLink;
+
+      // Generate key mismatch link display - use untrusted key to create real key mismatch
+      const keyMismatchLink = await window.electronAPI.generateUntrustedSDLPLink('echo "Key mismatch demo"');
+      const keyMismatchLinkDisplay = document.getElementById('key-mismatch-link-display');
+      if (keyMismatchLinkDisplay) {
+        keyMismatchLinkDisplay.textContent = keyMismatchLink;
       }
     } catch (error) {
       console.error('Failed to populate examples:', error);
@@ -837,6 +989,13 @@ document.addEventListener('DOMContentLoaded', () => {
         output: 'electronAPI not available',
         exitCode: 1,
       }),
+      trustStore: {
+        isTrusted: async () => false,
+        addTrusted: async () => false,
+        removeTrusted: async () => false,
+        getAll: async () => ({}),
+        clear: async () => false,
+      },
     };
   } else {
     console.log('electronAPI is available');
@@ -849,6 +1008,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error('Failed to initialize SDLP renderer:', error);
   }
 });
+
 
 // Add some global error handling
 window.addEventListener('error', event => {
