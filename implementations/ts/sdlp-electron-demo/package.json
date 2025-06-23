@@ -87,7 +87,6 @@
     "vitest": "^3.2.2"
   },
   "dependencies": {
-    "vitest": "^3.2.2",
     "@sdlp/sdk": "file:../sdlp-sdk",
     "@xterm/xterm": "^5.5.0",
     "react": "^18.3.1",
