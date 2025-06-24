@@ -1,4 +1,4 @@
-import { writeFileSync, readFileSync } from 'node:fs';
+import { writeFileSync, readFileSync, chmodSync } from 'node:fs';
 import { stdin } from 'node:process';
 import bs58 from 'bs58';
 import { Command } from 'commander';
@@ -89,10 +89,19 @@ export const keygenCommand = new Command('keygen')
       };
 
       writeFileSync(options.out, JSON.stringify(keyData, null, 2));
+      
+      // Set secure file permissions (owner read/write only: 0o600)
+      try {
+        chmodSync(options.out, 0o600);
+      } catch {
+        console.warn(`⚠️  Warning: Could not set secure file permissions on ${options.out}`);
+        console.warn('Please manually set permissions to 600 (owner read/write only)');
+      }
 
       const action = options.fromPem !== undefined ? 'converted' : 'generated';
       console.log(`✅ Key pair ${action} successfully!`);
       console.log(`📁 Private key saved to: ${options.out}`);
+      console.log(`🔒 File permissions set to 600 (owner read/write only)`);
       console.log(`🔑 DID: ${didIdentifier}`);
       console.log(`🔗 Key ID: ${keyId}`);
 
