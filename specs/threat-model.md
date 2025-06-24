@@ -35,9 +35,9 @@ The SDLP system consists of:
 
 **Primary Controls:**
 
-- JWS signature verification against the sender's public key resolved via the `sid` DID
-- DID-based sender identification with cryptographic verification
-- `kid`/`sid` base DID matching requirement prevents cross-DID key reuse
+- **JWS Signature Verification:** The core defense is the cryptographic verification of the JWS signature against the public key resolved from the `sid` DID, as detailed in the *Receiver Workflow Summary* (Section 3.8, Step 6).
+- **DID-Based Sender Identification:** The protocol mandates sender identification via a DID in the `sid` field, with the public key for verification located via the `kid` field, ensuring cryptographic linkage (Section 3.3.2).
+- **Cross-DID Key Reuse Prevention:** The receiver workflow explicitly requires that the base DID of the `kid` URL MUST match the `sid` DID, preventing an attacker from using a valid key from one DID to sign a link for another (Section 3.8, Step 5c).
 
 **Secondary Controls:**
 
@@ -57,8 +57,8 @@ The SDLP system consists of:
 
 **Controls:**
 
-- Multiple DID method support allows diversity
-- DID document integrity verification per method specification
+- **Method Diversity:** The protocol is agnostic to the DID method, allowing implementers to choose methods whose security models they trust. The specification explicitly lists `did:web`, `did:key`, and `did:plc` as examples (Section 3.3.2).
+- **Method-Specific Security:** The ultimate security relies on the guarantees of the chosen DID method (e.g., DNSSEC for `did:web`, cryptographic derivation for `did:key`), as noted in the *Security Considerations* (Section 4).
 
 **Residual Risks:**
 
@@ -72,8 +72,7 @@ The SDLP system consists of:
 
 **Primary Controls:**
 
-- JWS signature protects all metadata fields
-- Base64URL encoding integrity
+- **JWS Signature Protection:** All metadata, including the JWS Protected Header and the Core Metadata (JWS Payload), is covered by the JWS signature. Any modification would invalidate the signature, as defined in the signature generation process (Section 3.5).
 
 **Residual Risks:**
 
@@ -85,8 +84,8 @@ The SDLP system consists of:
 
 **Primary Controls:**
 
-- SHA-256 checksum (`chk`) of original payload included in signed metadata
-- Checksum verification before payload processing
+- **Payload Checksum:** The `chk` field in the Core Metadata contains a SHA-256 hash of the original, uncompressed payload. Since the Core Metadata is protected by the JWS signature, this checksum is also integrity-protected (Section 3.3.2).
+- **Mandatory Verification:** The receiver workflow mandates that after decompressing the payload, its SHA-256 hash MUST be calculated and compared against the `chk` value. A mismatch indicates tampering, and the process MUST be aborted (Section 3.8, Step 10).
 
 **Residual Risks:**
 
@@ -98,8 +97,8 @@ The SDLP system consists of:
 
 **Primary Controls:**
 
-- Compression algorithm (`comp`) included in signed metadata
-- Receiver validates supported compression algorithms
+- **Signed `comp` Field:** The compression algorithm identifier is stored in the `comp` field within the Core Metadata, which is protected by the JWS signature. An attacker cannot change the algorithm without invalidating the signature (Section 3.3.2).
+- **Graceful Handling:** The receiver workflow specifies that implementations should handle unsupported compression algorithms gracefully, preventing crashes or exploits based on an unexpected `comp` value (Section 3.8, Step 9.2).
 
 **Residual Risks:**
 
@@ -113,9 +112,9 @@ The SDLP system consists of:
 
 **Primary Controls:**
 
-- Cryptographic signature provides non-repudiation
-- DID-based identity tied to cryptographic keys
-- Optional timestamp fields (`exp`, `nbf`) for temporal verification
+- **Cryptographic Signature:** The JWS signature, verifiable against the sender's public key, provides strong cryptographic evidence that the key holder associated with the `sid` DID created the link (Section 3.5).
+- **DID-Based Identity:** The sender's identity is bound to the cryptographic key via the DID Document, making it difficult to repudiate ownership without claiming key compromise (Section 3.3.2).
+- **Temporal Bounds:** The optional `exp` and `nbf` fields can be used to limit the validity window of a link, providing temporal context for the signature (Section 3.3.2).
 
 **Residual Risks:**
 
@@ -130,7 +129,8 @@ The SDLP system consists of:
 
 **Controls:**
 
-- **NONE INHERENT:** SDLP v1.0 does not provide confidentiality
+- **None by Design:** The protocol explicitly does not provide confidentiality for the payload, as stated in the *Security Considerations* (Section 4). This is a deliberate design choice to prioritize simplicity and capacity.
+- **Future Work:** The specification acknowledges that confidentiality can be layered on top and mentions JWE as a potential future direction (Section 6).
 
 **Mitigations (Application Layer):**
 
@@ -148,7 +148,7 @@ The SDLP system consists of:
 
 **Controls:**
 
-- **NONE INHERENT:** Sender DID is required for verification
+- **None by Design:** The `sid` field, which contains the sender's DID, is a mandatory part of the Core Metadata and is required for the receiver to resolve the public key for signature verification (Section 3.3.2 and 3.8).
 
 **Mitigations:**
 
@@ -165,7 +165,7 @@ The SDLP system consists of:
 
 **Controls:**
 
-- **MINIMAL:** Basic metadata required for safe processing
+- **None by Design:** All fields within the Core Metadata (version, sender DID, payload type, compression algorithm, etc.) are unencrypted and visible to any party with access to the link. This is a necessary trade-off to allow receivers to make processing decisions (Section 3.3.2).
 
 **Residual Risks:**
 
@@ -179,10 +179,9 @@ The SDLP system consists of:
 
 **Primary Controls:**
 
-- Maximum URL length enforcement
-- Robust JSON parsing with error handling
-- Base64URL decoding validation
-- JWS structure validation
+- **Strict Parsing:** The receiver workflow begins with a strict parsing requirement, mandating that the link MUST be split into exactly two non-empty parts separated by a dot. Any deviation results in an immediate abort, preventing further processing of malformed structures (Section 3.8, Step 1).
+- **Component Validation:** The workflow implicitly requires valid Base64URL decoding and JSON parsing at multiple steps. Failures in these steps should be caught by robust libraries.
+- **URL Length Limits:** The specification discusses URL length limits as a consideration for senders, which indirectly encourages receivers to enforce a reasonable maximum length (Section 3.6).
 
 **Residual Risks:**
 
@@ -192,11 +191,11 @@ The SDLP system consists of:
 
 **Description:** Attacker forces expensive DID resolution operations.
 
-**Primary Controls:**
+**Implementation-Layer Controls:**
 
-- DID document caching with proper TTL/Cache-Control header respect
-- Rate limiting on DID resolution requests
-- Timeout enforcement for resolution operations
+- **DID Document Caching:** Receivers SHOULD cache resolved DID Documents to reduce redundant network requests, respecting HTTP caching headers where applicable (e.g., for `did:web`).
+- **Resolution Timeouts:** Receivers MUST implement timeouts for DID resolution operations to prevent indefinite hangs, as suggested by the ABORT step in the workflow (Section 3.8, Step 5d).
+- **Rate Limiting:** Application-level rate limiting on link processing can mitigate repeated resolution attempts from a malicious actor.
 
 **Residual Risks:**
 
@@ -206,11 +205,11 @@ The SDLP system consists of:
 
 **Description:** Attacker crafts payload that expands to consume excessive memory/CPU during decompression.
 
-**Primary Controls:**
+**Implementation-Layer Controls:**
 
-- Maximum decompressed payload size limits
-- Decompression timeout enforcement
-- Memory usage monitoring during decompression
+- **Resource Limiting:** Receivers MUST implement limits on the maximum size of the decompressed payload to prevent excessive memory allocation.
+- **Timeout Enforcement:** Decompression operations SHOULD be subject to a timeout to prevent CPU exhaustion attacks.
+- **Safe Libraries:** Using well-vetted decompression libraries is critical, as noted in the *Security Considerations* (Section 4).
 
 **Residual Risks:**
 
@@ -220,11 +219,10 @@ The SDLP system consists of:
 
 **Description:** Attacker forces expensive signature verification operations.
 
-**Primary Controls:**
+**Implementation-Layer Controls:**
 
-- Signature algorithm allow-list (default to `['EdDSA']`)
-- Rejection of computationally expensive algorithms
-- Rate limiting on verification operations
+- **Algorithm Allow-List:** While the protocol allows for various JWS algorithms, it recommends "EdDSA" for its performance and security characteristics (Section 3.3.1). Receivers MUST maintain an allow-list of accepted algorithms and reject any link that specifies an unsupported or computationally expensive algorithm.
+- **Rate Limiting:** Application-level rate limiting can prevent an attacker from forcing a large number of signature verifications.
 
 **Residual Risks:**
 
@@ -236,9 +234,10 @@ The SDLP system consists of:
 
 **Description:** Valid link from compromised or malicious sender causes receiver to perform dangerous actions.
 
-**Primary Controls:**
+**Controls:**
 
-- **NONE INHERENT:** Protocol authenticates sender but cannot prevent malicious intent
+- **None at Protocol Level:** The protocol is designed only to authenticate the *origin* of a payload, not the *intent* of the sender. This is explicitly stated in the *Security Considerations* (Section 4).
+- **Receiver Responsibility:** The specification places the full responsibility for safe payload handling on the receiver. The *Receiver Workflow Summary* mandates sandboxed execution and explicit user confirmation before taking action as critical, required controls (Section 3.8, Steps 11 and 12).
 
 **Mitigations (Application Layer):**
 
@@ -255,11 +254,11 @@ The SDLP system consists of:
 
 **Description:** Vulnerabilities in JSON parsers, cryptographic libraries, or decompression code allow privilege escalation.
 
-**Primary Controls:**
+**Implementation-Layer Controls:**
 
-- Use of well-established, audited libraries (`jose`, `brotli-wasm`)
-- Regular dependency updates
-- Input validation and sanitization
+- **Use of Robust Libraries:** The specification's *Security Considerations* advises that "Receivers should use robust, well-tested libraries" for parsing and decompression (Section 4).
+- **Dependency Management:** Standard software supply chain security practices, such as regular dependency scanning and updates, are essential.
+- **Input Validation:** The strict parsing and validation steps defined in the receiver workflow (Section 3.8) serve as a primary defense against malformed inputs that could trigger library vulnerabilities.
 
 **Residual Risks:**
 
