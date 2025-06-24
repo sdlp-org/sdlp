@@ -20,7 +20,9 @@ export async function compressBrotli(data: Uint8Array): Promise<Uint8Array> {
 /**
  * Decompress Brotli-compressed data (Node.js implementation)
  */
-export async function decompressBrotli(compressedData: Uint8Array): Promise<Uint8Array> {
+export async function decompressBrotli(
+  compressedData: Uint8Array
+): Promise<Uint8Array> {
   const decompressed = await decompress(Buffer.from(compressedData));
   return new Uint8Array(decompressed);
 }

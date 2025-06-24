@@ -13,8 +13,14 @@ export const keygenCommand = new Command('keygen')
     'Output file for the private key (JWK format)',
     'private.jwk'
   )
-  .option('--from-pem [file]', 'Path to a PEM file to convert to a JWK, or read from stdin if no file specified')
-  .option('--did-web <domain>', 'Generate did:web identity for the specified domain (e.g., pre.ms)')
+  .option(
+    '--from-pem [file]',
+    'Path to a PEM file to convert to a JWK, or read from stdin if no file specified'
+  )
+  .option(
+    '--did-web <domain>',
+    'Generate did:web identity for the specified domain (e.g., pre.ms)'
+  )
   .action(async options => {
     try {
       let privateJWK: JWK;
@@ -22,9 +28,10 @@ export const keygenCommand = new Command('keygen')
 
       if (options.fromPem !== undefined) {
         // Import from PEM file or stdin
-        const pemContent: string = options.fromPem === true 
-          ? await readStdin() // Read from stdin when --from-pem is used without a file argument
-          : readFileSync(options.fromPem, 'utf-8'); // Read from specified file
+        const pemContent: string =
+          options.fromPem === true
+            ? await readStdin() // Read from stdin when --from-pem is used without a file argument
+            : readFileSync(options.fromPem, 'utf-8'); // Read from specified file
         const privateKey = await importPKCS8(pemContent, 'EdDSA');
 
         // Export private key to JWK
@@ -88,38 +95,47 @@ export const keygenCommand = new Command('keygen')
       console.log(`📁 Private key saved to: ${options.out}`);
       console.log(`🔑 DID: ${didIdentifier}`);
       console.log(`🔗 Key ID: ${keyId}`);
-      
+
       // Security recommendations
       console.log('');
       console.log('🔒 SECURITY RECOMMENDATION:');
-      console.log('- This file contains your private key. Protect it like a password.');
-      console.log('- For production use, consider storing keys in a secure vault (e.g., HashiCorp Vault, AWS KMS) or a hardware security module (HSM).');
+      console.log(
+        '- This file contains your private key. Protect it like a password.'
+      );
+      console.log(
+        '- For production use, consider storing keys in a secure vault (e.g., HashiCorp Vault, AWS KMS) or a hardware security module (HSM).'
+      );
       console.log('- Do not commit private keys to version control.');
 
       // If did:web, also generate the DID document
       if (options.didWeb !== undefined) {
-        const didDocumentPath = options.out.replace('.jwk', '-did-document.json');
+        const didDocumentPath = options.out.replace(
+          '.jwk',
+          '-did-document.json'
+        );
         const didDocument = {
-          "@context": [
-            "https://www.w3.org/ns/did/v1",
-            "https://w3id.org/security/suites/ed25519-2020/v1"
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3id.org/security/suites/ed25519-2020/v1',
           ],
-          "id": didIdentifier,
-          "verificationMethod": [
+          id: didIdentifier,
+          verificationMethod: [
             {
-              "id": keyId,
-              "type": "Ed25519VerificationKey2020",
-              "controller": didIdentifier,
-              "publicKeyJwk": publicJWK
-            }
+              id: keyId,
+              type: 'Ed25519VerificationKey2020',
+              controller: didIdentifier,
+              publicKeyJwk: publicJWK,
+            },
           ],
-          "authentication": ["#owner"],
-          "assertionMethod": ["#owner"]
+          authentication: ['#owner'],
+          assertionMethod: ['#owner'],
         };
 
         writeFileSync(didDocumentPath, JSON.stringify(didDocument, null, 2));
         console.log(`📄 DID document saved to: ${didDocumentPath}`);
-        console.log(`🌐 Publish this at: https://${options.didWeb}/.well-known/did.json`);
+        console.log(
+          `🌐 Publish this at: https://${options.didWeb}/.well-known/did.json`
+        );
       }
     } catch (error) {
       const action =
@@ -136,19 +152,19 @@ async function readStdin(): Promise<string> {
   return new Promise((resolve, reject) => {
     let data = '';
     stdin.setEncoding('utf8');
-    
+
     stdin.on('readable', () => {
       const chunk = stdin.read();
       if (chunk !== null) {
         data += chunk;
       }
     });
-    
+
     stdin.on('end', () => {
       resolve(data.trim());
     });
-    
-    stdin.on('error', (error) => {
+
+    stdin.on('error', error => {
       reject(error);
     });
   });

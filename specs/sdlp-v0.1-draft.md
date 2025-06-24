@@ -156,13 +156,13 @@ _Note: The term "ABORT" in this workflow signifies that the entire process MUST 
     c. Resolve the DID specified in `sid` using a conformant DID resolver for its method (e.g., `did:web`, `did:key`, `did:plc`). This process retrieves the DID Document.
     d. From the resolved DID Document, locate the public key (verification method) identified by the full `kid`.
     e. If DID resolution fails, the specified `kid` is not found in the DID Document, or the key material is not appropriate for signature verification, the link is invalid; ABORT.
-6. **JWS Verification:** Verify the JWS signature using the retrieved public key, alg, and the protected, payload, and signature segments. If verification fails, the link is invalid; ABORT.
-7. **Time-Bound Check:** If exp or nbf are present in Core Metadata, validate them against the current time. If checks fail, the link is not currently valid; ABORT.
-8. **Sender Information Display:** After successful JWS verification, display information about the verified sender to the user. This should be based on the resolved DID (sid) and potentially enhanced with data from the DID Document (e.g., service endpoints, linked profiles if available). Clearly indicate trust status (e.g., known/trusted DID, new DID).
-9. **Payload Retrieval:**
-   1. Base64URL decode part2_b64 to get the (potentially) compressed payload data.
-   2. Decompress this data using the algorithm specified in the comp field from Core Metadata. (If comp is "none", no decompression).
-      Handle unsupported compression algorithms gracefully.
+6.  **JWS Verification:** Verify the JWS signature using the retrieved public key, alg, and the protected, payload, and signature segments. If verification fails, the link is invalid; ABORT.
+7.  **Time-Bound Check:** If exp or nbf are present in Core Metadata, validate them against the current time. If checks fail, the link is not currently valid; ABORT.
+8.  **Sender Information Display:** After successful JWS verification, display information about the verified sender to the user. This should be based on the resolved DID (sid) and potentially enhanced with data from the DID Document (e.g., service endpoints, linked profiles if available). Clearly indicate trust status (e.g., known/trusted DID, new DID).
+9.  **Payload Retrieval:**
+    1.  Base64URL decode part2_b64 to get the (potentially) compressed payload data.
+    2.  Decompress this data using the algorithm specified in the comp field from Core Metadata. (If comp is "none", no decompression).
+        Handle unsupported compression algorithms gracefully.
 10. **Payload Integrity Check:** Calculate the SHA-256 hash of the fully decompressed payload. Compare it with the chk field from Core Metadata. If hashes do not match, the payload is corrupted or altered; ABORT.
 11. **Payload Processing & User Confirmation:**
     1. Interpret the payload based on its type (from Core Metadata).

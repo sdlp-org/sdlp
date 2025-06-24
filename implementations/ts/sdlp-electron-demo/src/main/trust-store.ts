@@ -47,13 +47,13 @@ export class TrustStore {
 
   addTrustedDID(did: string, label?: string): void {
     const trustedDID: TrustedDID = {
-      addedAt: new Date().toISOString()
+      addedAt: new Date().toISOString(),
     };
-    
+
     if (label !== undefined) {
       trustedDID.label = label;
     }
-    
+
     this.data[did] = trustedDID;
     this.saveData();
   }

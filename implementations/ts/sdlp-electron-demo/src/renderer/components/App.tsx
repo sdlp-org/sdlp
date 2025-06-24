@@ -16,7 +16,8 @@ class GenericSdlpError extends SdlpError {
 
 function App() {
   const [activeTab, setActiveTab] = useState('home');
-  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
+  const [verificationResult, setVerificationResult] =
+    useState<VerificationResult | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -29,7 +30,10 @@ function App() {
         message?: string;
       };
       let result: VerificationResult;
-      if (commandData.status === 'success' || commandData.status === 'untrusted') {
+      if (
+        commandData.status === 'success' ||
+        commandData.status === 'untrusted'
+      ) {
         const metadata: CoreMetadata = {
           v: '1',
           sid: commandData.from,
@@ -46,7 +50,9 @@ function App() {
       } else {
         result = {
           valid: false,
-          error: new GenericSdlpError(commandData.message || 'An unknown error occurred.'),
+          error: new GenericSdlpError(
+            commandData.message || 'An unknown error occurred.'
+          ),
         };
       }
 

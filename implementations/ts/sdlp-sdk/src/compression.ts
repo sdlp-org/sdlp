@@ -13,11 +13,15 @@ const isNode =
 export async function compressBrotli(data: Uint8Array): Promise<Uint8Array> {
   if (isNode) {
     // Use Node.js implementation
-    const { compressBrotli: nodeCompress } = await import('./compression.node.js');
+    const { compressBrotli: nodeCompress } = await import(
+      './compression.node.js'
+    );
     return nodeCompress(data);
   } else {
     // Use browser implementation
-    const { compressBrotli: browserCompress } = await import('./compression.browser.js');
+    const { compressBrotli: browserCompress } = await import(
+      './compression.browser.js'
+    );
     return browserCompress(data);
   }
 }
@@ -30,11 +34,15 @@ export async function decompressBrotli(
 ): Promise<Uint8Array> {
   if (isNode) {
     // Use Node.js implementation
-    const { decompressBrotli: nodeDecompress } = await import('./compression.node.js');
+    const { decompressBrotli: nodeDecompress } = await import(
+      './compression.node.js'
+    );
     return nodeDecompress(compressedData);
   } else {
     // Use browser implementation
-    const { decompressBrotli: browserDecompress } = await import('./compression.browser.js');
+    const { decompressBrotli: browserDecompress } = await import(
+      './compression.browser.js'
+    );
     return browserDecompress(compressedData);
   }
 }

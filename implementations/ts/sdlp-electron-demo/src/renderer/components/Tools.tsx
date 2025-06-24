@@ -11,7 +11,8 @@ function Tools({ setVerificationResult, setError, setIsLoading }: ToolsProps) {
   const [payload, setPayload] = useState('');
   const [generatedLink, setGeneratedLink] = useState('');
   const [linkToVerify, setLinkToVerify] = useState('');
-  const [localVerificationResult, setLocalVerificationResult] = useState<any>(null);
+  const [localVerificationResult, setLocalVerificationResult] =
+    useState<any>(null);
 
   const handleGenerateLink = async () => {
     if (!payload) return;
@@ -42,14 +43,22 @@ function Tools({ setVerificationResult, setError, setIsLoading }: ToolsProps) {
       const result = await window.electronAPI.verifySDLPLink(linkToVerify);
       setLocalVerificationResult(result);
     } catch (error) {
-      setLocalVerificationResult({ valid: false, error: { message: (error as Error).message } } as any);
+      setLocalVerificationResult({
+        valid: false,
+        error: { message: (error as Error).message },
+      } as any);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div id="tools-content" className="tab-content" role="tabpanel" aria-labelledby="tools-tab">
+    <div
+      id="tools-content"
+      className="tab-content"
+      role="tabpanel"
+      aria-labelledby="tools-tab"
+    >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Link Generator */}
         <div className="bg-white rounded-lg shadow-md p-6">
@@ -87,14 +96,14 @@ function Tools({ setVerificationResult, setError, setIsLoading }: ToolsProps) {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder='echo "Hello from SDLP!"'
                 value={payload}
-                onChange={(e) => setPayload(e.target.value)}
+                onChange={e => setPayload(e.target.value)}
               ></textarea>
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="text-sm text-blue-800">
-                <strong>🔑 Signing Key:</strong> Links will be signed with
-                the trusted demo key, making them appear as trusted sources.
+                <strong>🔑 Signing Key:</strong> Links will be signed with the
+                trusted demo key, making them appear as trusted sources.
               </p>
             </div>
 
@@ -107,9 +116,9 @@ function Tools({ setVerificationResult, setError, setIsLoading }: ToolsProps) {
 
             {generatedLink && (
               <div id="generated-link-section">
-                <label className="block text-sm font-medium text-gray-700 mb-2"
-                  >Generated Link</label
-                >
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Generated Link
+                </label>
                 <div className="flex mb-3">
                   <input
                     id="generated-link"
@@ -185,7 +194,7 @@ function Tools({ setVerificationResult, setError, setIsLoading }: ToolsProps) {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Paste an SDLP link here..."
                 value={linkToVerify}
-                onChange={(e) => setLinkToVerify(e.target.value)}
+                onChange={e => setLinkToVerify(e.target.value)}
               ></textarea>
             </div>
 
@@ -203,29 +212,67 @@ function Tools({ setVerificationResult, setError, setIsLoading }: ToolsProps) {
                     <>
                       <div className="flex items-center">
                         <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mr-2">
-                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                          <svg
+                            className="w-4 h-4 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M5 13l4 4L19 7"
+                            ></path>
                           </svg>
                         </div>
-                        <span className="font-medium text-green-800">Valid Link</span>
+                        <span className="font-medium text-green-800">
+                          Valid Link
+                        </span>
                       </div>
                       <div className="mt-3 text-sm">
-                        <div><strong>Sender:</strong> {localVerificationResult.sender || 'Unknown'}</div>
-                        <div><strong>Payload:</strong> <code className="bg-gray-100 px-2 py-1 rounded">{localVerificationResult.payload ? new TextDecoder().decode(localVerificationResult.payload) : 'N/A'}</code></div>
+                        <div>
+                          <strong>Sender:</strong>{' '}
+                          {localVerificationResult.sender || 'Unknown'}
+                        </div>
+                        <div>
+                          <strong>Payload:</strong>{' '}
+                          <code className="bg-gray-100 px-2 py-1 rounded">
+                            {localVerificationResult.payload
+                              ? new TextDecoder().decode(
+                                  localVerificationResult.payload
+                                )
+                              : 'N/A'}
+                          </code>
+                        </div>
                       </div>
                     </>
                   ) : (
                     <>
                       <div className="flex items-center">
                         <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center mr-2">
-                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                          <svg
+                            className="w-4 h-4 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M6 18L18 6M6 6l12 12"
+                            ></path>
                           </svg>
                         </div>
-                        <span className="font-medium text-red-800">Invalid Link</span>
+                        <span className="font-medium text-red-800">
+                          Invalid Link
+                        </span>
                       </div>
                       <div className="mt-3 text-sm text-red-600">
-                        <strong>Error:</strong> {localVerificationResult.error?.message || 'Unknown error'}
+                        <strong>Error:</strong>{' '}
+                        {localVerificationResult.error?.message ||
+                          'Unknown error'}
                       </div>
                     </>
                   )}

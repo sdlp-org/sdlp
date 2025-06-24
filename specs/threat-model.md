@@ -35,7 +35,7 @@ The SDLP system consists of:
 
 **Primary Controls:**
 
-- **JWS Signature Verification:** The core defense is the cryptographic verification of the JWS signature against the public key resolved from the `sid` DID, as detailed in the *Receiver Workflow Summary* (Section 3.8, Step 6).
+- **JWS Signature Verification:** The core defense is the cryptographic verification of the JWS signature against the public key resolved from the `sid` DID, as detailed in the _Receiver Workflow Summary_ (Section 3.8, Step 6).
 - **DID-Based Sender Identification:** The protocol mandates sender identification via a DID in the `sid` field, with the public key for verification located via the `kid` field, ensuring cryptographic linkage (Section 3.3.2).
 - **Cross-DID Key Reuse Prevention:** The receiver workflow explicitly requires that the base DID of the `kid` URL MUST match the `sid` DID, preventing an attacker from using a valid key from one DID to sign a link for another (Section 3.8, Step 5c).
 
@@ -58,7 +58,7 @@ The SDLP system consists of:
 **Controls:**
 
 - **Method Diversity:** The protocol is agnostic to the DID method, allowing implementers to choose methods whose security models they trust. The specification explicitly lists `did:web`, `did:key`, and `did:plc` as examples (Section 3.3.2).
-- **Method-Specific Security:** The ultimate security relies on the guarantees of the chosen DID method (e.g., DNSSEC for `did:web`, cryptographic derivation for `did:key`), as noted in the *Security Considerations* (Section 4).
+- **Method-Specific Security:** The ultimate security relies on the guarantees of the chosen DID method (e.g., DNSSEC for `did:web`, cryptographic derivation for `did:key`), as noted in the _Security Considerations_ (Section 4).
 
 **Residual Risks:**
 
@@ -129,7 +129,7 @@ The SDLP system consists of:
 
 **Controls:**
 
-- **None by Design:** The protocol explicitly does not provide confidentiality for the payload, as stated in the *Security Considerations* (Section 4). This is a deliberate design choice to prioritize simplicity and capacity.
+- **None by Design:** The protocol explicitly does not provide confidentiality for the payload, as stated in the _Security Considerations_ (Section 4). This is a deliberate design choice to prioritize simplicity and capacity.
 - **Future Work:** The specification acknowledges that confidentiality can be layered on top and mentions JWE as a potential future direction (Section 6).
 
 **Mitigations (Application Layer):**
@@ -209,7 +209,7 @@ The SDLP system consists of:
 
 - **Resource Limiting:** Receivers MUST implement limits on the maximum size of the decompressed payload to prevent excessive memory allocation.
 - **Timeout Enforcement:** Decompression operations SHOULD be subject to a timeout to prevent CPU exhaustion attacks.
-- **Safe Libraries:** Using well-vetted decompression libraries is critical, as noted in the *Security Considerations* (Section 4).
+- **Safe Libraries:** Using well-vetted decompression libraries is critical, as noted in the _Security Considerations_ (Section 4).
 
 **Residual Risks:**
 
@@ -236,8 +236,8 @@ The SDLP system consists of:
 
 **Controls:**
 
-- **None at Protocol Level:** The protocol is designed only to authenticate the *origin* of a payload, not the *intent* of the sender. This is explicitly stated in the *Security Considerations* (Section 4).
-- **Receiver Responsibility:** The specification places the full responsibility for safe payload handling on the receiver. The *Receiver Workflow Summary* mandates sandboxed execution and explicit user confirmation before taking action as critical, required controls (Section 3.8, Steps 11 and 12).
+- **None at Protocol Level:** The protocol is designed only to authenticate the _origin_ of a payload, not the _intent_ of the sender. This is explicitly stated in the _Security Considerations_ (Section 4).
+- **Receiver Responsibility:** The specification places the full responsibility for safe payload handling on the receiver. The _Receiver Workflow Summary_ mandates sandboxed execution and explicit user confirmation before taking action as critical, required controls (Section 3.8, Steps 11 and 12).
 
 **Mitigations (Application Layer):**
 
@@ -256,7 +256,7 @@ The SDLP system consists of:
 
 **Implementation-Layer Controls:**
 
-- **Use of Robust Libraries:** The specification's *Security Considerations* advises that "Receivers should use robust, well-tested libraries" for parsing and decompression (Section 4).
+- **Use of Robust Libraries:** The specification's _Security Considerations_ advises that "Receivers should use robust, well-tested libraries" for parsing and decompression (Section 4).
 - **Dependency Management:** Standard software supply chain security practices, such as regular dependency scanning and updates, are essential.
 - **Input Validation:** The strict parsing and validation steps defined in the receiver workflow (Section 3.8) serve as a primary defense against malformed inputs that could trigger library vulnerabilities.
 

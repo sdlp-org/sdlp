@@ -18,7 +18,7 @@ describe('didgen command', () => {
       x: 'O2onvM62pC1io6jQKm8Nc2UyFXcd4kOmOsBIoYtZ2ik',
       d: 'nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A',
       kid: 'test-key-1',
-      alg: 'EdDSA'
+      alg: 'EdDSA',
     };
     writeFileSync(testKeyFile, JSON.stringify(testKey, null, 2));
   });
@@ -46,7 +46,9 @@ describe('didgen command', () => {
     expect(didDocument.id).toMatch(/^did:key:z/);
     expect(didDocument['@context']).toContain('https://www.w3.org/ns/did/v1');
     expect(didDocument.verificationMethod).toHaveLength(1);
-    expect(didDocument.verificationMethod[0].type).toBe('Ed25519VerificationKey2020');
+    expect(didDocument.verificationMethod[0].type).toBe(
+      'Ed25519VerificationKey2020'
+    );
   });
 
   it('should generate a did:web document', () => {
@@ -64,7 +66,9 @@ describe('didgen command', () => {
     expect(didDocument.id).toBe('did:web:example.com');
     expect(didDocument['@context']).toContain('https://www.w3.org/ns/did/v1');
     expect(didDocument.verificationMethod).toHaveLength(1);
-    expect(didDocument.verificationMethod[0].id).toBe('did:web:example.com#key-1');
+    expect(didDocument.verificationMethod[0].id).toBe(
+      'did:web:example.com#key-1'
+    );
   });
 
   it('should output to stdout when no output file specified', () => {
@@ -90,10 +94,10 @@ describe('didgen command', () => {
 
   it('should fail when domain is missing for did:web', () => {
     expect(() => {
-      execSync(
-        `npx tsx ${CLI_PATH} didgen --key ${testKeyFile} --method web`,
-        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
-      );
+      execSync(`npx tsx ${CLI_PATH} didgen --key ${testKeyFile} --method web`, {
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
     }).toThrow();
   });
 

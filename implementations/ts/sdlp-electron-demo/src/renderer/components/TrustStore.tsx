@@ -6,7 +6,9 @@ interface TrustedDID {
 }
 
 function TrustStore() {
-  const [trustedKeys, setTrustedKeys] = useState<Record<string, TrustedDID>>({});
+  const [trustedKeys, setTrustedKeys] = useState<Record<string, TrustedDID>>(
+    {}
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   const loadTrustedKeys = async () => {
@@ -53,9 +55,10 @@ function TrustStore() {
         🔐 Trusted Keys
       </h3>
       <p className="text-gray-600 mb-4">
-        Manage your trusted SDLP senders. Keys added here will be automatically trusted for future links.
+        Manage your trusted SDLP senders. Keys added here will be automatically
+        trusted for future links.
       </p>
-      
+
       <div id="trusted-keys-section">
         {isLoading ? (
           <div className="text-center py-4">
@@ -65,15 +68,22 @@ function TrustStore() {
           <div className="text-center py-8">
             <div className="text-gray-500 mb-2">No trusted keys yet</div>
             <p className="text-sm text-gray-400">
-              When you encounter valid SDLP links from new senders, you can choose to trust them for future interactions.
+              When you encounter valid SDLP links from new senders, you can
+              choose to trust them for future interactions.
             </p>
           </div>
         ) : (
           <div className="space-y-3">
             {Object.entries(trustedKeys).map(([did, info]) => {
-              const shortDid = did.length > 50 ? `${did.substring(0, 30)}...${did.substring(did.length - 20)}` : did;
+              const shortDid =
+                did.length > 50
+                  ? `${did.substring(0, 30)}...${did.substring(did.length - 20)}`
+                  : did;
               return (
-                <div key={did} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div
+                  key={did}
+                  className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center mb-2">
@@ -83,13 +93,16 @@ function TrustStore() {
                         </h4>
                       </div>
                       <div className="text-sm text-gray-600 mb-1">
-                        <strong>DID:</strong> <code className="bg-white px-1 rounded text-xs">{shortDid}</code>
+                        <strong>DID:</strong>{' '}
+                        <code className="bg-white px-1 rounded text-xs">
+                          {shortDid}
+                        </code>
                       </div>
                       <div className="text-xs text-gray-500">
                         Added: {new Date(info.addedAt).toLocaleDateString()}
                       </div>
                     </div>
-                    <button 
+                    <button
                       onClick={() => handleRemoveKey(did)}
                       className="ml-4 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition-colors"
                     >
@@ -101,7 +114,7 @@ function TrustStore() {
             })}
           </div>
         )}
-        
+
         <div className="mt-4 pt-4 border-t border-gray-200">
           <button
             onClick={loadTrustedKeys}

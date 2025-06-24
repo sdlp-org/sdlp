@@ -50,7 +50,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     removeTrusted: async (did: string): Promise<boolean> => {
       return await ipcRenderer.invoke('trust-store-remove-trusted', did);
     },
-    getAll: async (): Promise<Record<string, { addedAt: string; label?: string }>> => {
+    getAll: async (): Promise<
+      Record<string, { addedAt: string; label?: string }>
+    > => {
       return await ipcRenderer.invoke('trust-store-get-all');
     },
     clear: async (): Promise<boolean> => {

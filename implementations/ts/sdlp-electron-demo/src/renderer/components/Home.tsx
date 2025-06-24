@@ -9,9 +9,19 @@ interface HomeProps {
   isLoading: boolean;
 }
 
-function Home({ setActiveTab, verificationResult, error, isLoading }: HomeProps) {
+function Home({
+  setActiveTab,
+  verificationResult,
+  error,
+  isLoading,
+}: HomeProps) {
   return (
-    <div id="home-content" className="tab-content" role="tabpanel" aria-labelledby="home-tab">
+    <div
+      id="home-content"
+      className="tab-content"
+      role="tabpanel"
+      aria-labelledby="home-tab"
+    >
       <VerificationResult
         result={verificationResult}
         error={error}
@@ -37,18 +47,18 @@ function Home({ setActiveTab, verificationResult, error, isLoading }: HomeProps)
         <div className="prose text-gray-600">
           <p className="mb-4">
             The <strong>Secure Deep Link Protocol (SDLP)</strong> is a
-            cryptographic protocol that ensures the integrity and
-            authenticity of deep links. Unlike regular URLs, SDLP links are
-            digitally signed, allowing you to verify:
+            cryptographic protocol that ensures the integrity and authenticity
+            of deep links. Unlike regular URLs, SDLP links are digitally signed,
+            allowing you to verify:
           </p>
           <ul className="list-disc list-inside mb-4 space-y-2">
             <li>
-              <strong>Who sent the link</strong> - Cryptographic proof of
-              the sender's identity
+              <strong>Who sent the link</strong> - Cryptographic proof of the
+              sender's identity
             </li>
             <li>
-              <strong>Content integrity</strong> - Guarantee that the
-              payload hasn't been tampered with
+              <strong>Content integrity</strong> - Guarantee that the payload
+              hasn't been tampered with
             </li>
             <li>
               <strong>Trust level</strong> - Clear indication of whether the
@@ -57,8 +67,7 @@ function Home({ setActiveTab, verificationResult, error, isLoading }: HomeProps)
           </ul>
           <p>
             This prevents common attacks like link tampering, phishing, and
-            man-in-the-middle modifications that plague traditional deep
-            links.
+            man-in-the-middle modifications that plague traditional deep links.
           </p>
         </div>
       </div>

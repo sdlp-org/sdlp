@@ -142,6 +142,7 @@ $ op item get "pre.ms" | jq -r '.value' | sdlp keygen --from-pem --did-web pre.m
 **did:web Identity Setup:**
 
 When using `--did-web`, the CLI generates both:
+
 1. **Private key (JWK)** - Keep this secure for signing
 2. **DID document** - Publish this at `https://yourdomain/.well-known/did.json`
 
