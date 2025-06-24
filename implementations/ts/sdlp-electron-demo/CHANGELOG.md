@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/sdlp-org/sdlp/compare/sdlp-demo-v0.1.1...sdlp-demo-v0.1.2) (2025-06-24)
+
+
+### Features
+
+* better UI and feedback for testing ([#12](https://github.com/sdlp-org/sdlp/issues/12)) ([4b0e81c](https://github.com/sdlp-org/sdlp/commit/4b0e81c7dde9d36a7919cf8f292e8657f1fd6690))
+
 ## [0.1.1](https://github.com/sdlp-org/sdlp/compare/sdlp-demo-v0.1.0...sdlp-demo-v0.1.1) (2025-06-22)
 
 ### Features
