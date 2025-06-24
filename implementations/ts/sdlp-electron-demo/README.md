@@ -1,10 +1,16 @@
 <div align="center">
-  <img src="../../../assets/logo.png" alt="Project Logo" width="200"/>
+  <img src="../../../assets/logo.png" alt="SDLP Logo" width="200"/>
 </div>
 
-# SDLP Electron Demo Application
+# SDLP Electron Demo Application v1.1.0
 
 A comprehensive Electron application that demonstrates the Secure Deep Link Protocol (SDLP) with an interactive user interface for testing, generating, and verifying SDLP links.
+
+## Documentation
+
+- **[Getting Started Guide](../../../GETTING_STARTED.md)** - Complete setup and usage guide
+- **[SDLP SDK API](../sdlp-sdk/docs/API.md)** - SDK API reference
+- **[SDLP Specification](../../../specs/sdlp-v0.1-draft.md)** - Protocol specification
 
 ## Features
 
