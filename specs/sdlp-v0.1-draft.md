@@ -44,14 +44,16 @@ This document defines the protocol mechanics using a generic scheme `sdlp://` fo
 
 ### 3.2. Deep Link Format
 
-A Secure Deep Link is structured as follows: <custom_scheme>://<base64url_encoded_jws_metadata_object>.<base64url_encoded_compressed_payload>
+A Secure Deep Link is structured as follows: `<custom_scheme>://<base64url_encoded_jws_metadata_object>.<base64url_encoded_compressed_payload>`
 
 - **<custom_scheme>://**: The scheme registered by the receiving application (e.g., `sdlp://`).
 - **<base64url_encoded_jws_metadata_object>**: The first part, containing signed metadata as a Base64URL encoded Flattened JWS JSON Serialization object.
 - **. (dot)**: A literal period character separating the two main parts.
 - **<base64url_encoded_compressed_payload>**: The second part, containing the Base64URL encoded, compressed (or uncompressed) actual payload.
 
-_Note: This structure intentionally separates the JWS metadata object from the payload to avoid double Base64URL encoding. If the payload were embedded within the JWS structure (as is typical), it would need to be Base64URL encoded once to become the JWS payload field, then the entire JWS object would be Base64URL encoded again for URL transmission. This would result in approximately 78% size overhead (1.33 × 1.33 ≈ 1.78) compared to the original binary data. By separating them with a dot delimiter, we achieve only the necessary 33% overhead from single Base64URL encoding of the compressed payload, maximizing the usable payload capacity within URL length constraints._
+_Note on URL Encoding: The two main parts of the link are encoded using the Base64URL alphabet, which is safe for use in URLs without further percent-encoding. Receivers SHOULD NOT perform additional URL-decoding on the link content before parsing._
+
+_Note on JWS/Payload Separation: This structure intentionally separates the JWS metadata object from the payload to avoid double Base64URL encoding. If the payload were embedded within the JWS structure (as is typical), it would need to be Base64URL encoded once to become the JWS payload field, then the entire JWS object would be Base64URL encoded again for URL transmission. This would result in approximately 78% size overhead (1.33 × 1.33 ≈ 1.78) compared to the original binary data. By separating them with a dot delimiter, we achieve only the necessary 33% overhead from single Base64URL encoding of the compressed payload, maximizing the usable payload capacity within URL length constraints._
 
 ### 3.3. JWS Metadata Object{#3.3.-jws-metadata-object}
 
@@ -77,7 +79,7 @@ This object provides verifiable information about the sender and the payload. Af
 }
 ```
 
-- **kid (string):** Key Identifier. This MUST be a complete DID URL that includes a fragment identifier pointing to a specific verification method (public key) within the DID Document associated with the sid (Sender Identifier) from the Core Metadata. Example: "did:web:example.com#key-1".
+- **kid (string):** Key Identifier. This MUST be a complete DID URL that includes a fragment identifier pointing to a specific verification method (public key) within the DID Document associated with the `sid` (Sender Identifier) from the Core Metadata. Example: "did:web:example.com#key-1".
 
 **3.3.2. JWS Payload (Core Metadata JSON)** This JSON object contains the core metadata claims. It MUST be Base64URL encoded to form the payload field value in the JWS structure.
 
@@ -101,7 +103,7 @@ This object provides verifiable information about the sender and the payload. Af
   - "br": Brotli
   - "gz": Gzip
   - "zstd": Zstandard
-  - "none": No compression applied. Receivers SHOULD support br and none. Support for gz and zstd is RECOMMENDED.
+  - "none": No compression applied. For baseline interoperability, receivers MUST support `none`. Support for `br` is RECOMMENDED for efficiency. Support for `gz` and `zstd` is OPTIONAL.
 - **chk (string):** The hexadecimal string representation of the SHA-256 hash of the original, uncompressed payload data.
 - **exp (integer, optional):** Expiration time. Unix timestamp (seconds since epoch). If present, the link MUST NOT be processed on or after this time.
 - **nbf (integer, optional):** Not Before time. Unix timestamp. If present, the link MUST NOT be processed before this time.
@@ -138,15 +140,22 @@ The protocol aims to maximize usable payload within typical URL length limits.
 
 ### 3.8. Receiver Workflow Summary
 
-1. **Strictly Parse the Deep Link:**
-   a. Extract the scheme and verify it is the expected one (e.g., `sdlp://`).
-   b. Remove the scheme prefix (`sdlp://`) to get the link's content.
-   c. Split the content string by the `.` delimiter. The result MUST be an array of exactly two non-empty strings: `part1_b64` (the JWS) and `part2_b64` (the payload).
-   d. If the link does not conform to this exact structure, it is invalid; ABORT.
-2. Base64URL decode part1_b64 to get the JWS Metadata Object (JSON).
-3. Parse JWS: Extract protected (string), payload (string), and signature (string) segments.
-4. Decode Headers & Core Metadata: Base64URL decode the protected segment (JWS Protected Header) and payload segment (Core Metadata). Parse the resulting JSONs.
-5. **Key Discovery & DID Resolution:** a. Extract the sender's DID from the sid field (Core Metadata) and the key identifier from the kid field (JWS Protected Header). b. Resolve the DID specified in sid using a conformant DID resolver for its method (e.g., did:web, did:key, did:plc). This process retrieves the DID Document. c. From the resolved DID Document, locate the public key (verification method) identified by the kid. Ensure the kid's DID matches the sid. d. If DID resolution fails or the specified kid is not found in the DID Document, or is not appropriate for signature verification, the link is invalid; ABORT. e. Receivers MAY implement Trust On First Use (TOFU) policies for resolved DIDs/keys or maintain a list of trusted DIDs.
+_Note: The term "ABORT" in this workflow signifies that the entire process MUST be terminated immediately, and the link MUST be treated as invalid. No further processing should occur, and the receiver SHOULD present an appropriate error to the user or calling application._
+
+1.  **Strictly Parse the Deep Link:**
+    a. Extract the scheme and verify it is the expected one (e.g., `sdlp://`).
+    b. Remove the scheme prefix (`sdlp://`) to get the link's content.
+    c. Split the content string by the `.` delimiter. The result MUST be an array of exactly two non-empty strings: `part1_b64` (the JWS) and `part2_b64` (the payload).
+    d. If the link does not conform to this exact structure, it is invalid; ABORT.
+2.  Base64URL decode `part1_b64` to get the JWS Metadata Object (JSON).
+3.  Parse JWS: Extract `protected` (string), `payload` (string), and `signature` (string) segments.
+4.  Decode Headers & Core Metadata: Base64URL decode the `protected` segment (JWS Protected Header) and `payload` segment (Core Metadata). Parse the resulting JSONs.
+5.  **Key Discovery & DID Resolution:**
+    a. Extract the sender's DID from the `sid` field (Core Metadata) and the key identifier from the `kid` field (JWS Protected Header).
+    b. The `kid`'s base DID (the part before the `#` fragment) MUST be identical to the `sid` DID. If they do not match, the link is invalid; ABORT.
+    c. Resolve the DID specified in `sid` using a conformant DID resolver for its method (e.g., `did:web`, `did:key`, `did:plc`). This process retrieves the DID Document.
+    d. From the resolved DID Document, locate the public key (verification method) identified by the full `kid`.
+    e. If DID resolution fails, the specified `kid` is not found in the DID Document, or the key material is not appropriate for signature verification, the link is invalid; ABORT.
 6. **JWS Verification:** Verify the JWS signature using the retrieved public key, alg, and the protected, payload, and signature segments. If verification fails, the link is invalid; ABORT.
 7. **Time-Bound Check:** If exp or nbf are present in Core Metadata, validate them against the current time. If checks fail, the link is not currently valid; ABORT.
 8. **Sender Information Display:** After successful JWS verification, display information about the verified sender to the user. This should be based on the resolved DID (sid) and potentially enhanced with data from the DID Document (e.g., service endpoints, linked profiles if available). Clearly indicate trust status (e.g., known/trusted DID, new DID).
@@ -165,7 +174,9 @@ The protocol aims to maximize usable payload within typical URL length limits.
 
 - **Trust in DID Resolution:** The security of sender authentication relies on the integrity and security of the specific DID method used (e.g., HTTPS and DNSSEC for did:web, blockchain consensus for DIDs like did:ion, cryptographic derivation for did:key) and the conformant operation of the DID resolver.
 - **Private Key Security:** Senders are responsible for securing their private keys. Compromise of a private key allows impersonation of the DID. Use of hardware security modules or secure enclaves for private key storage is recommended for high-value DIDs.
-- **Key Management and Rotation:** Senders are responsible for managing their keys within their DID Document. Receivers should fetch the latest DID Document for verification but may have policies for handling signatures made with keys that were previously valid but are no longer current (TOFU).
+- **Key Management and Rotation:** Senders are responsible for managing their keys within their DID Document. Receivers SHOULD fetch the latest DID Document for verification. For signatures where the `kid` is valid but no longer present in the resolved DID Document (i.e., a rotated key), receivers MAY have a policy to trust the signature based on a previously cached version of the DID Document (a form of Trust On First Use), but this increases the risk of accepting signatures from a key that was deliberately revoked.
+- **DID Resolution Failures:** If a DID cannot be resolved (e.g., due to a network failure, DNS outage for `did:web`, etc.), the link cannot be verified and MUST be rejected. Implementations SHOULD surface a distinct error to the user indicating a resolution failure, as this is a different condition from an invalid signature.
+- **Clock Skew:** The `exp` and `nbf` fields are sensitive to clock differences between the sender and receiver. Receivers SHOULD allow for a small, configurable grace period (e.g., 30-60 seconds) when validating these timestamps to account for minor clock skew.
 - **Payload Handling:** Receivers MUST treat all incoming payloads as potentially untrusted until all verifications (signature, checksum, schema) pass. Payloads, especially those that can trigger actions (e.g., AI prompts, scripts, configurations), MUST be handled in a sandboxed or controlled manner.
 - **No Confidentiality:** This protocol does not encrypt the payload. Sensitive data should not be transmitted unless an additional encryption layer is applied (outside the scope of this version).
 - **Replay Attacks:** The optional exp and nbf fields offer basic time-windowing. Applications requiring stronger replay protection must implement additional mechanisms.
