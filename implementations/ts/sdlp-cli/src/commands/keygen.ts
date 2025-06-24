@@ -89,13 +89,17 @@ export const keygenCommand = new Command('keygen')
       };
 
       writeFileSync(options.out, JSON.stringify(keyData, null, 2));
-      
+
       // Set secure file permissions (owner read/write only: 0o600)
       try {
         chmodSync(options.out, 0o600);
       } catch {
-        console.warn(`⚠️  Warning: Could not set secure file permissions on ${options.out}`);
-        console.warn('Please manually set permissions to 600 (owner read/write only)');
+        console.warn(
+          `⚠️  Warning: Could not set secure file permissions on ${options.out}`
+        );
+        console.warn(
+          'Please manually set permissions to 600 (owner read/write only)'
+        );
       }
 
       const action = options.fromPem !== undefined ? 'converted' : 'generated';
