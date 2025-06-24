@@ -74,7 +74,7 @@ sdlp verify "sdlp://eyJ..."
 
 ### `keygen`
 
-Generate a new DID:key identity and save the private key.
+Generate a new DID:key identity and save the private key, or convert an existing PEM key to JWK format.
 
 ```bash
 sdlp keygen [options]
@@ -83,6 +83,8 @@ sdlp keygen [options]
 **Options:**
 
 - `-o, --out <file>` - Output file for the private key (JWK format) (default: "private.jwk")
+- `--from-pem [file]` - Path to a PEM file to convert to a JWK, or read from stdin if no file specified
+- `--did-web <domain>` - Generate did:web identity for the specified domain (e.g., pre.ms)
 
 **Output:**
 
@@ -90,14 +92,60 @@ sdlp keygen [options]
 - Displays the generated DID:key identifier
 - The DID can be shared publicly; keep the private key secure
 
-**Example:**
+**Examples:**
 
 ```bash
+# Generate a new key pair
 $ sdlp keygen --out alice-key.jwk
 ✅ Key pair generated successfully!
 📁 Private key saved to: alice-key.jwk
 🔑 DID: did:key:z6MkkKU8EXYUHfV4eGmU2EWn4qr57Q5ZEU8bWRZ94BwySX74
+
+# Convert an existing PEM key to JWK format
+$ sdlp keygen --from-pem my-key.pem --out converted-key.jwk
+✅ Key pair converted successfully!
+📁 Private key saved to: converted-key.jwk
+🔑 DID: did:key:z6MkkKU8EXYUHfV4eGmU2EWn4qr57Q5ZEU8bWRZ94BwySX74
 ```
+
+**PEM Key Requirements:**
+
+- The PEM file must contain an Ed25519 private key in PKCS#8 format
+- The key should be generated using standard cryptographic tools
+- Only Ed25519 keys are supported for DID:key generation
+
+**Example PEM Key Generation:**
+
+```bash
+# Generate Ed25519 key pair using OpenSSL
+openssl genpkey -algorithm Ed25519 -out private-key.pem
+
+# Convert to JWK format using SDLP CLI
+sdlp keygen --from-pem private-key.pem --out my-key.jwk
+
+# Convert from stdin (useful with password managers like 1Password)
+op item --vault=Private get "pre.ms" --fields "label=private key" --format=json | jq -r '.value' | sdlp keygen --from-pem --out my-key.jwk
+
+# Or pipe any PEM content directly
+cat my-key.pem | sdlp keygen --from-pem --out converted-key.jwk
+
+# Generate did:web identity with automatic DID document creation
+$ op item get "pre.ms" | jq -r '.value' | sdlp keygen --from-pem --did-web pre.ms --out my-web-key.jwk
+✅ Key pair converted successfully!
+📁 Private key saved to: my-web-key.jwk
+🔑 DID: did:web:pre.ms
+🔗 Key ID: did:web:pre.ms#owner
+📄 DID document saved to: my-web-key-did-document.json
+🌐 Publish this at: https://pre.ms/.well-known/did.json
+```
+
+**did:web Identity Setup:**
+
+When using `--did-web`, the CLI generates both:
+1. **Private key (JWK)** - Keep this secure for signing
+2. **DID document** - Publish this at `https://yourdomain/.well-known/did.json`
+
+The DID document contains your public key and must be accessible via HTTPS for verification to work.
 
 ### `sign`
 

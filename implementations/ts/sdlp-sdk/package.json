@@ -9,6 +9,18 @@
       "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js",
       "require": "./dist/src/index.js"
+    },
+    "./compression": {
+      "types": "./dist/src/compression.d.ts",
+      "node": {
+        "import": "./dist/src/compression.node.js",
+        "require": "./dist/src/compression.node.js"
+      },
+      "browser": {
+        "import": "./dist/src/compression.browser.js",
+        "require": "./dist/src/compression.browser.js"
+      },
+      "default": "./dist/src/compression.browser.js"
     }
   },
   "files": [

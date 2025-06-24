@@ -9,6 +9,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onSDLPCommandToExecute: (callback: (data: any) => void) => {
     ipcRenderer.on('sdlp-command-to-execute', (_event, data) => callback(data));
   },
+  onSDLPCommandOutput: (callback: (data: any) => void) => {
+    ipcRenderer.on('sdlp-command-output', (_event, data) => callback(data));
+  },
   removeAllListeners: (channel: string) => {
     ipcRenderer.removeAllListeners(channel);
   },
@@ -35,5 +38,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
     command: string
   ): Promise<{ output: string; exitCode: number }> => {
     return await ipcRenderer.invoke('execute-sdlp-command', command);
+  },
+  // Trust Store APIs (new for Phase 11)
+  trustStore: {
+    isTrusted: async (did: string): Promise<boolean> => {
+      return await ipcRenderer.invoke('trust-store-is-trusted', did);
+    },
+    addTrusted: async (did: string, label?: string): Promise<boolean> => {
+      return await ipcRenderer.invoke('trust-store-add-trusted', did, label);
+    },
+    removeTrusted: async (did: string): Promise<boolean> => {
+      return await ipcRenderer.invoke('trust-store-remove-trusted', did);
+    },
+    getAll: async (): Promise<Record<string, { addedAt: string; label?: string }>> => {
+      return await ipcRenderer.invoke('trust-store-get-all');
+    },
+    clear: async (): Promise<boolean> => {
+      return await ipcRenderer.invoke('trust-store-clear');
+    },
   },
 });

@@ -1,51 +1,158 @@
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readFileSync } from 'node:fs';
+import { stdin } from 'node:process';
 import bs58 from 'bs58';
 import { Command } from 'commander';
-import { generateKeyPair, exportJWK, type JWK } from 'jose';
+import { generateKeyPair, exportJWK, importPKCS8, type JWK } from 'jose';
 
 export const keygenCommand = new Command('keygen')
-  .description('Generate a did:key and save the private key')
+  .description(
+    'Generate a did:key and save the private key, optionally from a PEM file'
+  )
   .option(
     '-o, --out <file>',
     'Output file for the private key (JWK format)',
     'private.jwk'
   )
+  .option('--from-pem [file]', 'Path to a PEM file to convert to a JWK, or read from stdin if no file specified')
+  .option('--did-web <domain>', 'Generate did:web identity for the specified domain (e.g., pre.ms)')
   .action(async options => {
     try {
-      // Generate Ed25519 key pair
-      const { privateKey, publicKey } = await generateKeyPair('EdDSA', {
-        crv: 'Ed25519',
-      });
+      let privateJWK: JWK;
+      let publicJWK: JWK;
 
-      // Export as JWK
-      const privateJWK = await exportJWK(privateKey);
-      const publicJWK = await exportJWK(publicKey);
+      if (options.fromPem !== undefined) {
+        // Import from PEM file or stdin
+        const pemContent: string = options.fromPem === true 
+          ? await readStdin() // Read from stdin when --from-pem is used without a file argument
+          : readFileSync(options.fromPem, 'utf-8'); // Read from specified file
+        const privateKey = await importPKCS8(pemContent, 'EdDSA');
 
-      // Generate the did:key identifier
-      const didKey = generateDidKey(publicJWK);
+        // Export private key to JWK
+        privateJWK = await exportJWK(privateKey);
 
-      // Extract the key identifier (the part after 'did:key:')
-      const keyIdentifier = didKey.replace('did:key:', '');
-      const fullKeyId = `${didKey}#${keyIdentifier}`;
+        // Create public JWK by removing private components
+        if (
+          privateJWK.kty === undefined ||
+          privateJWK.crv === undefined ||
+          privateJWK.x === undefined ||
+          privateJWK.kty === null ||
+          privateJWK.crv === null ||
+          privateJWK.x === null ||
+          privateJWK.kty === '' ||
+          privateJWK.crv === '' ||
+          privateJWK.x === ''
+        ) {
+          throw new Error('Invalid private key: missing required components');
+        }
+        publicJWK = {
+          kty: privateJWK.kty,
+          crv: privateJWK.crv,
+          x: privateJWK.x,
+        };
+      } else {
+        // Generate new Ed25519 key pair
+        const { privateKey, publicKey } = await generateKeyPair('EdDSA', {
+          crv: 'Ed25519',
+        });
+
+        // Export as JWK
+        privateJWK = await exportJWK(privateKey);
+        publicJWK = await exportJWK(publicKey);
+      }
+
+      let didIdentifier: string;
+      let keyId: string;
+
+      if (options.didWeb !== undefined) {
+        // Generate did:web identity
+        didIdentifier = `did:web:${options.didWeb}`;
+        keyId = `${didIdentifier}#owner`;
+      } else {
+        // Generate did:key identity
+        didIdentifier = generateDidKey(publicJWK);
+        const keyIdentifier = didIdentifier.replace('did:key:', '');
+        keyId = `${didIdentifier}#${keyIdentifier}`;
+      }
 
       // Save private key to file
       const keyData = {
         ...privateJWK,
-        kid: fullKeyId,
+        kid: keyId,
         alg: 'EdDSA',
       };
 
       writeFileSync(options.out, JSON.stringify(keyData, null, 2));
 
-      console.log(`✅ Key pair generated successfully!`);
+      const action = options.fromPem !== undefined ? 'converted' : 'generated';
+      console.log(`✅ Key pair ${action} successfully!`);
       console.log(`📁 Private key saved to: ${options.out}`);
-      console.log(`🔑 DID: ${didKey}`);
-      console.log(`🔗 Key ID: ${fullKeyId}`);
+      console.log(`🔑 DID: ${didIdentifier}`);
+      console.log(`🔗 Key ID: ${keyId}`);
+      
+      // Security recommendations
+      console.log('');
+      console.log('🔒 SECURITY RECOMMENDATION:');
+      console.log('- This file contains your private key. Protect it like a password.');
+      console.log('- For production use, consider storing keys in a secure vault (e.g., HashiCorp Vault, AWS KMS) or a hardware security module (HSM).');
+      console.log('- Do not commit private keys to version control.');
+
+      // If did:web, also generate the DID document
+      if (options.didWeb !== undefined) {
+        const didDocumentPath = options.out.replace('.jwk', '-did-document.json');
+        const didDocument = {
+          "@context": [
+            "https://www.w3.org/ns/did/v1",
+            "https://w3id.org/security/suites/ed25519-2020/v1"
+          ],
+          "id": didIdentifier,
+          "verificationMethod": [
+            {
+              "id": keyId,
+              "type": "Ed25519VerificationKey2020",
+              "controller": didIdentifier,
+              "publicKeyJwk": publicJWK
+            }
+          ],
+          "authentication": ["#owner"],
+          "assertionMethod": ["#owner"]
+        };
+
+        writeFileSync(didDocumentPath, JSON.stringify(didDocument, null, 2));
+        console.log(`📄 DID document saved to: ${didDocumentPath}`);
+        console.log(`🌐 Publish this at: https://${options.didWeb}/.well-known/did.json`);
+      }
     } catch (error) {
-      console.error('❌ Error generating key pair:', error);
+      const action =
+        options.fromPem !== undefined ? 'converting' : 'generating';
+      console.error(`❌ Error ${action} key pair:`, error);
       process.exit(1);
     }
   });
+
+/**
+ * Read content from stdin
+ */
+async function readStdin(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    stdin.setEncoding('utf8');
+    
+    stdin.on('readable', () => {
+      const chunk = stdin.read();
+      if (chunk !== null) {
+        data += chunk;
+      }
+    });
+    
+    stdin.on('end', () => {
+      resolve(data.trim());
+    });
+    
+    stdin.on('error', (error) => {
+      reject(error);
+    });
+  });
+}
 
 /**
  * Generate a did:key identifier from a public JWK

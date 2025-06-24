@@ -138,3 +138,18 @@ dist
 
 # SvelteKit build / generate output
 .svelte-kit
+
+# Security: Exclude private keys and certificates
+*.jwk
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.der
+*.csr
+
+# Allow test fixtures explicity
+!implementations/ts/sdlp-cli/fixtures/test-key.pem
+!implementations/ts/sdlp-cli/fixtures/valid-key.jwk

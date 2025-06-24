@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
+import { didgenCommand } from './commands/didgen.js';
 import { keygenCommand } from './commands/keygen.js';
 import { signCommand } from './commands/sign.js';
 import { verifyCommand } from './commands/verify.js';
@@ -13,6 +14,7 @@ program
   .version('1.0.0');
 
 // Add commands
+program.addCommand(didgenCommand);
 program.addCommand(keygenCommand);
 program.addCommand(signCommand);
 program.addCommand(verifyCommand);

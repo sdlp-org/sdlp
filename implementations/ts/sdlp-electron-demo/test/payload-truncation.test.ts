@@ -23,9 +23,10 @@ describe('Payload Truncation Feature', () => {
     });
 
     it('should truncate long payloads correctly', () => {
-      const longPayload = 'echo "This is a very long command that should be truncated because it exceeds the maximum length limit for display in dialogs"';
+      const longPayload =
+        'echo "This is a very long command that should be truncated because it exceeds the maximum length limit for display in dialogs"';
       const result = truncatePayload(longPayload, 50);
-      
+
       expect(result).toContain('...');
       // For maxLength 50: (50-3)/2 = 23.5, floor = 23
       // So we get 23 + '...' + 23 = 49 chars total
@@ -44,7 +45,7 @@ describe('Payload Truncation Feature', () => {
     it('should handle edge case with one character over limit', () => {
       const slightlyLongPayload = 'a'.repeat(51);
       const result = truncatePayload(slightlyLongPayload, 50);
-      
+
       expect(result).toContain('...');
       // For maxLength 50: (50-3)/2 = 23.5, floor = 23
       // So we get 23 + '...' + 23 = 49 chars total
@@ -56,7 +57,7 @@ describe('Payload Truncation Feature', () => {
     it('should handle very short max length', () => {
       const payload = 'echo "test"';
       const result = truncatePayload(payload, 10);
-      
+
       expect(result).toContain('...');
       // For maxLength 10: (10-3)/2 = 3.5, floor = 3
       // So we get 3 + '...' + 3 = 9 chars total
@@ -78,9 +79,10 @@ describe('Payload Truncation Feature', () => {
     });
 
     it('should preserve command structure in truncation', () => {
-      const commandPayload = 'curl -X POST https://api.example.com/very/long/endpoint/path/that/should/be/truncated -H "Authorization: Bearer very-long-token-here" -d "{"key":"value","another":"data"}"';
+      const commandPayload =
+        'curl -X POST https://api.example.com/very/long/endpoint/path/that/should/be/truncated -H "Authorization: Bearer very-long-token-here" -d "{"key":"value","another":"data"}"';
       const result = truncatePayload(commandPayload, 80);
-      
+
       expect(result).toContain('...');
       // For maxLength 80: (80-3)/2 = 38.5, floor = 38
       // So we get 38 + '...' + 38 = 79 chars total
@@ -92,10 +94,12 @@ describe('Payload Truncation Feature', () => {
 
   describe('Dialog display integration', () => {
     it('should format payload display correctly for dialog', () => {
-      const longPayload = 'echo "This is a very long message that would make the dialog unwieldy if not truncated properly"';
+      const longPayload =
+        'echo "This is a very long message that would make the dialog unwieldy if not truncated properly"';
       const truncated = truncatePayload(longPayload, 60);
-      const payloadDisplay = longPayload.length > 60 ? `${truncated} (truncated)` : truncated;
-      
+      const payloadDisplay =
+        longPayload.length > 60 ? `${truncated} (truncated)` : truncated;
+
       expect(payloadDisplay).toContain('(truncated)');
       expect(payloadDisplay.length).toBeGreaterThan(60); // Because of " (truncated)" suffix
       expect(payloadDisplay.endsWith(' (truncated)')).toBe(true);
@@ -104,8 +108,9 @@ describe('Payload Truncation Feature', () => {
     it('should not add truncated suffix for short payloads', () => {
       const shortPayload = 'echo "short"';
       const truncated = truncatePayload(shortPayload, 100);
-      const payloadDisplay = shortPayload.length > 100 ? `${truncated} (truncated)` : truncated;
-      
+      const payloadDisplay =
+        shortPayload.length > 100 ? `${truncated} (truncated)` : truncated;
+
       expect(payloadDisplay).not.toContain('(truncated)');
       expect(payloadDisplay).toBe(shortPayload);
     });
@@ -113,9 +118,10 @@ describe('Payload Truncation Feature', () => {
 
   describe('Security considerations', () => {
     it('should handle potentially malicious payloads safely', () => {
-      const maliciousPayload = 'rm -rf / && echo "malicious command with very long path /usr/local/bin/some/deep/directory/structure"';
+      const maliciousPayload =
+        'rm -rf / && echo "malicious command with very long path /usr/local/bin/some/deep/directory/structure"';
       const result = truncatePayload(maliciousPayload, 50);
-      
+
       expect(result).toContain('...');
       // For maxLength 50: (50-3)/2 = 23.5, floor = 23
       // So we get 23 + '...' + 23 = 49 chars total
@@ -127,7 +133,7 @@ describe('Payload Truncation Feature', () => {
     it('should handle payloads with special characters', () => {
       const specialPayload = 'echo "Special chars: <>&\'"$`|;(){}[]"';
       const result = truncatePayload(specialPayload, 25);
-      
+
       expect(result).toContain('...');
       expect(result.length).toBe(25);
       // Should preserve special characters in truncation
@@ -141,7 +147,7 @@ describe('Payload Truncation Feature', () => {
       const startTime = Date.now();
       const result = truncatePayload(veryLongPayload, 100);
       const endTime = Date.now();
-      
+
       expect(result).toContain('...');
       // For maxLength 100: (100-3)/2 = 48.5, floor = 48
       // So we get 48 + '...' + 48 = 99 chars total

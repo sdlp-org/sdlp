@@ -27,8 +27,8 @@ describe('Electron Demo Basic Tests', () => {
   });
 
   it('should validate environment setup', () => {
-    // Basic environment checks
-    expect(typeof window).toBe('undefined'); // Node.js environment
+    // Basic environment checks - we're using jsdom so window is available
+    expect(typeof window).toBe('object'); // jsdom environment
     expect(typeof process).toBe('object');
     expect(process.env).toBeDefined();
   });
