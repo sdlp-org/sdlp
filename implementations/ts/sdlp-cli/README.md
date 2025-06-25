@@ -9,6 +9,8 @@ A command-line interface for the Secure Deep Link Protocol (SDLP) v1.0.
 ## Documentation
 
 - **[Getting Started Guide](../../../GETTING_STARTED.md)** - Complete setup and usage guide
+- **[DID Method Selection Guide](../../../GETTING_STARTED.md#choosing-a-did-method)** - Choose between did:key and did:web
+- **[Key Management Guidance](../../../docs/key-management-guidance.md)** - Production key management best practices
 - **[SDLP SDK API](../sdlp-sdk/docs/API.md)** - SDK API reference
 - **[SDLP Specification](../../../specs/sdlp-v0.1-draft.md)** - Protocol specification
 

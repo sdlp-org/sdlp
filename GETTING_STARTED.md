@@ -403,21 +403,180 @@ npm run dev
 - **Development Guide**: See `docs/development.md`
 - **Test Vectors**: Examine `specs/mvp-test-vectors.json` for examples
 
+## Choosing a DID Method
+
+SDLP supports multiple Decentralized Identifier (DID) methods for sender authentication. Understanding the different options helps you choose the right approach for your use case.
+
+### DID Method Comparison
+
+| Method | Best For | Setup Complexity | Domain Required | Key Management |
+|--------|----------|------------------|-----------------|----------------|
+| `did:key` | Development, Testing, Simple Apps | ⭐ Very Easy | No | Self-managed |
+| `did:web` | Production, Organizations | ⭐⭐ Easy | Yes | Self-managed |
+| Other Methods | Enterprise, Complex Identity | ⭐⭐⭐ Complex | Varies | Varies |
+
+### Using `did:key` (Recommended for Getting Started)
+
+`did:key` is perfect for development and simple applications. The identifier is derived directly from the public key, making it completely self-contained.
+
+#### Generate a `did:key` Identity
+
+```bash
+cd implementations/ts/sdlp-cli
+
+# Generate a new Ed25519 key pair
+node dist/src/index.js keygen --out my-did-key.jwk
+
+# The output shows your DID:key identifier
+# ✅ Key pair generated successfully!
+# 🔑 DID: did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK
+```
+
+#### Sign with `did:key`
+
+```bash
+# Create and sign a payload
+echo '{"action": "hello", "message": "Getting started with SDLP!"}' > hello.json
+
+node dist/src/index.js sign \
+  --payload-file hello.json \
+  --type application/json \
+  --signer-key my-did-key.jwk
+```
+
+**Advantages of `did:key`:**
+- ✅ No domain or infrastructure required
+- ✅ Works immediately after key generation
+- ✅ Perfect for development and testing
+- ✅ Completely decentralized
+
+**Limitations of `did:key`:**
+- ❌ No human-readable identity
+- ❌ Cannot rotate keys (new key = new DID)
+- ❌ No additional metadata or services
+
+### Using `did:web` (Recommended for Production)
+
+`did:web` provides a more flexible identity system that's perfect for organizations with domain control.
+
+#### Set Up `did:web` Identity
+
+1. **Generate a key pair:**
+```bash
+cd implementations/ts/sdlp-cli
+node dist/src/index.js keygen --out my-web-key.jwk
+```
+
+2. **Create a DID document:**
+```bash
+# Generate DID document for your domain
+node dist/src/index.js didgen \
+  --domain example.com \
+  --key-file my-web-key.jwk \
+  --out did-document.json
+```
+
+3. **Host the DID document:**
+```bash
+# Upload did-document.json to your web server at:
+# https://example.com/.well-known/did.json
+```
+
+4. **Sign with your `did:web` identity:**
+```bash
+echo '{"action": "welcome", "from": "Example Corp"}' > welcome.json
+
+node dist/src/index.js sign \
+  --payload-file welcome.json \
+  --type application/json \
+  --signer-key my-web-key.jwk
+```
+
+**Advantages of `did:web`:**
+- ✅ Human-readable domain-based identity
+- ✅ Can rotate keys by updating DID document
+- ✅ Can include additional metadata and services
+- ✅ Familiar web-based infrastructure
+
+**Limitations of `did:web`:**
+- ❌ Requires domain ownership and HTTPS
+- ❌ Depends on DNS and web infrastructure
+- ❌ More complex setup process
+
+### DID Method Selection Guide
+
+#### Choose `did:key` if:
+- 🚀 You're just getting started with SDLP
+- 🧪 Building a prototype or development application
+- 🔒 You need maximum decentralization
+- ⚡ You want the simplest possible setup
+
+#### Choose `did:web` if:
+- 🏢 You represent an organization with a domain
+- 🔄 You need the ability to rotate keys
+- 📋 You want to include additional identity metadata
+- 🌐 Your users expect domain-based verification
+
+#### Consider other DID methods if:
+- 🏛️ You need enterprise-grade identity infrastructure
+- 🔗 You're integrating with existing DID ecosystems
+- 📜 You have specific compliance requirements
+
+### Migration Path
+
+Start with `did:key` for development, then migrate to `did:web` for production:
+
+1. **Development Phase**: Use `did:key` for rapid prototyping
+2. **Testing Phase**: Test with both `did:key` and `did:web`
+3. **Production Phase**: Deploy with `did:web` for your organization
+4. **Scale Phase**: Consider enterprise DID methods as needed
+
+### Example: Complete Workflow
+
+Here's a complete example showing both methods:
+
+```bash
+cd implementations/ts/sdlp-cli
+
+# 1. Quick start with did:key
+node dist/src/index.js keygen --out dev-key.jwk
+echo '{"env": "development"}' | node dist/src/index.js sign \
+  --payload-file /dev/stdin \
+  --type application/json \
+  --signer-key dev-key.jwk
+
+# 2. Production setup with did:web
+node dist/src/index.js keygen --out prod-key.jwk
+node dist/src/index.js didgen \
+  --domain mycompany.com \
+  --key-file prod-key.jwk \
+  --out did-document.json
+
+# Upload did-document.json to https://mycompany.com/.well-known/did.json
+
+echo '{"env": "production", "company": "My Company"}' | node dist/src/index.js sign \
+  --payload-file /dev/stdin \
+  --type application/json \
+  --signer-key prod-key.jwk
+```
+
 ## Next Steps
 
 Now that you have SDLP running:
 
 1. **Explore the Specification**: Read `specs/sdlp-v0.1-draft.md` to understand the protocol
 2. **Review Security Model**: Check `specs/threat-model.md` for security considerations
-3. **Try Advanced Features**: Experiment with compression, expiration, and did:web identities
-4. **Build Applications**: Integrate the SDK into your own projects
-5. **Contribute**: See `docs/development.md` for contribution guidelines
+3. **Learn Key Management**: Read our [Key Management Guidance](docs/key-management-guidance.md) for production best practices
+4. **Try Advanced Features**: Experiment with compression, expiration, and different DID methods
+5. **Build Applications**: Integrate the SDK into your own projects
+6. **Contribute**: See `docs/development.md` for contribution guidelines
 
 ## Security Considerations
 
 ⚠️ **Important Security Notes**:
 
 - **Private Keys**: Never commit private key files to version control
+- **Key Management**: For production deployments, follow comprehensive security practices outlined in our [Key Management Guidance](docs/key-management-guidance.md)
 - **Production Use**: The demo app executes arbitrary commands - implement proper sandboxing for production
 - **Network Security**: did:web resolution relies on HTTPS - ensure secure connections
 - **Payload Validation**: Always validate payloads before processing in your applications
