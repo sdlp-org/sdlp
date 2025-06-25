@@ -19,6 +19,32 @@ SDLP enables secure, verifiable deep links that can be trusted across applicatio
 - **🗜️ Compression**: Efficient Brotli compression for large payloads
 - **🌐 Cross-Platform**: Works in Node.js, browsers, and desktop applications
 
+## SDLP in the Deep-Link Ecosystem
+
+While traditional deep links and platform-specific solutions like Android App Links and iOS Universal Links serve basic navigation needs, they were not designed for security-critical applications. SDLP fills a crucial gap by providing a comprehensive, platform-agnostic security layer for deep links.
+
+A recent comparative analysis highlights the key differences:
+
+| Feature                      | Traditional | Platform-Specific (iOS/Android) | JWT-Based | **SDLP**                               |
+| ---------------------------- | ----------- | ------------------------------- | --------- | -------------------------------------- |
+| **Link Hijacking Prevention**  | ❌ No       | ✅ Yes (Domain-based)           | ❌ No     | ✅ **Yes (Cryptographic Auth)**        |
+| **Payload Tampering Protection** | ❌ No       | ❌ No                           | ⚠️ Limited | ✅ **Yes (JWS Signatures)**            |
+| **Sender Authentication**    | ❌ No       | ✅ Yes (Domain-based)           | ⚠️ Limited | ✅ **Yes (Decentralized Identity)**    |
+| **Cross-Platform Support**   | ✅ Yes      | ❌ No                           | ✅ Yes    | ✅ **Yes**                             |
+| **Requires Domain Control**  | No          | Yes                             | No        | **No**                                 |
+| **Cryptographic Integrity**  | ❌ No       | ❌ No                           | ✅ Yes    | ✅ **Yes (Enhanced)**                  |
+
+### When to Choose SDLP
+
+SDLP's use of DIDs and JWS provides a robust, verifiable chain of trust from sender to recipient, independent of platform or domain ownership. This makes it the ideal protocol for applications where security is non-negotiable:
+
+- **🏦 Financial Services**: Secure transaction links and account access
+- **🏥 Healthcare**: Patient data sharing and medical record access
+- **🏢 Enterprise**: Internal tool integration and secure workflows
+- **🔒 High-Security Applications**: Any scenario requiring verified sender identity and payload integrity
+
+For basic navigation and consumer applications, traditional deep links or platform-specific solutions may be sufficient. However, when authenticity, integrity, and cross-platform security are paramount, SDLP provides the comprehensive solution.
+
 ### Protocol Format
 
 SDLP links follow this structure:
