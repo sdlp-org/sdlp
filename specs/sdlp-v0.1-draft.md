@@ -170,10 +170,101 @@ _Note: The term "ABORT" in this workflow signifies that the entire process MUST 
     3. **Crucially, before taking any significant action, present the verified sender information (based on the resolved DID), payload type, and a summary/preview of the intended action to the user and request explicit confirmation.**
 12. **Controlled Execution:** If all checks pass and the user confirms, process the payload in a sandboxed or appropriately restricted environment.
 
-## 4. Security Considerations
+## 4. Error Handling
+
+SDLP implementations MUST provide standardized error codes and conditions to ensure consistent behavior across different libraries and applications. This section defines the normative error types that implementations MUST support.
+
+### 4.1. Error Code Categories
+
+All SDLP errors MUST be categorized into one of the following types:
+
+#### 4.1.1. Structural Errors
+
+- **`E_INVALID_STRUCTURE`**: The link does not conform to the expected SDLP format
+  - Link cannot be split into exactly two parts by the dot delimiter
+  - Missing or empty scheme prefix
+  - Invalid Base64URL encoding in either part
+  - Malformed JWS structure after decoding
+
+#### 4.1.2. Cryptographic Errors
+
+- **`E_SIGNATURE_VERIFICATION_FAILED`**: The JWS signature is cryptographically invalid
+
+  - Signature does not match the protected header and payload
+  - Unsupported or invalid signature algorithm
+  - Malformed signature data
+
+- **`E_KEY_NOT_FOUND`**: The specified key identifier cannot be located
+  - The `kid` from the JWS header does not exist in the resolved DID document
+  - The key is not suitable for signature verification
+  - Missing required key material or properties
+
+#### 4.1.3. Identity Resolution Errors
+
+- **`E_DID_RESOLUTION_FAILED`**: The sender's DID cannot be resolved
+
+  - Network failure during DID resolution
+  - DID method not supported
+  - Invalid DID format or structure
+  - DID document not found or inaccessible
+
+- **`E_DID_MISMATCH`**: The DID in `sid` does not match the base DID in `kid`
+  - The DID portion of the `kid` (before #) differs from the `sid` value
+  - This indicates a potential security issue or malformed link
+
+#### 4.1.4. Payload Processing Errors
+
+- **`E_PAYLOAD_DECOMPRESSION_FAILED`**: The payload cannot be decompressed
+
+  - Unsupported compression algorithm specified in `comp`
+  - Corrupted or invalid compressed data
+  - Decompression library errors
+
+- **`E_PAYLOAD_INTEGRITY_FAILED`**: The payload checksum verification failed
+  - SHA-256 hash of decompressed payload does not match `chk` value
+  - Indicates payload tampering or corruption
+
+#### 4.1.5. Time Validation Errors
+
+- **`E_TIME_BOUNDS_VIOLATED`**: The link violates time-based constraints
+  - Current time is before the `nbf` (not before) timestamp
+  - Current time is on or after the `exp` (expiration) timestamp
+  - Invalid timestamp format or values
+
+#### 4.1.6. Replay Protection Errors
+
+- **`E_REPLAY_DETECTED`**: The link has been processed before (optional)
+  - The `jti` (JWT ID) has been seen previously
+  - Requires stateful tracking by the implementation
+  - Only applicable if replay protection is implemented
+
+### 4.2. Error Response Format
+
+Implementations SHOULD provide structured error information including:
+
+- **Error Code**: One of the standardized codes above
+- **Error Message**: Human-readable description of the failure
+- **Context**: Additional details about the failure location or cause
+- **Timestamp**: When the error occurred (for logging purposes)
+
+### 4.3. Error Handling Requirements
+
+- **Fail Securely**: All errors MUST result in link rejection
+- **Clear Messaging**: Error messages MUST be informative but not expose sensitive details
+- **Consistent Behavior**: The same error condition MUST always produce the same error code
+- **Graceful Degradation**: Unsupported features should produce appropriate error codes rather than crashes
+
+### 4.4. Implementation Guidelines
+
+- Libraries MUST throw or return errors using these standardized codes
+- Applications SHOULD map these codes to user-friendly messages
+- Logging systems SHOULD record the specific error codes for debugging
+- Error handling MUST NOT leak sensitive information (private keys, internal state)
+
+## 5. Security Considerations
 
 - **Trust in DID Resolution:** The security of sender authentication relies on the integrity and security of the specific DID method used (e.g., HTTPS and DNSSEC for did:web, blockchain consensus for DIDs like did:ion, cryptographic derivation for did:key) and the conformant operation of the DID resolver.
-- **Private Key Security:** Senders are responsible for securing their private keys. Compromise of a private key allows impersonation of the DID. Use of hardware security modules or secure enclaves for private key storage is recommended for high-value DIDs.
+- **Private Key Security:** Senders are responsible for securing their private keys. Compromise of a private key allows impersonation of the DID. Use of hardware security modules or secure enclaves for private key storage is recommended for high-value DIDs. For comprehensive guidance on key management best practices, see [Key Management Guidance](../docs/key-management-guidance.md).
 - **Key Management and Rotation:** Senders are responsible for managing their keys within their DID Document. Receivers SHOULD fetch the latest DID Document for verification. For signatures where the `kid` is valid but no longer present in the resolved DID Document (i.e., a rotated key), receivers MAY have a policy to trust the signature based on a previously cached version of the DID Document (a form of Trust On First Use), but this increases the risk of accepting signatures from a key that was deliberately revoked.
 - **DID Resolution Failures:** If a DID cannot be resolved (e.g., due to a network failure, DNS outage for `did:web`, etc.), the link cannot be verified and MUST be rejected. Implementations SHOULD surface a distinct error to the user indicating a resolution failure, as this is a different condition from an invalid signature.
 - **Clock Skew:** The `exp` and `nbf` fields are sensitive to clock differences between the sender and receiver. Receivers SHOULD allow for a small, configurable grace period (e.g., 30-60 seconds) when validating these timestamps to account for minor clock skew.

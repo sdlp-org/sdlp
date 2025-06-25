@@ -270,9 +270,97 @@ function Tools({ setVerificationResult, setError, setIsLoading }: ToolsProps) {
                         </span>
                       </div>
                       <div className="mt-3 text-sm text-red-600">
-                        <strong>Error:</strong>{' '}
-                        {localVerificationResult.error?.message ||
-                          'Unknown error'}
+                        {(() => {
+                          const error = localVerificationResult.error;
+                          const errorCode = error?.code;
+
+                          // Provide specific error messages based on standardized error codes
+                          switch (errorCode) {
+                            case 'E_INVALID_STRUCTURE':
+                              return (
+                                <div>
+                                  <strong>🔧 Invalid Link Format:</strong> The
+                                  link structure is malformed or corrupted.
+                                </div>
+                              );
+                            case 'E_SIGNATURE_VERIFICATION_FAILED':
+                              return (
+                                <div>
+                                  <strong>🔐 Signature Invalid:</strong> The
+                                  cryptographic signature could not be verified.
+                                  This link may have been tampered with.
+                                </div>
+                              );
+                            case 'E_KEY_NOT_FOUND':
+                              return (
+                                <div>
+                                  <strong>🔑 Key Not Found:</strong> The signing
+                                  key specified in the link could not be located
+                                  in the sender's DID document.
+                                </div>
+                              );
+                            case 'E_DID_RESOLUTION_FAILED':
+                              return (
+                                <div>
+                                  <strong>
+                                    🌐 Identity Resolution Failed:
+                                  </strong>{' '}
+                                  Could not resolve the sender's decentralized
+                                  identifier (DID).
+                                </div>
+                              );
+                            case 'E_DID_MISMATCH':
+                              return (
+                                <div>
+                                  <strong>⚠️ Identity Mismatch:</strong> The
+                                  sender DID and key identifier do not match.
+                                  This indicates a security issue.
+                                </div>
+                              );
+                            case 'E_PAYLOAD_DECOMPRESSION_FAILED':
+                              return (
+                                <div>
+                                  <strong>📦 Decompression Failed:</strong>{' '}
+                                  Could not decompress the payload data.
+                                </div>
+                              );
+                            case 'E_PAYLOAD_INTEGRITY_FAILED':
+                              return (
+                                <div>
+                                  <strong>🛡️ Payload Tampered:</strong> The
+                                  payload integrity check failed. The content
+                                  has been modified.
+                                </div>
+                              );
+                            case 'E_TIME_BOUNDS_VIOLATED':
+                              return (
+                                <div>
+                                  <strong>⏰ Time Violation:</strong> The link
+                                  has expired or is not yet valid.
+                                </div>
+                              );
+                            case 'E_REPLAY_DETECTED':
+                              return (
+                                <div>
+                                  <strong>🔄 Replay Detected:</strong> This link
+                                  has already been processed before.
+                                </div>
+                              );
+                            default:
+                              return (
+                                <div>
+                                  <strong>Error:</strong>{' '}
+                                  {error?.message || 'Unknown error'}
+                                </div>
+                              );
+                          }
+                        })()}
+                        {localVerificationResult.error?.code && (
+                          <div className="mt-2 text-xs text-gray-500">
+                            <strong>Code:</strong>{' '}
+                            {localVerificationResult.error.code}
+                          </div>
+                        )}
                       </div>
                     </>
                   )}

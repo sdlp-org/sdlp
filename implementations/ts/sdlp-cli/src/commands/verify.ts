@@ -95,10 +95,70 @@ export const verifyCommand = new Command('verify')
             process.stdout.write(result.payload);
           } else {
             console.error(`❌ Link verification failed:`);
-            console.error(`Error: ${result.error.message}`);
 
-            if (typeof result.error.code === 'string') {
-              console.error(`Code: ${result.error.code}`);
+            // Provide specific error messages based on standardized error codes
+            switch (result.error.code) {
+              case 'E_INVALID_STRUCTURE':
+                console.error(
+                  `🔧 Invalid Link Format: The link structure is malformed or corrupted.`
+                );
+                break;
+              case 'E_SIGNATURE_VERIFICATION_FAILED':
+                console.error(
+                  `🔐 Signature Invalid: The cryptographic signature could not be verified. This link may have been tampered with.`
+                );
+                break;
+              case 'E_KEY_NOT_FOUND':
+                console.error(
+                  `🔑 Key Not Found: The signing key specified in the link could not be located in the sender's DID document.`
+                );
+                break;
+              case 'E_DID_RESOLUTION_FAILED':
+                console.error(
+                  `🌐 Identity Resolution Failed: Could not resolve the sender's decentralized identifier (DID).`
+                );
+                break;
+              case 'E_DID_MISMATCH':
+                console.error(
+                  `⚠️  Identity Mismatch: The sender DID and key identifier do not match. This indicates a security issue.`
+                );
+                break;
+              case 'E_PAYLOAD_DECOMPRESSION_FAILED':
+                console.error(
+                  `📦 Decompression Failed: Could not decompress the payload data.`
+                );
+                break;
+              case 'E_PAYLOAD_INTEGRITY_FAILED':
+                console.error(
+                  `🛡️  Payload Tampered: The payload integrity check failed. The content has been modified.`
+                );
+                break;
+              case 'E_TIME_BOUNDS_VIOLATED':
+                console.error(
+                  `⏰ Time Violation: The link has expired or is not yet valid.`
+                );
+                break;
+              case 'E_REPLAY_DETECTED':
+                console.error(
+                  `🔄 Replay Detected: This link has already been processed before.`
+                );
+                break;
+              default:
+                console.error(`Error: ${result.error.message}`);
+            }
+
+            console.error(`Code: ${result.error.code}`);
+
+            // Show additional context if available (check if the error has context property)
+            if (
+              'context' in result.error &&
+              result.error.context !== null &&
+              result.error.context !== undefined
+            ) {
+              console.error(
+                `Context:`,
+                JSON.stringify(result.error.context, null, 2)
+              );
             }
 
             process.exit(1);

@@ -304,7 +304,7 @@ interface DIDDocument {
 
 ## Error Classes
 
-All SDLP errors extend the base `SdlpError` class and include a specific error code for programmatic handling.
+All SDLP errors extend the base `SdlpError` class and include standardized error codes as defined in the SDLP specification. Each error includes a timestamp and optional context for debugging.
 
 ### SdlpError
 
@@ -313,22 +313,67 @@ Base class for all SDLP-specific errors.
 ```typescript
 abstract class SdlpError extends Error {
   abstract readonly code: string;
+  readonly timestamp: Date;
+  readonly context?: Record<string, unknown>;
 }
 ```
 
-### Error Types
+### Standardized Error Types
 
-| Error Class                    | Code                        | Description                       |
-| ------------------------------ | --------------------------- | --------------------------------- |
-| `DIDMismatchError`             | `DID_MISMATCH`              | DID mismatch between sid and kid  |
-| `InvalidJWSFormatError`        | `INVALID_JWS_FORMAT`        | Invalid JWS format                |
-| `InvalidSignatureError`        | `INVALID_SIGNATURE`         | Invalid cryptographic signature   |
-| `PayloadChecksumMismatchError` | `PAYLOAD_CHECKSUM_MISMATCH` | Payload integrity check failed    |
-| `LinkExpiredError`             | `LINK_EXPIRED`              | Link has expired                  |
-| `LinkNotYetValidError`         | `LINK_NOT_YET_VALID`        | Link not yet valid (nbf)          |
-| `UnsupportedCompressionError`  | `UNSUPPORTED_COMPRESSION`   | Unsupported compression algorithm |
-| `DIDResolutionError`           | `DID_RESOLUTION_FAILED`     | Could not resolve sender DID      |
-| `InvalidLinkFormatError`       | `INVALID_LINK_FORMAT`       | Malformed link structure          |
+The SDK implements the standardized error codes defined in the SDLP specification:
+
+#### Structural Errors
+
+| Error Class             | Code                  | Description                          |
+| ----------------------- | --------------------- | ------------------------------------ |
+| `InvalidStructureError` | `E_INVALID_STRUCTURE` | Link does not conform to SDLP format |
+
+#### Cryptographic Errors
+
+| Error Class                  | Code                              | Description                                |
+| ---------------------------- | --------------------------------- | ------------------------------------------ |
+| `SignatureVerificationError` | `E_SIGNATURE_VERIFICATION_FAILED` | JWS signature is cryptographically invalid |
+| `KeyNotFoundError`           | `E_KEY_NOT_FOUND`                 | Key identifier cannot be located           |
+
+#### Identity Resolution Errors
+
+| Error Class          | Code                      | Description                        |
+| -------------------- | ------------------------- | ---------------------------------- |
+| `DIDResolutionError` | `E_DID_RESOLUTION_FAILED` | Sender's DID cannot be resolved    |
+| `DIDMismatchError`   | `E_DID_MISMATCH`          | DID in sid does not match kid base |
+
+#### Payload Processing Errors
+
+| Error Class                 | Code                             | Description                          |
+| --------------------------- | -------------------------------- | ------------------------------------ |
+| `PayloadDecompressionError` | `E_PAYLOAD_DECOMPRESSION_FAILED` | Payload cannot be decompressed       |
+| `PayloadIntegrityError`     | `E_PAYLOAD_INTEGRITY_FAILED`     | Payload checksum verification failed |
+
+#### Time Validation Errors
+
+| Error Class               | Code                     | Description                          |
+| ------------------------- | ------------------------ | ------------------------------------ |
+| `TimeBoundsViolatedError` | `E_TIME_BOUNDS_VIOLATED` | Link violates time-based constraints |
+
+#### Replay Protection Errors
+
+| Error Class           | Code                | Description                    |
+| --------------------- | ------------------- | ------------------------------ |
+| `ReplayDetectedError` | `E_REPLAY_DETECTED` | Link has been processed before |
+
+### Legacy Error Classes (Deprecated)
+
+For backward compatibility, the following legacy error classes are still available but deprecated:
+
+| Legacy Error Class             | New Error Class              | Status     |
+| ------------------------------ | ---------------------------- | ---------- |
+| `InvalidLinkFormatError`       | `InvalidStructureError`      | Deprecated |
+| `InvalidJWSFormatError`        | `InvalidStructureError`      | Deprecated |
+| `InvalidSignatureError`        | `SignatureVerificationError` | Deprecated |
+| `PayloadChecksumMismatchError` | `PayloadIntegrityError`      | Deprecated |
+| `LinkExpiredError`             | `TimeBoundsViolatedError`    | Deprecated |
+| `LinkNotYetValidError`         | `TimeBoundsViolatedError`    | Deprecated |
+| `UnsupportedCompressionError`  | `PayloadDecompressionError`  | Deprecated |
 
 ### Error Handling Example
 
@@ -339,14 +384,20 @@ try {
   const result = await verifyLink(link);
   if (!result.valid) {
     switch (result.error.code) {
-      case 'LINK_EXPIRED':
-        console.log('Link has expired');
+      case 'E_TIME_BOUNDS_VIOLATED':
+        console.log('Link has expired or is not yet valid');
         break;
-      case 'INVALID_SIGNATURE':
+      case 'E_SIGNATURE_VERIFICATION_FAILED':
         console.log('Signature verification failed');
         break;
-      case 'DID_RESOLUTION_FAILED':
+      case 'E_DID_RESOLUTION_FAILED':
         console.log('Could not resolve sender DID');
+        break;
+      case 'E_PAYLOAD_INTEGRITY_FAILED':
+        console.log('Payload has been tampered with');
+        break;
+      case 'E_INVALID_STRUCTURE':
+        console.log('Link format is invalid');
         break;
       default:
         console.log('Verification failed:', result.error.message);
@@ -355,6 +406,9 @@ try {
 } catch (error) {
   if (error instanceof SdlpError) {
     console.error('SDLP Error:', error.code, error.message);
+    if (error.context) {
+      console.error('Context:', error.context);
+    }
   } else {
     console.error('Unexpected error:', error);
   }
