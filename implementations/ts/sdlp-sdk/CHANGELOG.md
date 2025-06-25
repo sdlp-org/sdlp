@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/sdlp-org/sdlp/compare/sdlp-sdk-v1.1.0...sdlp-sdk-v1.2.0) (2025-06-25)
+
+
+### Features
+
+* some spec hardening and better docs ([#14](https://github.com/sdlp-org/sdlp/issues/14)) ([d0df786](https://github.com/sdlp-org/sdlp/commit/d0df786c9396ebfac7012061fb937192126fe872))
+
 ## [1.1.0](https://github.com/sdlp-org/sdlp/compare/sdlp-sdk-v1.0.1...sdlp-sdk-v1.1.0) (2025-06-24)
 
 ### Features
