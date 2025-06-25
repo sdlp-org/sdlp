@@ -2,10 +2,9 @@
 
 ## [1.1.0](https://github.com/sdlp-org/sdlp/compare/sdlp-cli-v1.0.1...sdlp-cli-v1.1.0) (2025-06-24)
 
-
 ### Features
 
-* better UI and feedback for testing ([#12](https://github.com/sdlp-org/sdlp/issues/12)) ([4b0e81c](https://github.com/sdlp-org/sdlp/commit/4b0e81c7dde9d36a7919cf8f292e8657f1fd6690))
+- better UI and feedback for testing ([#12](https://github.com/sdlp-org/sdlp/issues/12)) ([4b0e81c](https://github.com/sdlp-org/sdlp/commit/4b0e81c7dde9d36a7919cf8f292e8657f1fd6690))
 
 ## [1.0.1](https://github.com/sdlp-org/sdlp/compare/sdlp-cli-v1.0.0...sdlp-cli-v1.0.1) (2025-06-22)
 

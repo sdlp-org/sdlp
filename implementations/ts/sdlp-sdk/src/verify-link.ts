@@ -78,6 +78,8 @@ function extractDidFromKid(kid: string): string {
  *   - On success: `{ valid: true, sender, payload, metadata, didDocument? }`
  *   - On failure: `{ valid: false, error }`
  *
+ * @throws {TypeError} When input parameters are invalid types
+ *
  * @example
  * ```typescript
  * import { verifyLink } from '@sdlp/sdk';
@@ -98,13 +100,66 @@ export async function verifyLink(
   link: string,
   options: VerifyOptions = {}
 ): Promise<VerificationResult> {
+  // Input validation
+  if (typeof link !== 'string') {
+    return {
+      valid: false,
+      error: new InvalidLinkFormatError('Link must be a string'),
+    };
+  }
+
+  if (link.length === 0) {
+    return {
+      valid: false,
+      error: new InvalidLinkFormatError('Link cannot be empty'),
+    };
+  }
+
+  if (link.length > 100000) {
+    // 100KB limit for link size
+    return {
+      valid: false,
+      error: new InvalidLinkFormatError('Link exceeds maximum allowed length'),
+    };
+  }
+
+  if (typeof options !== 'object' || options === null) {
+    return {
+      valid: false,
+      error: new InvalidLinkFormatError('Options must be an object'),
+    };
+  }
+
   try {
-    // Extract options with defaults
+    // Extract options with defaults and validation
     const {
       resolver = createDefaultResolver(),
       allowedAlgorithms = ['EdDSA'],
       maxPayloadSize = 10 * 1024 * 1024, // 10MB default
     } = options;
+
+    // Validate options
+    if (!Array.isArray(allowedAlgorithms) || allowedAlgorithms.length === 0) {
+      return {
+        valid: false,
+        error: new InvalidLinkFormatError(
+          'allowedAlgorithms must be a non-empty array'
+        ),
+      };
+    }
+
+    if (
+      typeof maxPayloadSize !== 'number' ||
+      maxPayloadSize <= 0 ||
+      maxPayloadSize > 100 * 1024 * 1024
+    ) {
+      return {
+        valid: false,
+        error: new InvalidLinkFormatError(
+          'maxPayloadSize must be a positive number not exceeding 100MB'
+        ),
+      };
+    }
 
     // 1. Parse the SDLP link format - split by first '.' separator
     const parseResult = parseSDLPLink(link);

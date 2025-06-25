@@ -69,29 +69,194 @@ export interface VerificationFailure {
 
 /**
  * Structured error class hierarchy for SDLP errors
+ * Implements standardized error codes as defined in the SDLP specification
  */
 export abstract class SdlpError extends Error {
   abstract readonly code: string;
+  readonly timestamp: Date;
+  readonly context?: Record<string, unknown> | undefined;
 
-  constructor(message: string) {
+  constructor(message: string, context?: Record<string, unknown>) {
     super(message);
     this.name = this.constructor.name;
+    this.timestamp = new Date();
+    this.context = context;
+  }
+}
+
+// ===== Structural Errors =====
+
+/**
+ * Error for invalid SDLP link structure
+ * Corresponds to E_INVALID_STRUCTURE in the specification
+ */
+export class InvalidStructureError extends SdlpError {
+  readonly code = 'E_INVALID_STRUCTURE';
+
+  constructor(reason: string, context?: Record<string, unknown>) {
+    super(`Invalid SDLP link structure: ${reason}`, context);
+  }
+}
+
+// ===== Cryptographic Errors =====
+
+/**
+ * Error for signature verification failures
+ * Corresponds to E_SIGNATURE_VERIFICATION_FAILED in the specification
+ */
+export class SignatureVerificationError extends SdlpError {
+  readonly code = 'E_SIGNATURE_VERIFICATION_FAILED';
+
+  constructor(reason?: string, context?: Record<string, unknown>) {
+    super(reason ?? 'JWS signature verification failed', context);
+  }
+}
+
+/**
+ * Error for missing or invalid key identifiers
+ * Corresponds to E_KEY_NOT_FOUND in the specification
+ */
+export class KeyNotFoundError extends SdlpError {
+  readonly code = 'E_KEY_NOT_FOUND';
+
+  constructor(kid: string, reason?: string, context?: Record<string, unknown>) {
+    super(
+      `Key not found: ${kid}${reason !== null && reason !== undefined ? ` - ${reason}` : ''}`,
+      context
+    );
+  }
+}
+
+// ===== Identity Resolution Errors =====
+
+/**
+ * Error for DID resolution failures
+ * Corresponds to E_DID_RESOLUTION_FAILED in the specification
+ */
+export class DIDResolutionError extends SdlpError {
+  readonly code = 'E_DID_RESOLUTION_FAILED';
+
+  constructor(
+    didUrl: string,
+    reason: string,
+    context?: Record<string, unknown>
+  ) {
+    super(`Failed to resolve DID '${didUrl}': ${reason}`, context);
   }
 }
 
 /**
  * Error for DID mismatch between sid and kid
+ * Corresponds to E_DID_MISMATCH in the specification
  */
 export class DIDMismatchError extends SdlpError {
-  readonly code = 'DID_MISMATCH';
+  readonly code = 'E_DID_MISMATCH';
 
-  constructor(sid: string, kid: string) {
-    super(`DID mismatch: sid='${sid}' does not match kid base DID='${kid}'`);
+  constructor(sid: string, kid: string, context?: Record<string, unknown>) {
+    super(
+      `DID mismatch: sid='${sid}' does not match kid base DID='${kid}'`,
+      context
+    );
+  }
+}
+
+// ===== Payload Processing Errors =====
+
+/**
+ * Error for payload decompression failures
+ * Corresponds to E_PAYLOAD_DECOMPRESSION_FAILED in the specification
+ */
+export class PayloadDecompressionError extends SdlpError {
+  readonly code = 'E_PAYLOAD_DECOMPRESSION_FAILED';
+
+  constructor(
+    algorithm: string,
+    reason?: string,
+    context?: Record<string, unknown>
+  ) {
+    super(
+      `Payload decompression failed (${algorithm})${reason !== null && reason !== undefined ? `: ${reason}` : ''}`,
+      context
+    );
   }
 }
 
 /**
- * Error for invalid JWS format
+ * Error for payload integrity check failures
+ * Corresponds to E_PAYLOAD_INTEGRITY_FAILED in the specification
+ */
+export class PayloadIntegrityError extends SdlpError {
+  readonly code = 'E_PAYLOAD_INTEGRITY_FAILED';
+
+  constructor(
+    expected: string,
+    actual: string,
+    context?: Record<string, unknown>
+  ) {
+    super(
+      `Payload integrity check failed: expected=${expected}, actual=${actual}`,
+      context
+    );
+  }
+}
+
+// ===== Time Validation Errors =====
+
+/**
+ * Error for time bounds violations (exp/nbf)
+ * Corresponds to E_TIME_BOUNDS_VIOLATED in the specification
+ */
+export class TimeBoundsViolatedError extends SdlpError {
+  readonly code = 'E_TIME_BOUNDS_VIOLATED';
+
+  constructor(reason: string, context?: Record<string, unknown>) {
+    super(`Time bounds violated: ${reason}`, context);
+  }
+
+  static expired(expiration: number): TimeBoundsViolatedError {
+    return new TimeBoundsViolatedError(
+      `Link expired at ${new Date(expiration * 1000).toISOString()}`,
+      { expiration, currentTime: Math.floor(Date.now() / 1000) }
+    );
+  }
+
+  static notYetValid(notBefore: number): TimeBoundsViolatedError {
+    return new TimeBoundsViolatedError(
+      `Link not valid until ${new Date(notBefore * 1000).toISOString()}`,
+      { notBefore, currentTime: Math.floor(Date.now() / 1000) }
+    );
+  }
+}
+
+// ===== Replay Protection Errors =====
+
+/**
+ * Error for detected replay attacks
+ * Corresponds to E_REPLAY_DETECTED in the specification
+ */
+export class ReplayDetectedError extends SdlpError {
+  readonly code = 'E_REPLAY_DETECTED';
+
+  constructor(jti: string, context?: Record<string, unknown>) {
+    super(`Replay detected: JWT ID '${jti}' has been seen before`, context);
+  }
+}
+
+// ===== Legacy Error Classes (for backward compatibility) =====
+
+/**
+ * @deprecated Use InvalidStructureError instead
+ */
+export class InvalidLinkFormatError extends SdlpError {
+  readonly code = 'INVALID_LINK_FORMAT';
+
+  constructor(reason: string) {
+    super(`Invalid link format: ${reason}`);
+  }
+}
+
+/**
+ * @deprecated Use InvalidStructureError instead
  */
 export class InvalidJWSFormatError extends SdlpError {
   readonly code = 'INVALID_JWS_FORMAT';
@@ -102,7 +267,7 @@ export class InvalidJWSFormatError extends SdlpError {
 }
 
 /**
- * Error for invalid signature
+ * @deprecated Use SignatureVerificationError instead
  */
 export class InvalidSignatureError extends SdlpError {
   readonly code = 'INVALID_SIGNATURE';
@@ -113,7 +278,7 @@ export class InvalidSignatureError extends SdlpError {
 }
 
 /**
- * Error for payload checksum mismatch
+ * @deprecated Use PayloadIntegrityError instead
  */
 export class PayloadChecksumMismatchError extends SdlpError {
   readonly code = 'PAYLOAD_CHECKSUM_MISMATCH';
@@ -124,7 +289,7 @@ export class PayloadChecksumMismatchError extends SdlpError {
 }
 
 /**
- * Error for expired links
+ * @deprecated Use TimeBoundsViolatedError.expired() instead
  */
 export class LinkExpiredError extends SdlpError {
   readonly code = 'LINK_EXPIRED';
@@ -135,7 +300,7 @@ export class LinkExpiredError extends SdlpError {
 }
 
 /**
- * Error for links not yet valid
+ * @deprecated Use TimeBoundsViolatedError.notYetValid() instead
  */
 export class LinkNotYetValidError extends SdlpError {
   readonly code = 'LINK_NOT_YET_VALID';
@@ -146,7 +311,7 @@ export class LinkNotYetValidError extends SdlpError {
 }
 
 /**
- * Error for unsupported compression
+ * @deprecated Use PayloadDecompressionError instead
  */
 export class UnsupportedCompressionError extends SdlpError {
   readonly code = 'UNSUPPORTED_COMPRESSION';
@@ -157,24 +322,28 @@ export class UnsupportedCompressionError extends SdlpError {
 }
 
 /**
- * Error for DID resolution failures
+ * Legacy DIDResolutionError for backward compatibility
+ * Note: This maintains the old error code for existing tests
  */
-export class DIDResolutionError extends SdlpError {
+export class LegacyDIDResolutionError extends SdlpError {
   readonly code = 'DID_RESOLUTION_FAILED';
 
   constructor(didUrl: string, reason: string) {
     super(`Failed to resolve DID '${didUrl}': ${reason}`);
+    this.name = 'DIDResolutionError';
   }
 }
 
 /**
- * Error for invalid link format
+ * Legacy DIDMismatchError for backward compatibility
+ * Note: This maintains the old error code for existing tests
  */
-export class InvalidLinkFormatError extends SdlpError {
-  readonly code = 'INVALID_LINK_FORMAT';
+export class LegacyDIDMismatchError extends SdlpError {
+  readonly code = 'DID_MISMATCH';
 
-  constructor(reason: string) {
-    super(`Invalid link format: ${reason}`);
+  constructor(sid: string, kid: string) {
+    super(`DID mismatch: sid='${sid}' does not match kid base DID='${kid}'`);
+    this.name = 'DIDMismatchError';
   }
 }
 

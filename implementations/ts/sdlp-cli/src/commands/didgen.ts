@@ -20,9 +20,15 @@ export const didgenCommand = new Command('didgen')
   .description('Generate a DID document from an existing key')
   .requiredOption('--key <file>', 'Path to the JWK key file')
   .requiredOption('--method <method>', 'DID method: "key" or "web"')
-  .option('--domain <domain>', 'Domain name for did:web method (required for did:web)')
-  .option('-o, --output <file>', 'Output file for the DID document (default: stdout)')
-  .action(async (options) => {
+  .option(
+    '--domain <domain>',
+    'Domain name for did:web method (required for did:web)'
+  )
+  .option(
+    '-o, --output <file>',
+    'Output file for the DID document (default: stdout)'
+  )
+  .action(async options => {
     try {
       // Validate method
       if (options.method !== 'key' && options.method !== 'web') {
@@ -30,7 +36,10 @@ export const didgenCommand = new Command('didgen')
       }
 
       // Validate domain for did:web
-      if (options.method === 'web' && (options.domain === undefined || options.domain === '')) {
+      if (
+        options.method === 'web' &&
+        (options.domain === undefined || options.domain === '')
+      ) {
         throw new Error('--domain is required when using did:web method');
       }
 
@@ -62,21 +71,21 @@ export const didgenCommand = new Command('didgen')
         const keyId = `${didIdentifier}#${keyIdentifier}`;
 
         didDocument = {
-          "@context": [
-            "https://www.w3.org/ns/did/v1",
-            "https://w3id.org/security/suites/ed25519-2020/v1"
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3id.org/security/suites/ed25519-2020/v1',
           ],
-          "id": didIdentifier,
-          "verificationMethod": [
+          id: didIdentifier,
+          verificationMethod: [
             {
-              "id": keyId,
-              "type": "Ed25519VerificationKey2020",
-              "controller": didIdentifier,
-              "publicKeyJwk": publicJWK
-            }
+              id: keyId,
+              type: 'Ed25519VerificationKey2020',
+              controller: didIdentifier,
+              publicKeyJwk: publicJWK,
+            },
           ],
-          "authentication": [keyId],
-          "assertionMethod": [keyId]
+          authentication: [keyId],
+          assertionMethod: [keyId],
         };
       } else {
         // Generate did:web document
@@ -84,21 +93,21 @@ export const didgenCommand = new Command('didgen')
         const keyId = `${didIdentifier}#key-1`;
 
         didDocument = {
-          "@context": [
-            "https://www.w3.org/ns/did/v1",
-            "https://w3id.org/security/suites/ed25519-2020/v1"
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3id.org/security/suites/ed25519-2020/v1',
           ],
-          "id": didIdentifier,
-          "verificationMethod": [
+          id: didIdentifier,
+          verificationMethod: [
             {
-              "id": keyId,
-              "type": "Ed25519VerificationKey2020",
-              "controller": didIdentifier,
-              "publicKeyJwk": publicJWK
-            }
+              id: keyId,
+              type: 'Ed25519VerificationKey2020',
+              controller: didIdentifier,
+              publicKeyJwk: publicJWK,
+            },
           ],
-          "authentication": [keyId],
-          "assertionMethod": [keyId]
+          authentication: [keyId],
+          assertionMethod: [keyId],
         };
       }
 
@@ -107,7 +116,9 @@ export const didgenCommand = new Command('didgen')
       // Output the DID document
       if (typeof options.output === 'string' && options.output.length > 0) {
         writeFileSync(options.output, didDocumentJson);
-        console.log(`✅ DID document generated successfully at ${options.output}`);
+        console.log(
+          `✅ DID document generated successfully at ${options.output}`
+        );
       } else {
         console.log(didDocumentJson);
       }
@@ -115,13 +126,18 @@ export const didgenCommand = new Command('didgen')
       // Print publishing instructions for did:web
       if (options.method === 'web') {
         console.log('');
-        console.log('🚀 To publish your DID, host this file on your web server at the following location:');
+        console.log(
+          '🚀 To publish your DID, host this file on your web server at the following location:'
+        );
         console.log(`https://${options.domain}/.well-known/did.json`);
         console.log('');
-        console.log('You can verify it using a universal resolver or by running:');
-        console.log(`sdlp-cli verify <some-link> --resolver-url https://${options.domain}`);
+        console.log(
+          'You can verify it using a universal resolver or by running:'
+        );
+        console.log(
+          `sdlp-cli verify <some-link> --resolver-url https://${options.domain}`
+        );
       }
-
     } catch (error) {
       console.error('❌ Error generating DID document:', error);
       process.exit(1);

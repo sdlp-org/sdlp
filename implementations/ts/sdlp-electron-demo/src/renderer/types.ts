@@ -15,7 +15,9 @@ declare global {
     electronAPI: {
       onSDLPResult: (callback: (data: SDLPResult) => void) => void;
       onSDLPCommandToExecute: (callback: (data: SDLPResult) => void) => void;
-      onSDLPCommandOutput: (callback: (data: { output: string; exitCode: number }) => void) => void;
+      onSDLPCommandOutput: (
+        callback: (data: { output: string; exitCode: number }) => void
+      ) => void;
       removeAllListeners: (channel: string) => void;
       generateSDLPLink: (payload: string) => Promise<string>;
       generateUntrustedSDLPLink: (payload: string) => Promise<string>;
@@ -31,7 +33,9 @@ declare global {
         isTrusted: (did: string) => Promise<boolean>;
         addTrusted: (did: string, label?: string) => Promise<boolean>;
         removeTrusted: (did: string) => Promise<boolean>;
-        getAll: () => Promise<Record<string, { addedAt: string; label?: string }>>;
+        getAll: () => Promise<
+          Record<string, { addedAt: string; label?: string }>
+        >;
         clear: () => Promise<boolean>;
       };
     };

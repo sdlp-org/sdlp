@@ -1,10 +1,18 @@
 <div align="center">
-  <img src="../../../assets/logo.png" alt="Project Logo" width="200"/>
+  <img src="../../../assets/logo.png" alt="SDLP Logo" width="200"/>
 </div>
 
-# SDLP CLI
+# SDLP CLI v1.1.0
 
 A command-line interface for the Secure Deep Link Protocol (SDLP) v1.0.
+
+## Documentation
+
+- **[Getting Started Guide](../../../GETTING_STARTED.md)** - Complete setup and usage guide
+- **[DID Method Selection Guide](../../../GETTING_STARTED.md#choosing-a-did-method)** - Choose between did:key and did:web
+- **[Key Management Guidance](../../../docs/key-management-guidance.md)** - Production key management best practices
+- **[SDLP SDK API](../sdlp-sdk/docs/API.md)** - SDK API reference
+- **[SDLP Specification](../../../specs/sdlp-v0.1-draft.md)** - Protocol specification
 
 ## Overview
 
@@ -142,6 +150,7 @@ $ op item get "pre.ms" | jq -r '.value' | sdlp keygen --from-pem --did-web pre.m
 **did:web Identity Setup:**
 
 When using `--did-web`, the CLI generates both:
+
 1. **Private key (JWK)** - Keep this secure for signing
 2. **DID document** - Publish this at `https://yourdomain/.well-known/did.json`
 

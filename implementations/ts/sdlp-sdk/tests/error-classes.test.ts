@@ -5,14 +5,14 @@
 import { describe, it, expect } from 'vitest';
 import {
   SdlpError,
-  DIDMismatchError,
+  LegacyDIDMismatchError as DIDMismatchError,
   InvalidJWSFormatError,
   InvalidSignatureError,
   PayloadChecksumMismatchError,
   LinkExpiredError,
   LinkNotYetValidError,
   UnsupportedCompressionError,
-  DIDResolutionError,
+  LegacyDIDResolutionError as DIDResolutionError,
   InvalidLinkFormatError,
 } from '../src/types.js';
 
@@ -168,19 +168,46 @@ describe('SDLP Error Classes', () => {
 
     it('should have correct constructor name', () => {
       const errors = [
-        new DIDMismatchError('did1', 'did2'),
-        new InvalidJWSFormatError('reason'),
-        new InvalidSignatureError(),
-        new PayloadChecksumMismatchError('exp', 'act'),
-        new LinkExpiredError(123456),
-        new LinkNotYetValidError(123456),
-        new UnsupportedCompressionError('gzip'),
-        new DIDResolutionError('did', 'reason'),
-        new InvalidLinkFormatError('reason'),
+        {
+          error: new DIDMismatchError('did1', 'did2'),
+          expectedName: 'DIDMismatchError',
+        },
+        {
+          error: new InvalidJWSFormatError('reason'),
+          expectedName: 'InvalidJWSFormatError',
+        },
+        {
+          error: new InvalidSignatureError(),
+          expectedName: 'InvalidSignatureError',
+        },
+        {
+          error: new PayloadChecksumMismatchError('exp', 'act'),
+          expectedName: 'PayloadChecksumMismatchError',
+        },
+        {
+          error: new LinkExpiredError(123456),
+          expectedName: 'LinkExpiredError',
+        },
+        {
+          error: new LinkNotYetValidError(123456),
+          expectedName: 'LinkNotYetValidError',
+        },
+        {
+          error: new UnsupportedCompressionError('gzip'),
+          expectedName: 'UnsupportedCompressionError',
+        },
+        {
+          error: new DIDResolutionError('did', 'reason'),
+          expectedName: 'DIDResolutionError',
+        },
+        {
+          error: new InvalidLinkFormatError('reason'),
+          expectedName: 'InvalidLinkFormatError',
+        },
       ];
 
-      for (const error of errors) {
-        expect(error.name).toBe(error.constructor.name);
+      for (const { error, expectedName } of errors) {
+        expect(error.name).toBe(expectedName);
       }
     });
 

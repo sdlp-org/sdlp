@@ -27,9 +27,15 @@ export const signCommand = new Command('sign')
     'MIME type of the payload (e.g., application/json, text/plain)'
   )
   .option('--signer-key <file>', 'Path to the private key file (JWK format)')
-  .option('--did-document <file>', 'Path to the DID document file (JSON format)')
+  .option(
+    '--did-document <file>',
+    'Path to the DID document file (JSON format)'
+  )
   .option('--kid <kid>', 'Key ID from the DID document to use for signing')
-  .option('--key <file>', 'Path to the private key file (JWK format) when using DID document')
+  .option(
+    '--key <file>',
+    'Path to the private key file (JWK format) when using DID document'
+  )
   .option(
     '--compression <comp>',
     'Compression algorithm (br, gz, zstd, none)',
@@ -95,11 +101,18 @@ async function loadSigner(
 ): Promise<Signer> {
   // Check if using DID-centric workflow
   if (
-    didDocumentFile !== undefined && didDocumentFile !== '' &&
-    keyId !== undefined && keyId !== '' &&
-    privateKeyFile !== undefined && privateKeyFile !== ''
+    didDocumentFile !== undefined &&
+    didDocumentFile !== '' &&
+    keyId !== undefined &&
+    keyId !== '' &&
+    privateKeyFile !== undefined &&
+    privateKeyFile !== ''
   ) {
-    return await loadSignerFromDIDDocument(didDocumentFile, keyId, privateKeyFile);
+    return await loadSignerFromDIDDocument(
+      didDocumentFile,
+      keyId,
+      privateKeyFile
+    );
   }
 
   // Traditional workflow
@@ -173,11 +186,15 @@ async function loadSignerFromDIDDocument(
 
   // Validate that the public key in the DID document matches the private key
   const publicKeyFromDID = verificationMethod.publicKeyJwk;
-  
-  if (publicKeyFromDID.kty !== privateKeyJwk.kty ||
-      publicKeyFromDID.crv !== privateKeyJwk.crv ||
-      publicKeyFromDID.x !== privateKeyJwk.x) {
-    throw new Error('Private key does not correspond to the public key in the DID document');
+
+  if (
+    publicKeyFromDID.kty !== privateKeyJwk.kty ||
+    publicKeyFromDID.crv !== privateKeyJwk.crv ||
+    publicKeyFromDID.x !== privateKeyJwk.x
+  ) {
+    throw new Error(
+      'Private key does not correspond to the public key in the DID document'
+    );
   }
 
   // Create the signer with the DID as the sid
@@ -186,7 +203,7 @@ async function loadSignerFromDIDDocument(
     privateKeyJwk: {
       ...privateKeyJwk,
       kid: keyId,
-      alg: 'EdDSA'
+      alg: 'EdDSA',
     },
   };
 }

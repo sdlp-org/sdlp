@@ -7,20 +7,31 @@ interface ExamplesProps {
 function Examples({ setActiveTab }: ExamplesProps) {
   const [validLink, setValidLink] = useState('');
   const [corruptedLink, setCorruptedLink] = useState('');
-  const [malformedLink, setMalformedLink] = useState('sdlp://eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.INVALID_STRUCTURE.signature');
+  const [malformedLink, setMalformedLink] = useState(
+    'sdlp://eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.INVALID_STRUCTURE.signature'
+  );
   const [keyMismatchLink, setKeyMismatchLink] = useState('');
 
   const populateExamples = async () => {
     try {
       const validPayload = 'echo "Hello from a valid SDLP link!"';
-      const generatedValidLink = await window.electronAPI.generateSDLPLink(validPayload);
+      const generatedValidLink =
+        await window.electronAPI.generateSDLPLink(validPayload);
       setValidLink(generatedValidLink);
 
-      const originalLink = await window.electronAPI.generateSDLPLink('echo "Original payload"');
-      const generatedCorruptedLink = originalLink.replace(/(.{50})(.{10})/, '$1CORRUPTED');
+      const originalLink = await window.electronAPI.generateSDLPLink(
+        'echo "Original payload"'
+      );
+      const generatedCorruptedLink = originalLink.replace(
+        /(.{50})(.{10})/,
+        '$1CORRUPTED'
+      );
       setCorruptedLink(generatedCorruptedLink);
 
-      const generatedKeyMismatchLink = await window.electronAPI.generateUntrustedSDLPLink('echo "Key mismatch demo"');
+      const generatedKeyMismatchLink =
+        await window.electronAPI.generateUntrustedSDLPLink(
+          'echo "Key mismatch demo"'
+        );
       setKeyMismatchLink(generatedKeyMismatchLink);
     } catch (error) {
       console.error('Failed to populate examples:', error);
@@ -40,7 +51,12 @@ function Examples({ setActiveTab }: ExamplesProps) {
   };
 
   return (
-    <div id="examples-content" className="tab-content" role="tabpanel" aria-labelledby="examples-tab">
+    <div
+      id="examples-content"
+      className="tab-content"
+      role="tabpanel"
+      aria-labelledby="examples-tab"
+    >
       <div className="space-y-6">
         {/* Valid Link Example */}
         <div className="bg-white rounded-lg shadow-md p-6">
@@ -78,9 +94,9 @@ function Examples({ setActiveTab }: ExamplesProps) {
             <div>
               <h4 className="font-medium text-gray-800 mb-2">Payload</h4>
               <div className="bg-gray-50 rounded-lg p-3">
-                <pre
-                  className="text-sm text-gray-700 font-mono"
-                >echo "Hello from a valid SDLP link!"</pre>
+                <pre className="text-sm text-gray-700 font-mono">
+                  echo "Hello from a valid SDLP link!"
+                </pre>
               </div>
             </div>
 
@@ -89,9 +105,7 @@ function Examples({ setActiveTab }: ExamplesProps) {
                 Signing Key (Public)
               </h4>
               <div className="bg-gray-50 rounded-lg p-3">
-                <pre
-                  className="text-sm text-gray-700 font-mono"
-                >{`{
+                <pre className="text-sm text-gray-700 font-mono">{`{
   "kty": "OKP",
   "crv": "Ed25519",
   "use": "sig",
@@ -105,9 +119,9 @@ function Examples({ setActiveTab }: ExamplesProps) {
             <div>
               <h4 className="font-medium text-gray-800 mb-2">SDLP Link</h4>
               <div className="bg-gray-50 rounded-lg p-3 overflow-hidden">
-                <pre
-                  className="text-sm text-gray-700 font-mono break-all whitespace-pre-wrap"
-                >{validLink || 'Loading...'}</pre>
+                <pre className="text-sm text-gray-700 font-mono break-all whitespace-pre-wrap">
+                  {validLink || 'Loading...'}
+                </pre>
               </div>
             </div>
           </div>
@@ -133,7 +147,8 @@ function Examples({ setActiveTab }: ExamplesProps) {
               Failure Mode Examples
             </h3>
             <p className="text-gray-600">
-              Different ways SDLP links can fail verification with detailed breakdowns
+              Different ways SDLP links can fail verification with detailed
+              breakdowns
             </p>
           </div>
 
@@ -164,28 +179,40 @@ function Examples({ setActiveTab }: ExamplesProps) {
                   Test This Link
                 </button>
               </div>
-              
+
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
-                  <h5 className="font-medium text-red-800 mb-2">What Happens</h5>
+                  <h5 className="font-medium text-red-800 mb-2">
+                    What Happens
+                  </h5>
                   <p className="text-sm text-red-700 mb-3">
-                    Link content is modified after signing, breaking the cryptographic signature.
+                    Link content is modified after signing, breaking the
+                    cryptographic signature.
                   </p>
-                  
-                  <h5 className="font-medium text-red-800 mb-2">Original Payload</h5>
+
+                  <h5 className="font-medium text-red-800 mb-2">
+                    Original Payload
+                  </h5>
                   <div className="bg-white rounded p-2 mb-3">
-                    <code className="text-xs text-gray-700">echo "Original payload"</code>
+                    <code className="text-xs text-gray-700">
+                      echo "Original payload"
+                    </code>
                   </div>
-                  
-                  <h5 className="font-medium text-red-800 mb-2">Why It Fails</h5>
+
+                  <h5 className="font-medium text-red-800 mb-2">
+                    Why It Fails
+                  </h5>
                   <p className="text-xs text-red-700">
-                    The signature was created for the original payload, but the link now contains corrupted data. 
-                    SDLP detects this mismatch and rejects the link.
+                    The signature was created for the original payload, but the
+                    link now contains corrupted data. SDLP detects this mismatch
+                    and rejects the link.
                   </p>
                 </div>
-                
+
                 <div>
-                  <h5 className="font-medium text-red-800 mb-2">Corrupted SDLP Link</h5>
+                  <h5 className="font-medium text-red-800 mb-2">
+                    Corrupted SDLP Link
+                  </h5>
                   <div className="bg-white rounded p-2">
                     <code className="text-xs text-red-600 break-all">
                       {corruptedLink || 'Loading...'}
@@ -221,27 +248,39 @@ function Examples({ setActiveTab }: ExamplesProps) {
                   Test This Link
                 </button>
               </div>
-              
+
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
-                  <h5 className="font-medium text-red-800 mb-2">What Happens</h5>
+                  <h5 className="font-medium text-red-800 mb-2">
+                    What Happens
+                  </h5>
                   <p className="text-sm text-red-700 mb-3">
-                    SDLP link has invalid JWT structure - missing or corrupted components.
+                    SDLP link has invalid JWT structure - missing or corrupted
+                    components.
                   </p>
-                  
-                  <h5 className="font-medium text-red-800 mb-2">Expected Structure</h5>
+
+                  <h5 className="font-medium text-red-800 mb-2">
+                    Expected Structure
+                  </h5>
                   <div className="bg-white rounded p-2 mb-3">
-                    <code className="text-xs text-gray-700">sdlp://header.payload.signature</code>
+                    <code className="text-xs text-gray-700">
+                      sdlp://header.payload.signature
+                    </code>
                   </div>
-                  
-                  <h5 className="font-medium text-red-800 mb-2">Why It Fails</h5>
+
+                  <h5 className="font-medium text-red-800 mb-2">
+                    Why It Fails
+                  </h5>
                   <p className="text-xs text-red-700">
-                    SDLP links must follow JWT format. This link has invalid structure that cannot be parsed.
+                    SDLP links must follow JWT format. This link has invalid
+                    structure that cannot be parsed.
                   </p>
                 </div>
-                
+
                 <div>
-                  <h5 className="font-medium text-red-800 mb-2">Malformed SDLP Link</h5>
+                  <h5 className="font-medium text-red-800 mb-2">
+                    Malformed SDLP Link
+                  </h5>
                   <div className="bg-white rounded p-2">
                     <code className="text-xs text-red-600 break-all">
                       {malformedLink}
@@ -250,7 +289,6 @@ function Examples({ setActiveTab }: ExamplesProps) {
                 </div>
               </div>
             </div>
-
 
             {/* Different Signer */}
             <div className="border border-yellow-200 rounded-lg p-6 bg-yellow-50">
@@ -278,27 +316,41 @@ function Examples({ setActiveTab }: ExamplesProps) {
                   Test This Link
                 </button>
               </div>
-              
+
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
-                  <h5 className="font-medium text-yellow-800 mb-2">What Happens</h5>
+                  <h5 className="font-medium text-yellow-800 mb-2">
+                    What Happens
+                  </h5>
                   <p className="text-sm text-yellow-700 mb-3">
-                    Link is cryptographically valid but signed with a different key than the trusted one.
+                    Link is cryptographically valid but signed with a different
+                    key than the trusted one.
                   </p>
-                  
-                  <h5 className="font-medium text-yellow-800 mb-2">Demo Payload</h5>
+
+                  <h5 className="font-medium text-yellow-800 mb-2">
+                    Demo Payload
+                  </h5>
                   <div className="bg-white rounded p-2 mb-3">
-                    <code className="text-xs text-gray-700">echo "Key mismatch demo"</code>
+                    <code className="text-xs text-gray-700">
+                      echo "Key mismatch demo"
+                    </code>
                   </div>
-                  
-                  <h5 className="font-medium text-yellow-800 mb-2">Why It Shows as Untrusted</h5>
+
+                  <h5 className="font-medium text-yellow-800 mb-2">
+                    Why It Shows as Untrusted
+                  </h5>
                   <p className="text-xs text-yellow-700">
-                    The signature is valid, but it's from a different signer than expected. SDLP's trust system correctly identifies this as an untrusted source, demonstrating key-based identity verification.
+                    The signature is valid, but it's from a different signer
+                    than expected. SDLP's trust system correctly identifies this
+                    as an untrusted source, demonstrating key-based identity
+                    verification.
                   </p>
                 </div>
-                
+
                 <div>
-                  <h5 className="font-medium text-yellow-800 mb-2">Different Signer SDLP Link</h5>
+                  <h5 className="font-medium text-yellow-800 mb-2">
+                    Different Signer SDLP Link
+                  </h5>
                   <div className="bg-white rounded p-2">
                     <code className="text-xs text-yellow-600 break-all">
                       {keyMismatchLink || 'Loading...'}
@@ -313,7 +365,12 @@ function Examples({ setActiveTab }: ExamplesProps) {
             <div className="flex items-start space-x-3">
               <div className="w-5 h-5 text-red-600 mt-0.5">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  ></path>
                 </svg>
               </div>
               <div>
@@ -321,9 +378,10 @@ function Examples({ setActiveTab }: ExamplesProps) {
                   Security Protection
                 </p>
                 <p className="text-sm text-red-700">
-                  These examples demonstrate why cryptographic verification is essential. 
-                  SDLP's signature verification prevents execution of tampered, expired, or fraudulent links, 
-                  protecting users from malicious attacks that are common with traditional deep links.
+                  These examples demonstrate why cryptographic verification is
+                  essential. SDLP's signature verification prevents execution of
+                  tampered, expired, or fraudulent links, protecting users from
+                  malicious attacks that are common with traditional deep links.
                 </p>
               </div>
             </div>
@@ -360,14 +418,25 @@ function Examples({ setActiveTab }: ExamplesProps) {
               <div className="border border-green-200 rounded-lg p-4 bg-green-50">
                 <div className="flex items-center mb-2">
                   <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mr-2">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    <svg
+                      className="w-4 h-4 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M5 13l4 4L19 7"
+                      ></path>
                     </svg>
                   </div>
                   <h4 className="font-medium text-green-800">Trusted</h4>
                 </div>
                 <p className="text-sm text-green-700">
-                  Sender is in your trust store. Links proceed with minimal friction.
+                  Sender is in your trust store. Links proceed with minimal
+                  friction.
                 </p>
               </div>
 
@@ -375,14 +444,25 @@ function Examples({ setActiveTab }: ExamplesProps) {
               <div className="border border-yellow-200 rounded-lg p-4 bg-yellow-50">
                 <div className="flex items-center mb-2">
                   <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center mr-2">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    <svg
+                      className="w-4 h-4 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                      ></path>
                     </svg>
                   </div>
                   <h4 className="font-medium text-yellow-800">Untrusted</h4>
                 </div>
                 <p className="text-sm text-yellow-700">
-                  Valid but unknown sender. Shows TOFU options: "Trust this Sender" or "Proceed Once".
+                  Valid but unknown sender. Shows TOFU options: "Trust this
+                  Sender" or "Proceed Once".
                 </p>
               </div>
 
@@ -390,14 +470,25 @@ function Examples({ setActiveTab }: ExamplesProps) {
               <div className="border border-red-200 rounded-lg p-4 bg-red-50">
                 <div className="flex items-center mb-2">
                   <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center mr-2">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    <svg
+                      className="w-4 h-4 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      ></path>
                     </svg>
                   </div>
                   <h4 className="font-medium text-red-800">Invalid</h4>
                 </div>
                 <p className="text-sm text-red-700">
-                  Cryptographic verification failed. Link is blocked for security.
+                  Cryptographic verification failed. Link is blocked for
+                  security.
                 </p>
               </div>
             </div>
@@ -406,7 +497,12 @@ function Examples({ setActiveTab }: ExamplesProps) {
               <div className="flex items-start space-x-3">
                 <div className="w-5 h-5 text-blue-600 mt-0.5">
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    ></path>
                   </svg>
                 </div>
                 <div>
@@ -414,9 +510,10 @@ function Examples({ setActiveTab }: ExamplesProps) {
                     Trust on First Use (TOFU)
                   </p>
                   <p className="text-sm text-blue-700">
-                    All senders start as untrusted. When you encounter a valid link from an unknown sender, 
-                    you can choose to "Trust this Sender" to add them to your trust store for future interactions, 
-                    or "Proceed Once" to execute without trusting.
+                    All senders start as untrusted. When you encounter a valid
+                    link from an unknown sender, you can choose to "Trust this
+                    Sender" to add them to your trust store for future
+                    interactions, or "Proceed Once" to execute without trusting.
                   </p>
                 </div>
               </div>

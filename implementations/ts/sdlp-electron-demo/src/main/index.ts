@@ -274,7 +274,10 @@ function setupIpcHandlers() {
 
       childProcess.on('close', code => {
         const output = stdout + (stderr ? '\n--- STDERR --n' + stderr : '');
-        mainWindow?.webContents.send('sdlp-command-output', { output, exitCode: code });
+        mainWindow?.webContents.send('sdlp-command-output', {
+          output,
+          exitCode: code,
+        });
         resolve({ output, exitCode: code });
       });
 
@@ -294,15 +297,18 @@ function setupIpcHandlers() {
     }
   });
 
-  ipcMain.handle('trust-store-add-trusted', async (_event, did: string, label?: string) => {
-    try {
-      trustStore.addTrustedDID(did, label);
-      return true;
-    } catch (error) {
-      console.error('Failed to add trusted DID:', error);
-      throw error;
+  ipcMain.handle(
+    'trust-store-add-trusted',
+    async (_event, did: string, label?: string) => {
+      try {
+        trustStore.addTrustedDID(did, label);
+        return true;
+      } catch (error) {
+        console.error('Failed to add trusted DID:', error);
+        throw error;
+      }
     }
-  });
+  );
 
   ipcMain.handle('trust-store-remove-trusted', async (_event, did: string) => {
     try {
@@ -313,7 +319,7 @@ function setupIpcHandlers() {
     }
   });
 
-  ipcMain.handle('trust-store-get-all', async (_event) => {
+  ipcMain.handle('trust-store-get-all', async _event => {
     try {
       return trustStore.getTrustedDIDs();
     } catch (error) {
@@ -322,7 +328,7 @@ function setupIpcHandlers() {
     }
   });
 
-  ipcMain.handle('trust-store-clear', async (_event) => {
+  ipcMain.handle('trust-store-clear', async _event => {
     try {
       trustStore.clear();
       return true;
@@ -344,7 +350,7 @@ async function processSDLPLink(
     // Let the SDK naturally detect any failures - no simulation
     const { verifyLink } = await import('@sdlp/sdk');
     const result = await verifyLink(url);
-    
+
     console.log('Verification result:', result);
 
     let dialogType: 'info' | 'warning' | 'error' | 'none' = 'info';
@@ -370,9 +376,11 @@ This link failed verification and cannot be trusted.`;
 
       // Determine trust level using TrustStore
       const senderDID = result.sender || '';
-      
+
       // Check if the sender DID is in our trust store
-      const isTrustedSender = senderDID ? trustStore.isTrusted(senderDID) : false;
+      const isTrustedSender = senderDID
+        ? trustStore.isTrusted(senderDID)
+        : false;
 
       isTrusted = !forceUntrusted && isTrustedSender;
 
@@ -437,7 +445,12 @@ This link is cryptographically valid but comes from an unknown or untrusted sour
       cancelId = 2;
     } else {
       // Untrusted sender - TOFU options
-      buttons = ['Trust this Sender', 'Proceed Once', 'Copy Full Link', 'Cancel'];
+      buttons = [
+        'Trust this Sender',
+        'Proceed Once',
+        'Copy Full Link',
+        'Cancel',
+      ];
       defaultId = 3;
       cancelId = 3;
     }
@@ -570,10 +583,10 @@ app.whenReady().then(() => {
   if (process.platform === 'darwin') {
     app.dock.setIcon(join(__dirname, '../../resources/icon.png'));
   }
-  
+
   // Initialize TrustStore
   trustStore = new TrustStore();
-  
+
   setupIpcHandlers();
   createWindow();
 

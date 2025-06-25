@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="../../../assets/logo.png" alt="Project Logo" width="200"/>
+  <img src="../../../assets/logo.png" alt="SDLP Logo" width="200"/>
 </div>
 
-# SDLP SDK v1.0
+# SDLP SDK v1.1.0
 
 A TypeScript reference implementation of the Secure Deep Link Protocol (SDLP) v1.0 specification.
 
@@ -10,11 +10,17 @@ A TypeScript reference implementation of the Secure Deep Link Protocol (SDLP) v1
 
 The Secure Deep Link Protocol (SDLP) enables the creation of cryptographically signed, tamper-evident deep links that can securely transmit structured data between applications. This library provides production-ready tools for creating and verifying SDLP links with support for:
 
-- **Cryptographic Signatures**: Uses EdDSA signatures with JWS Flattened JSON Serialization
-- **DID-based Identity**: Supports `did:key` and `did:web` methods for sender identification
-- **Payload Compression**: Built-in Brotli compression support for efficient data transmission
-- **Security Controls**: Comprehensive validation including payload integrity, time bounds, and algorithm agility
-- **Cross-platform**: Works in both Node.js and browser environments
+- **🔐 Cryptographic Signatures**: EdDSA signatures with JWS Flattened JSON Serialization
+- **🆔 DID-based Identity**: Support for `did:key` and `did:web` methods for sender identification
+- **🗜️ Payload Compression**: Built-in Brotli compression support for efficient data transmission
+- **🛡️ Security Controls**: Comprehensive validation including payload integrity, time bounds, and algorithm agility
+- **🌐 Cross-platform**: Works in both Node.js and browser environments
+
+## Documentation
+
+- **[Complete API Reference](docs/API.md)** - Comprehensive API documentation with examples
+- **[Getting Started Guide](../../../GETTING_STARTED.md)** - Step-by-step setup and usage guide
+- **[SDLP Specification](../../../specs/sdlp-v0.1-draft.md)** - Protocol specification
 
 ## Installation
 

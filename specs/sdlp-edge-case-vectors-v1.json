@@ -1,0 +1,60 @@
+{
+  "title": "Edge Case Test Vectors for SDLP v1.0",
+  "version": "1.0.0",
+  "description": "Test vectors covering edge cases, boundary conditions, and error scenarios for comprehensive SDLP implementation testing",
+  "schema": {
+    "vector": {
+      "description": "Human-readable description of the edge case",
+      "link": "Complete SDLP link string (may be invalid)",
+      "uncompressed_payload_hex": "Original payload in hex format (if applicable)",
+      "metadata": "Core metadata object (if applicable)",
+      "expects": "Expected result: 'success' or 'error'",
+      "error_type": "Expected error code if expects='error'",
+      "notes": "Additional test-specific notes and rationale"
+    }
+  },
+  "vectors": [
+    {
+      "description": "Edge Case: Invalid Base64 in JWS part",
+      "link": "sdlp://invalid_base64_!!!.SGVsbG8sIFdvcmxkIQ",
+      "expects": "error",
+      "error_type": "INVALID_JWS_FORMAT",
+      "notes": "Tests handling of malformed Base64URL in JWS metadata part"
+    },
+    {
+      "description": "Edge Case: Missing dot separator",
+      "link": "sdlp://eyJwcm90ZWN0ZWQiOiJleUpoYkdjaU9pSkZaRVJUUVNJc0ltdHBaQ0k2SW1ScFpEcHJaWGs2ZWpKRVptOVlkR05ZYVhacFJXWTFOekU1WlZKNmEzWkROa0pTVkRoVFNGbHdOa3BXVjNGSWVFeERSRWR3YUVRamVqSkVabTlZZEdOWWFYWnBSV1kxTnpFNVpWSjZhM1pETmtKU1ZEaFRTRmx3TmtwV1YzRkllRXhEUkVkd2FFUWlmUSIsInBheWxvYWQiOiJleUoySWpvaVUwUk1MVEV1TUNJc0luTnBaQ0k2SW1ScFpEcHJaWGs2ZWpKRVptOVlkR05ZYVhacFJXWTFOekU1WlZKNmEzWkROa0pTVkRoVFNGbHdOa3BXVjNGSWVFeERSRWR3YUVRaUxDSjBlWEJsSWpvaWRHVjRkQzl3YkdGcGJpSXNJbU52YlhBaU9pSnViMjVsSWl3aVkyaHJJam9pWkdabVpEWXdNakZpWWpKaVpEVmlNR0ZtTmpjMk1qa3dPREE1WldNellUVXpNVGt4WkdRNE1XTTNaamN3WVRSaU1qZzJPRGhoTXpZeU1UZ3lPVGcyWmlKOSIsInNpZ25hdHVyZSI6ImlnRDE2SWhZWWU3MXp3c1lEakljN085WllIQ0NMbWFWTlFDMzZHTlBiUWE1UFRAU1BFMVpMNGNtVkowS2R2VXhGdVZPZ0tYV0t4YzJWTXhBX09HRGcifQ",
+      "expects": "error",
+      "error_type": "INVALID_LINK_FORMAT",
+      "notes": "Tests link missing dot separator between JWS and payload"
+    },
+    {
+      "description": "Edge Case: Link with more than 2 parts",
+      "link": "sdlp://part1.part2.part3",
+      "expects": "error",
+      "error_type": "INVALID_LINK_FORMAT",
+      "notes": "Tests rejection of links with extra parts beyond JWS and payload"
+    },
+    {
+      "description": "Edge Case: Empty link parts",
+      "link": "sdlp://.",
+      "expects": "error",
+      "error_type": "INVALID_LINK_FORMAT",
+      "notes": "Tests rejection of links with empty JWS and payload parts"
+    },
+    {
+      "description": "Edge Case: Wrong scheme",
+      "link": "http://example.com/test.payload",
+      "expects": "error",
+      "error_type": "INVALID_LINK_FORMAT",
+      "notes": "Tests rejection of links with non-SDLP schemes"
+    },
+    {
+      "description": "Edge Case: Compact JWS format instead of Flattened",
+      "link": "sdlp://eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJ2IjoiU0RMLTEuMCIsInNpZCI6ImRpZDprZXk6ejJEZm9YdGNYaXZpRWY1NzE5ZVJ6a3ZDNkJSVDhTSFlwNkpWV3FIeExDREdwaEQiLCJ0eXBlIjoidGV4dC9wbGFpbiIsImNvbXAiOiJub25lIn0.invalid_compact_jws",
+      "expects": "error",
+      "error_type": "INVALID_LINK_FORMAT",
+      "notes": "Tests rejection of JWS in compact format instead of required Flattened JSON"
+    }
+  ]
+}

@@ -14,7 +14,9 @@ export default defineConfig({
       alias: {
         '@renderer': resolve('src/renderer'),
         // Force browser-specific compression module for renderer
-        'sdlp-sdk/compression': resolve('../sdlp-sdk/dist/src/compression.browser.js'),
+        'sdlp-sdk/compression': resolve(
+          '../sdlp-sdk/dist/src/compression.browser.js'
+        ),
       },
       conditions: ['browser', 'import', 'module', 'default'],
     },
