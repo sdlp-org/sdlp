@@ -1,5 +1,5 @@
 {
-  "implementations/ts/sdlp-sdk": "1.1.0",
-  "implementations/ts/sdlp-cli": "1.1.0",
-  "implementations/ts/sdlp-electron-demo": "0.1.2"
+  "implementations/ts/sdlp-sdk": "1.2.0",
+  "implementations/ts/sdlp-cli": "1.2.0",
+  "implementations/ts/sdlp-electron-demo": "0.1.3"
 }
