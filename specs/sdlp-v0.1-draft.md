@@ -126,7 +126,7 @@ The protocol aims to maximize usable payload within typical URL length limits.
 - Senders should choose a payload size appropriate for their intended distribution channels and receiver capabilities.
 
 ### 3.7. Sender Workflow Summary
-
+TODO: Edit
 1. Prepare the original payload data.
 2. Determine its MIME type (type).
 3. Calculate the SHA-256 hash of the original payload (chk).
@@ -142,6 +142,7 @@ The protocol aims to maximize usable payload within typical URL length limits.
 
 _Note: The term "ABORT" in this workflow signifies that the entire process MUST be terminated immediately, and the link MUST be treated as invalid. No further processing should occur, and the receiver SHOULD present an appropriate error to the user or calling application._
 
+TODO: Edit
 1.  **Strictly Parse the Deep Link:**
     a. Extract the scheme and verify it is the expected one (e.g., `sdlp://`).
     b. Remove the scheme prefix (`sdlp://`) to get the link's content.
