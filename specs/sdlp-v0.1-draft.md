@@ -11,7 +11,7 @@ This document proposes a "Secure Deep Link Protocol" designed to transmit arbitr
 
 ## 1. Introduction
 
-Deep links offer a powerful mechanism for inter-application communication and invoking specific functionalities with contextual data. However, standard deep links lack inherent security features to verify the sender's authenticity or the integrity of the transmitted data. This proposal addresses this gap by defining a protocol that wraps a data payload within a cryptographically signed envelope, ensuring that the receiver can trust its origin and that it has not been tampered with.
+Deep links offer a powerful mechanism for inter-application communication and invoking specific functionalities with contextual data. However, standard deep links lack inherent security features to verify the sender's authenticity or the integrity of the transmitted data. This proposal addresses this gap by defining a protocol that wraps a data payload within a cryptographically signed envelope, ensuring that the receiver can trust its origin and that it has not been tampered with. The protocol supports nested envelopes and signatures, enabling layered trust models:
 
 The protocol prioritizes:
 
@@ -105,7 +105,7 @@ This object provides verifiable information about the sender and the payload. Af
   - "zstd": Zstandard
   - "none": No compression applied. For baseline interoperability, receivers MUST support `none`. Support for `br` is RECOMMENDED for efficiency. Support for `gz` and `zstd` is OPTIONAL.
 - **chk (string):** The hexadecimal string representation of the SHA-256 hash of the original, uncompressed payload data.
-- **exp (integer, optional):** Expiration time. Unix timestamp (seconds since epoch). If present, the link MUST NOT be processed on or after this time.
+- **exp (integer, optional):** Expiration time. Unix timestamp (seconds since epoch). If present, the link MUST NOT be processed on or after this time. *Usage is strongly reccomended*
 - **nbf (integer, optional):** Not Before time. Unix timestamp. If present, the link MUST NOT be processed before this time.
 
 ### 3.4. Actual Payload{#3.4.-actual-payload}
