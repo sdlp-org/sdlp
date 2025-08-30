@@ -26,6 +26,7 @@ npm run dev
 ```
 
 The Electron app will open with:
+
 - **Home Tab**: Learn about SDLP and test example links
 - **Tester Tab**: Create and verify your own SDLP links
 - **Protocol Handler**: Automatically handles `sdlp://` links from your system

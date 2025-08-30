@@ -269,19 +269,16 @@ The SDLP system consists of:
 ### 4.1 For Receivers
 
 1. **Implement Strict Input Validation:**
-
    - Enforce maximum URL length (recommended: 32KB)
    - Validate Base64URL encoding before decoding
    - Verify JWS structure before signature verification
 
 2. **Use Safe Decompression:**
-
    - Implement decompression bomb protection (max size: 10MB recommended)
    - Set decompression timeouts
    - Monitor memory usage during decompression
 
 3. **Secure DID Resolution:**
-
    - Cache DID documents with appropriate TTL
    - Implement resolution timeouts
    - Validate DID document structure
@@ -295,7 +292,6 @@ The SDLP system consists of:
 ### 4.2 For Senders
 
 1. **Private Key Security:**
-
    - Use hardware security modules (HSMs) for high-value keys
    - Implement proper key rotation procedures
    - Secure key storage and access controls
@@ -308,7 +304,6 @@ The SDLP system consists of:
 ### 4.3 For Application Developers
 
 1. **Choose Appropriate DID Methods:**
-
    - `did:key` for simple, self-contained use cases
    - `did:web` for organization-based identity
    - Consider privacy implications of DID method choice
