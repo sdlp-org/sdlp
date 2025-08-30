@@ -1,0 +1,24 @@
+{
+  "name": "sdlp-playground",
+  "version": "1.0.0",
+  "description": "Interactive web demonstration of the Secure Deep Link Protocol (SDLP)",
+  "scripts": {
+    "start": "http-server . -p 8080 -o",
+    "dev": "http-server . -p 8080 -o"
+  },
+  "keywords": [
+    "sdlp",
+    "deep-links",
+    "cryptography",
+    "decentralized-identity",
+    "authentication"
+  ],
+  "author": "Prem Pillai <prem.pillai@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
