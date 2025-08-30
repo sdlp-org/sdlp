@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="700" height="500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; }
+      .axis-title { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; }
+      .label { font-family: Arial, sans-serif; font-size: 12px; fill: #333; }
+      .tick-label { font-family: Arial, sans-serif; font-size: 10px; fill: #666; }
+      .creation-bar { fill: #4CAF50; stroke: #388E3C; stroke-width: 1; }
+      .verification-bar { fill: #2196F3; stroke: #1976D2; stroke-width: 1; }
+      .grid-line { stroke: #e0e0e0; stroke-width: 1; }
+      .axis-line { stroke: #333; stroke-width: 2; }
+    </style>
+  </defs>
+  
+  <!-- Title -->
+  <text x="350" y="25" class="title" text-anchor="middle">SDLP Performance Benchmarks</text>
+  
+  <!-- Chart area -->
+  <g transform="translate(80, 60)">
+    
+    <!-- Grid lines (horizontal) -->
+    <line x1="0" y1="320" x2="540" y2="320" class="grid-line"/>
+    <line x1="0" y1="240" x2="540" y2="240" class="grid-line"/>
+    <line x1="0" y1="160" x2="540" y2="160" class="grid-line"/>
+    <line x1="0" y1="80" x2="540" y2="80" class="grid-line"/>
+    
+    <!-- Y-axis -->
+    <line x1="0" y1="0" x2="0" y2="360" class="axis-line"/>
+    <text x="-15" y="365" class="tick-label" text-anchor="middle">0.0</text>
+    <text x="-15" y="325" class="tick-label" text-anchor="middle">0.1</text>
+    <text x="-15" y="245" class="tick-label" text-anchor="middle">0.2</text>
+    <text x="-15" y="165" class="tick-label" text-anchor="middle">0.3</text>
+    <text x="-15" y="85" class="tick-label" text-anchor="middle">0.4</text>
+    <text x="-15" y="5" class="tick-label" text-anchor="middle">0.5</text>
+    
+    <!-- Y-axis title -->
+    <text x="-50" y="180" class="axis-title" text-anchor="middle" transform="rotate(-90, -50, 180)">Time (milliseconds)</text>
+    
+    <!-- X-axis -->
+    <line x1="0" y1="360" x2="540" y2="360" class="axis-line"/>
+    
+    <!-- X-axis labels -->
+    <text x="70" y="380" class="tick-label" text-anchor="middle">32B</text>
+    <text x="190" y="380" class="tick-label" text-anchor="middle">256B</text>
+    <text x="310" y="380" class="tick-label" text-anchor="middle">1KB</text>
+    <text x="430" y="380" class="tick-label" text-anchor="middle">1KB+Brotli</text>
+    
+    <!-- X-axis title -->
+    <text x="270" y="410" class="axis-title" text-anchor="middle">Payload Size</text>
+    
+    <!-- Bars for Creation (32B: 0.09ms) -->
+    <rect x="30" y="287.2" width="40" height="72.8" class="creation-bar"/>
+    <text x="50" y="282" class="tick-label" text-anchor="middle">0.09</text>
+    
+    <!-- Bars for Verification (32B: 0.32ms) -->
+    <rect x="80" y="129.6" width="40" height="230.4" class="verification-bar"/>
+    <text x="100" y="124" class="tick-label" text-anchor="middle">0.32</text>
+    
+    <!-- Bars for Creation (256B: 0.11ms) -->
+    <rect x="150" y="271.2" width="40" height="88.8" class="creation-bar"/>
+    <text x="170" y="266" class="tick-label" text-anchor="middle">0.11</text>
+    
+    <!-- Bars for Verification (256B: 0.35ms) -->
+    <rect x="200" y="108" width="40" height="252" class="verification-bar"/>
+    <text x="220" y="103" class="tick-label" text-anchor="middle">0.35</text>
+    
+    <!-- Bars for Creation (1KB: 0.10ms) -->
+    <rect x="270" y="280" width="40" height="80" class="creation-bar"/>
+    <text x="290" y="275" class="tick-label" text-anchor="middle">0.10</text>
+    
+    <!-- Bars for Verification (1KB: 0.38ms) -->
+    <rect x="320" y="86.4" width="40" height="273.6" class="verification-bar"/>
+    <text x="340" y="81" class="tick-label" text-anchor="middle">0.38</text>
+    
+    <!-- Bars for Creation (1KB+Brotli: 0.11ms) -->
+    <rect x="390" y="271.2" width="40" height="88.8" class="creation-bar"/>
+    <text x="410" y="266" class="tick-label" text-anchor="middle">0.11</text>
+    
+    <!-- Bars for Verification (1KB+Brotli: 0.38ms) -->
+    <rect x="440" y="86.4" width="40" height="273.6" class="verification-bar"/>
+    <text x="460" y="81" class="tick-label" text-anchor="middle">0.38</text>
+    
+  </g>
+  
+  <!-- Legend -->
+  <g transform="translate(450, 430)">
+    <rect x="0" y="0" width="15" height="15" class="creation-bar"/>
+    <text x="20" y="12" class="label">Link Creation</text>
+    <rect x="120" y="0" width="15" height="15" class="verification-bar"/>
+    <text x="140" y="12" class="label">Link Verification</text>
+  </g>
+  
+  <!-- Performance stats box -->
+  <g transform="translate(450, 80)">
+    <rect x="0" y="0" width="200" height="120" fill="#f8f8ff" stroke="#4169e1" stroke-width="2" rx="5"/>
+    <text x="10" y="20" class="label" font-weight="bold">Key Performance Metrics</text>
+    <text x="10" y="40" class="label">Creation: 9,000-11,600 ops/sec</text>
+    <text x="10" y="55" class="label">Verification: 2,600-3,100 ops/sec</text>
+    <text x="10" y="75" class="label">Consistent sub-ms latency</text>
+    <text x="10" y="90" class="label">Payload size independent</text>
+    <text x="10" y="105" class="label">cryptographic operations</text>
+  </g>
+</svg>

@@ -1,0 +1,61 @@
+# Justfile for SDLP Paper
+# Justfile for SDLP Paper
+
+# Build PDF with bibliography
+pdf:
+    pdflatex sdlp-paper
+    bibtex sdlp-paper
+    pdflatex sdlp-paper
+    pdflatex sdlp-paper
+
+# Create arXiv submission package
+arxiv: pdf
+    mkdir -p arxiv-submission
+    cp sdlp-paper.tex arxiv-submission/
+    cp references.bib arxiv-submission/
+    cp -r figures/ arxiv-submission/
+    cp sdlp-paper.pdf arxiv-submission/
+    @echo "arXiv submission package created in arxiv-submission/"
+    @echo "Files included:"
+    @ls -la arxiv-submission/
+
+# Clean build artifacts
+clean:
+    rm -f *.aux *.bbl *.blg *.log *.out *.toc *.fdb_latexmk *.fls
+    rm -rf arxiv-submission/
+
+# Convert SVG figures to PDF (if needed for some LaTeX setups)
+convert-figures:
+    @echo "Converting SVG figures to PDF..."
+    @for svg in figures/*.svg; do \
+        pdf=$${svg%.svg}.pdf; \
+        echo "Converting $$svg to $$pdf"; \
+        inkscape --export-type=pdf --export-filename="$$pdf" "$$svg" 2>/dev/null || \
+        rsvg-convert -f pdf -o "$$pdf" "$$svg" 2>/dev/null || \
+        echo "Warning: Could not convert $$svg (install inkscape or librsvg)"; \
+    done
+
+# Validate paper compilation and metrics
+validate: 
+    @echo "Validating LaTeX compilation..."
+    @pdflatex -interaction=nonstopmode sdlp-paper > /dev/null 2>&1 && echo "✓ LaTeX compilation successful" || echo "✗ LaTeX compilation failed"
+    @test -f sdlp-paper.pdf && echo "✓ PDF generated successfully" || echo "✗ PDF not found"
+    @wc -w sdlp-paper.tex | awk '{if ($$1 > 3000 && $$1 < 8000) print "✓ Word count appropriate: " $$1 " words"; else print "⚠ Word count: " $$1 " words (target: 3000-8000)"}'
+    @stat -f%z sdlp-paper.pdf 2>/dev/null || stat -c%s sdlp-paper.pdf 2>/dev/null | awk '{if ($1 < 10485760) print "✓ PDF size OK: " int($1/1024) "KB (limit: 10MB)"; else print "⚠ PDF size: " int($1/1048576) "MB (limit: 10MB)"}'
+
+# Build and validate in one command
+check: clean pdf validate
+
+# Show available commands
+help:
+    @echo "Available commands:"
+    @echo "  pdf           - Build PDF with bibliography"
+    @echo "  arxiv         - Create arXiv submission package"  
+    @echo "  clean         - Remove build artifacts"
+    @echo "  convert-figures - Convert SVG to PDF (if needed)"
+    @echo "  validate      - Validate paper metrics"
+    @echo "  check         - Clean, build, and validate"
+    @echo "  help          - Show this help"
+
+# Default target
+default: pdf

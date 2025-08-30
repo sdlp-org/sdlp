@@ -10,6 +10,8 @@ default:
 lint:
     @echo "Running lint in specs..."
     cd specs && npm run lint
+    @echo "Running lint in benchmarks..."
+    cd benchmarks && npm run lint
     @echo "Running lint in sdlp-sdk..."
     cd implementations/ts/sdlp-sdk && npm run lint
     @echo "Running lint in sdlp-cli..."
@@ -21,6 +23,8 @@ lint:
 format:
     @echo "Formatting files in specs..."
     cd specs && npm run format
+    @echo "Formatting files in benchmarks..."
+    cd benchmarks && npm run format
     @echo "Formatting files in sdlp-sdk..."
     cd implementations/ts/sdlp-sdk && npm run format
     @echo "Formatting files in sdlp-cli..."
@@ -65,3 +69,18 @@ ci-local:
 local-demo:
   @echo "Running local demo..."
   cd implementations/ts/sdlp-electron-demo && npm run dev
+
+# Run performance benchmarks
+benchmark:
+  @echo "Running SDLP performance benchmarks..."
+  cd benchmarks && npm run benchmark
+
+# Run benchmarks with JSON output
+benchmark-json:
+  @echo "Running SDLP benchmarks (JSON output)..."
+  cd benchmarks && npm run benchmark:json
+
+# Run benchmarks with CSV output
+benchmark-csv:
+  @echo "Running SDLP benchmarks (CSV output)..."
+  cd benchmarks && npm run benchmark:csv

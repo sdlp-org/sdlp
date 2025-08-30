@@ -3,7 +3,7 @@
 **Version:** 0.1-mvp  
 **Date:** Jun 3, 2025
 **Status:** Draft for MVP Phase 1 Implementation
-**Authors:** [Prem Pillai](mailto:prem@block.xyz)
+**Authors:** [Prem Pillai](mailto:prem.pillai@gmail.com)
 
 ## Abstract
 
@@ -189,7 +189,6 @@ All SDLP errors MUST be categorized into one of the following types:
 #### 4.1.2. Cryptographic Errors
 
 - **`E_SIGNATURE_VERIFICATION_FAILED`**: The JWS signature is cryptographically invalid
-
   - Signature does not match the protected header and payload
   - Unsupported or invalid signature algorithm
   - Malformed signature data
@@ -202,7 +201,6 @@ All SDLP errors MUST be categorized into one of the following types:
 #### 4.1.3. Identity Resolution Errors
 
 - **`E_DID_RESOLUTION_FAILED`**: The sender's DID cannot be resolved
-
   - Network failure during DID resolution
   - DID method not supported
   - Invalid DID format or structure
@@ -215,7 +213,6 @@ All SDLP errors MUST be categorized into one of the following types:
 #### 4.1.4. Payload Processing Errors
 
 - **`E_PAYLOAD_DECOMPRESSION_FAILED`**: The payload cannot be decompressed
-
   - Unsupported compression algorithm specified in `comp`
   - Corrupted or invalid compressed data
   - Decompression library errors

@@ -1,0 +1,22 @@
+# GitHub Pages configuration for SDLP
+title: "SDLP Playground"
+description: "Interactive demonstration of the Secure Deep Link Protocol"
+
+# Only serve essential files
+include:
+  - index.html
+  - logo.png
+  - _config.yml
+  - .nojekyll
+
+# Exclude everything else from being served
+exclude:
+  - package.json
+  - package-lock.json
+  - node_modules/
+  - "*.md"
+  - development.md
+  - key-management-guidance.md
+  - diagrams/
+  - .npmrc
+  - "*.log"
