@@ -10,14 +10,17 @@ A cryptographically signed deep link protocol using Decentralized Identifiers (D
 
 SDLP enables secure, verifiable deep links that can be trusted across applications and platforms. Each link is cryptographically signed by its creator using EdDSA signatures and can be independently verified without requiring a central authority.
 
+**📄 Academic Paper**: Read our comprehensive analysis in ["SDLP: A Lightweight Protocol for Authenticated Deep Links with Decentralized Identity"](paper/sdlp-paper.pdf) - prepared for arXiv submission.
+
 ### Key Features
 
 - **🔐 Cryptographic Signatures**: EdDSA with Ed25519 keys for tamper-evident links
 - **🆔 Decentralized Identity**: DID-based sender authentication (`did:key` and `did:web`)
 - **🛡️ Payload Integrity**: SHA-256 checksums prevent payload tampering
 - **⏰ Time Bounds**: Optional expiration and not-before timestamps
-- **🗜️ Compression**: Efficient Brotli compression for large payloads
+- **🗜️ Compression**: Efficient Brotli compression for large payloads (35.9% reduction for 1KB payloads)
 - **🌐 Cross-Platform**: Works in Node.js, browsers, and desktop applications
+- **⚡ High Performance**: Sub-millisecond operations (0.09-0.11ms creation, 0.32-0.38ms verification)
 
 ## SDLP in the Deep-Link Ecosystem
 
@@ -51,6 +54,30 @@ SDLP links follow this structure:
 ```
 sdlp://<base64url_jws_metadata>.<base64url_compressed_payload>
 ```
+
+## Performance Benchmarks
+
+SDLP is designed for high performance with minimal overhead:
+
+| Operation | Average Time | Throughput | Notes |
+|-----------|-------------|------------|-------|
+| **Link Creation** | 0.09-0.11ms | 9,000-11,600 ops/sec | Consistent across payload sizes |
+| **Link Verification** | 0.32-0.38ms | 2,600-3,100 ops/sec | Includes DID resolution |
+| **Compression (1KB)** | +0.01ms | 35.9% size reduction | Brotli compression |
+| **URL Efficiency** | | 72% payload ratio | Within URL length constraints |
+
+*Benchmarks run on macOS ARM64 with Node.js v23.7.0. See [benchmarks/](benchmarks/) for reproducible tests.*
+
+## Live Demo
+
+Try SDLP interactively:
+
+```bash
+# Quick demo with Electron app
+npm install && just local-demo
+```
+
+Or [run online demo](https://sdlp-demo.vercel.app) (coming soon)
 
 ## Getting Started
 
@@ -98,6 +125,45 @@ This repository contains multiple TypeScript packages:
 | [`sdlp-sdk`](implementations/ts/sdlp-sdk/) | Core TypeScript library for creating and verifying SDLP links | v1.1.0 |
 | [`sdlp-cli`](implementations/ts/sdlp-cli/) | Command-line interface for key generation, signing, and verification | v1.1.0 |
 | [`sdlp-electron-demo`](implementations/ts/sdlp-electron-demo/) | Interactive Electron demonstration application | v1.1.0 |
+
+## Real-World Use Cases
+
+SDLP solves critical security problems across various applications:
+
+### 🤖 AI Prompt Sharing
+```typescript
+// Share AI prompts with guaranteed authenticity
+const promptLink = await createLink({
+  payload: new TextEncoder().encode('{"system": "You are an expert...", "user": "Help me with..."}'),
+  payloadType: 'application/json',
+  signer: trustedOrganizationKey
+});
+```
+*Prevents prompt injection attacks and ensures trusted AI interactions.*
+
+### 🔧 Configuration Distribution
+```typescript
+// Distribute app configs securely across teams
+const configLink = await createLink({
+  payload: yamlConfig,
+  payloadType: 'application/yaml',
+  signer: devOpsKey,
+  compress: 'br'
+});
+```
+*Ensures configuration integrity and prevents unauthorized modifications.*
+
+### 🔗 Cross-App Authentication
+```typescript
+// Pass authenticated session data between applications
+const authLink = await createLink({
+  payload: sessionToken,
+  payloadType: 'application/jwt',
+  signer: authServiceKey,
+  expiresIn: 300 // 5 minutes
+});
+```
+*Secure handoff between trusted applications without central auth server.*
 
 ## Example Usage
 
