@@ -3,7 +3,7 @@
 **Version:** 0.1-mvp  
 **Date:** Jun 3, 2025
 **Status:** Draft for MVP Phase 1 Implementation
-**Authors:** [Prem Pillai](mailto:prem@block.xyz)
+**Authors:** [Prem Pillai](mailto:prem.pillai@gmail.com)
 
 ## Abstract
 

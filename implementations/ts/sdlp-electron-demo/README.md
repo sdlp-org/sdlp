@@ -6,6 +6,32 @@
 
 A comprehensive Electron application that demonstrates the Secure Deep Link Protocol (SDLP) with an interactive user interface for testing, generating, and verifying SDLP links.
 
+## 🚀 Quick Start
+
+**Get up and running in 30 seconds:**
+
+```bash
+# 1. Clone the repository (if you haven't already)
+git clone https://github.com/sdlp-org/sdlp.git
+cd sdlp
+
+# 2. Navigate to the demo directory
+cd implementations/ts/sdlp-electron-demo
+
+# 3. Install dependencies
+npm install
+
+# 4. Start the app
+npm run dev
+```
+
+The Electron app will open with:
+- **Home Tab**: Learn about SDLP and test example links
+- **Tester Tab**: Create and verify your own SDLP links
+- **Protocol Handler**: Automatically handles `sdlp://` links from your system
+
+💡 **Try it immediately**: Click the example links in the Home tab to see SDLP in action!
+
 ## Documentation
 
 - **[Getting Started Guide](../../../GETTING_STARTED.md)** - Complete setup and usage guide
