@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="700" height="400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; }
+      .axis-title { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; }
+      .label { font-family: Arial, sans-serif; font-size: 12px; fill: #333; }
+      .tick-label { font-family: Arial, sans-serif; font-size: 10px; fill: #666; }
+      .uncompressed-bar { fill: #FF9800; stroke: #F57C00; stroke-width: 1; }
+      .compressed-bar { fill: #4CAF50; stroke: #388E3C; stroke-width: 1; }
+      .grid-line { stroke: #e0e0e0; stroke-width: 1; }
+      .axis-line { stroke: #333; stroke-width: 2; }
+      .savings-text { font-family: Arial, sans-serif; font-size: 11px; fill: #2E7D32; font-weight: bold; }
+    </style>
+  </defs>
+  
+  <!-- Title -->
+  <text x="350" y="25" class="title" text-anchor="middle">Brotli Compression Effectiveness</text>
+  
+  <!-- Chart area -->
+  <g transform="translate(80, 60)">
+    
+    <!-- Grid lines -->
+    <line x1="0" y1="240" x2="480" y2="240" class="grid-line"/>
+    <line x1="0" y1="180" x2="480" y2="180" class="grid-line"/>
+    <line x1="0" y1="120" x2="480" y2="120" class="grid-line"/>
+    <line x1="0" y1="60" x2="480" y2="60" class="grid-line"/>
+    
+    <!-- Y-axis -->
+    <line x1="0" y1="0" x2="0" y2="280" class="axis-line"/>
+    <text x="-20" y="285" class="tick-label" text-anchor="middle">0</text>
+    <text x="-20" y="245" class="tick-label" text-anchor="middle">500</text>
+    <text x="-20" y="185" class="tick-label" text-anchor="middle">1000</text>
+    <text x="-20" y="125" class="tick-label" text-anchor="middle">1500</text>
+    <text x="-20" y="65" class="tick-label" text-anchor="middle">2000</text>
+    <text x="-20" y="5" class="tick-label" text-anchor="middle">2500</text>
+    
+    <!-- Y-axis title -->
+    <text x="-50" y="140" class="axis-title" text-anchor="middle" transform="rotate(-90, -50, 140)">URL Length (bytes)</text>
+    
+    <!-- X-axis -->
+    <line x1="0" y1="280" x2="480" y2="280" class="axis-line"/>
+    
+    <!-- X-axis labels -->
+    <text x="80" y="300" class="tick-label" text-anchor="middle">32B Payload</text>
+    <text x="240" y="300" class="tick-label" text-anchor="middle">256B Payload</text>
+    <text x="400" y="300" class="tick-label" text-anchor="middle">1KB Payload</text>
+    
+    <!-- X-axis title -->
+    <text x="240" y="325" class="axis-title" text-anchor="middle">Original Payload Size</text>
+    
+    <!-- 32B payload - no compression benefit -->
+    <rect x="40" y="186.84" width="40" height="93.16" class="uncompressed-bar"/>
+    <text x="60" y="181" class="tick-label" text-anchor="middle">789B</text>
+    <text x="60" y="325" class="label" text-anchor="middle" font-size="10px">No compression</text>
+    <text x="60" y="340" class="label" text-anchor="middle" font-size="10px">(too small)</text>
+    
+    <!-- 256B payload -->
+    <!-- Uncompressed: 1117B -->
+    <rect x="200" y="90.52" width="35" height="189.48" class="uncompressed-bar"/>
+    <text x="217" y="85" class="tick-label" text-anchor="middle">1117B</text>
+    
+    <!-- Compressed: 1009B -->
+    <rect x="245" y="115.24" width="35" height="164.76" class="compressed-bar"/>
+    <text x="262" y="110" class="tick-label" text-anchor="middle">1009B</text>
+    <text x="240" y="325" class="savings-text" text-anchor="middle">9.7% reduction</text>
+    
+    <!-- 1KB payload -->
+    <!-- Uncompressed: 2233B -->
+    <rect x="360" y="12.88" width="35" height="267.12" class="uncompressed-bar"/>
+    <text x="377" y="7" class="tick-label" text-anchor="middle">2233B</text>
+    
+    <!-- Compressed: 1433B -->
+    <rect x="405" y="110.52" width="35" height="169.48" class="compressed-bar"/>
+    <text x="422" y="105" class="tick-label" text-anchor="middle">1433B</text>
+    <text x="400" y="325" class="savings-text" text-anchor="middle">35.9% reduction</text>
+    
+  </g>
+  
+  <!-- Legend -->
+  <g transform="translate(400, 350)">
+    <rect x="0" y="0" width="15" height="15" class="uncompressed-bar"/>
+    <text x="20" y="12" class="label">Uncompressed</text>
+    <rect x="120" y="0" width="15" height="15" class="compressed-bar"/>
+    <text x="140" y="12" class="label">Brotli Compressed</text>
+  </g>
+  
+  <!-- Analysis box -->
+  <g transform="translate(50, 350)">
+    <text x="0" y="0" class="label" font-weight="bold">Key Insights:</text>
+    <text x="0" y="15" class="label">• Compression effectiveness increases with payload size</text>
+    <text x="0" y="30" class="label">• 1KB payloads achieve significant 35.9% space savings</text>
+    <text x="0" y="45" class="label">• Small payloads (&lt;256B) show minimal compression benefit</text>
+  </g>
+</svg>

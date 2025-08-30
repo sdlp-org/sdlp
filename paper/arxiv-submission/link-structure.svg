@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="700" height="500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; }
+      .label { font-family: Arial, sans-serif; font-size: 12px; fill: #333; }
+      .small-label { font-family: Arial, sans-serif; font-size: 10px; fill: #666; }
+      .code { font-family: "Courier New", monospace; font-size: 10px; fill: #000; }
+      .scheme { fill: #ffebcd; stroke: #daa520; stroke-width: 2; }
+      .metadata { fill: #e0f0ff; stroke: #4169e1; stroke-width: 2; }
+      .payload { fill: #f0fff0; stroke: #32cd32; stroke-width: 2; }
+      .separator { fill: #ffe4e1; stroke: #dc143c; stroke-width: 2; }
+    </style>
+  </defs>
+  
+  <!-- Title -->
+  <text x="350" y="25" class="title" text-anchor="middle">SDLP Link Structure</text>
+  
+  <!-- Full link example -->
+  <text x="350" y="55" class="label" text-anchor="middle" font-weight="bold">Complete SDLP Link</text>
+  <rect x="50" y="65" width="600" height="30" class="scheme" rx="5"/>
+  <text x="60" y="85" class="code">sdlp://eyJwcm90ZWN0ZWQiOiJleUpoYkdjaU9pSkZaRVJUUVNJc0ltdHBaQ0k2SW1ScFpEcDNaV0k2WlhoaGJYQnNaUzVqYjIwamEyVjVMVEVpZlEiLCJwYXlsb2FkIjoiZXlKMklqb2lVMFJNTFRFdU1DSXNJbk5wWkNJNklrUmlaRFJqWldZMlpEUTJNV0UwT0dZNVl5SXNJblI1Y0dVaU9pSmhjSEJzYVdOaGRHbHZiaTl6YjI0aUxDSmpiMjF3SWpvaVltSWlMQ0pqYUdzaU9pSmpZakpsWldVeU1HUTBaVEJsWWpjM01HRTJPREUwWmpjNU5ERXlNakJrWWpOaU5UWXhZakpoWWpKaE9XUTVOMkl6TnpKbFlqUTJPV1poWXpsbU4ySXdJbjA","signature":"abc123def456"}.dGVzdCBwYXlsb2FkIGRhdGE</text>
+  
+  <!-- Breakdown sections -->
+  <g transform="translate(0, 120)">
+    
+    <!-- Scheme section -->
+    <text x="60" y="20" class="label" font-weight="bold">1. URL Scheme</text>
+    <rect x="60" y="25" width="100" height="25" class="scheme" rx="3"/>
+    <text x="65" y="42" class="code">sdlp://</text>
+    <text x="60" y="70" class="small-label">Custom application scheme</text>
+    <text x="60" y="85" class="small-label">Registered with OS</text>
+    
+    <!-- Separator -->
+    <text x="220" y="20" class="label" font-weight="bold">2. Dot Separator</text>
+    <rect x="220" y="25" width="20" height="25" class="separator" rx="3"/>
+    <text x="225" y="42" class="code">.</text>
+    <text x="220" y="70" class="small-label">Literal period</text>
+    <text x="220" y="85" class="small-label">Splits metadata/payload</text>
+    
+    <!-- Metadata section -->
+    <text x="300" y="20" class="label" font-weight="bold">3. JWS Metadata (Base64URL)</text>
+    <rect x="300" y="25" width="200" height="25" class="metadata" rx="3"/>
+    <text x="305" y="42" class="code">eyJwcm90ZWN0ZWQiOiJleUpoYkdjaU9pSkZa...</text>
+    <text x="300" y="70" class="small-label">Base64URL encoded JWS object</text>
+    <text x="300" y="85" class="small-label">Contains signature + metadata</text>
+    
+    <!-- Payload section -->
+    <text x="540" y="20" class="label" font-weight="bold">4. Compressed Payload</text>
+    <rect x="540" y="25" width="100" height="25" class="payload" rx="3"/>
+    <text x="545" y="42" class="code">dGVzdCBw...</text>
+    <text x="540" y="70" class="small-label">Base64URL encoded</text>
+    <text x="540" y="85" class="small-label">Compressed data</text>
+  </g>
+  
+  <!-- JWS Structure Detail -->
+  <g transform="translate(50, 230)">
+    <text x="300" y="20" class="label" font-weight="bold" text-anchor="middle">JWS Metadata Object Structure</text>
+    
+    <!-- JWS Object -->
+    <rect x="50" y="30" width="500" height="160" fill="#f8f8ff" stroke="#4169e1" stroke-width="2" rx="5"/>
+    
+    <!-- Protected Header -->
+    <text x="70" y="50" class="label" font-weight="bold">Protected Header (Base64URL decoded):</text>
+    <rect x="70" y="55" width="460" height="45" fill="#e0f0ff" stroke="#4169e1" stroke-width="1" rx="3"/>
+    <text x="80" y="72" class="code">{</text>
+    <text x="90" y="87" class="code">"alg": "EdDSA",</text>
+    <text x="90" y="102" class="code">"kid": "did:web:example.com#key-1"</text>
+    <text x="80" y="117" class="code">}</text>
+    
+    <!-- Payload (Core Metadata) -->
+    <text x="70" y="140" class="label" font-weight="bold">Payload - Core Metadata (Base64URL decoded):</text>
+    <rect x="70" y="145" width="460" height="75" fill="#f0fff0" stroke="#32cd32" stroke-width="1" rx="3"/>
+    <text x="80" y="162" class="code">{</text>
+    <text x="90" y="177" class="code">"v": "SDL-1.0", "sid": "did:web:example.com",</text>
+    <text x="90" y="192" class="code">"type": "application/json", "comp": "br",</text>
+    <text x="90" y="207" class="code">"chk": "cb2eee20d4e0eb770a68147f941220db3b561b2ab2a9d97b372eb469fac9f7b0"</text>
+    <text x="80" y="222" class="code">}</text>
+    
+    <!-- Signature -->
+    <text x="570" y="50" class="label" font-weight="bold">Signature:</text>
+    <rect x="570" y="55" width="80" height="25" fill="#ffe4e1" stroke="#dc143c" stroke-width="1" rx="3"/>
+    <text x="575" y="72" class="code">abc123...</text>
+    <text x="570" y="95" class="small-label">Ed25519</text>
+    <text x="570" y="110" class="small-label">signature</text>
+  </g>
+  
+  <!-- Efficiency comparison -->
+  <g transform="translate(50, 420)">
+    <text x="300" y="15" class="label" font-weight="bold" text-anchor="middle">Efficiency Comparison</text>
+    
+    <rect x="0" y="20" width="200" height="40" fill="#ffcccc" stroke="#cc0000" rx="3"/>
+    <text x="10" y="35" class="label" font-weight="bold">JWT in URL (Traditional)</text>
+    <text x="10" y="50" class="small-label">~78% overhead (double encoding)</text>
+    
+    <rect x="250" y="20" width="200" height="40" fill="#ccffcc" stroke="#00cc00" rx="3"/>
+    <text x="260" y="35" class="label" font-weight="bold">SDLP (Optimized)</text>
+    <text x="260" y="50" class="small-label">~33% overhead (single encoding)</text>
+    
+    <rect x="500" y="20" width="150" height="40" fill="#ccccff" stroke="#0000cc" rx="3"/>
+    <text x="510" y="35" class="label" font-weight="bold">Result</text>
+    <text x="510" y="50" class="small-label">72% payload efficiency</text>
+  </g>
+</svg>
