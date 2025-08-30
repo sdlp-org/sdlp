@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/sdlp-org/sdlp/compare/sdlp-demo-v0.1.3...sdlp-demo-v0.1.4) (2025-08-30)
+
+
+### Features
+
+* getting publishing ready ([#17](https://github.com/sdlp-org/sdlp/issues/17)) ([69c1d32](https://github.com/sdlp-org/sdlp/commit/69c1d3267dabaf035a047c66242fca9f5f70c173))
+
 ## [0.1.3](https://github.com/sdlp-org/sdlp/compare/sdlp-demo-v0.1.2...sdlp-demo-v0.1.3) (2025-06-25)
 
 ### Features
