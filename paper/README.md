@@ -104,4 +104,4 @@ The paper is formatted for arXiv submission:
 
 For questions about the paper:
 - Author: Prem Pillai (prem@block.xyz)
-- Repository: https://github.com/[org]/sdlp
+- Repository: https://github.com/sdlp-org/sdlp
