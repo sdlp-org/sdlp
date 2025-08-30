@@ -8,7 +8,9 @@
     "lint": "just lint",
     "format": "just format",
     "test": "just test",
-    "check-all": "just check-all"
+    "check-all": "just check-all",
+    "benchmark": "cd benchmarks && npm run benchmark",
+    "benchmark:json": "cd benchmarks && npm run benchmark:json"
   },
   "devDependencies": {
     "vite": "^6.3.5",
@@ -28,6 +30,7 @@
     "specs",
     "implementations/ts/sdlp-sdk",
     "implementations/ts/sdlp-cli",
-    "implementations/ts/sdlp-electron-demo"
+    "implementations/ts/sdlp-electron-demo",
+    "benchmarks"
   ]
 }

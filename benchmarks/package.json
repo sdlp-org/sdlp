@@ -1,0 +1,45 @@
+{
+  "name": "@sdlp/benchmarks",
+  "version": "1.0.0",
+  "description": "Performance benchmarks for SDLP protocol",
+  "type": "module",
+  "scripts": {
+    "benchmark": "npx tsx src/standalone-benchmark.ts",
+    "benchmark:json": "npm run build && node dist/run-benchmarks.js --format json",
+    "benchmark:csv": "npm run build && node dist/run-benchmarks.js --format csv",
+    "benchmark:simple": "npm run build && node dist/simple-benchmark.js",
+    "build": "tsc",
+    "build:standalone": "tsc src/standalone-benchmark.ts --outDir dist --target es2022 --module esnext --moduleResolution bundler --allowImportingTsExtensions false",
+    "clean": "rm -rf dist",
+    "test": "echo 'Benchmarks verified during execution'",
+    "lint": "eslint . --ext .ts,.js",
+    "lint:fix": "eslint . --ext .ts,.js --fix",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "table": "^6.8.1",
+    "@noble/hashes": "^1.8.0",
+    "brotli-wasm": "^2.0.0",
+    "bs58": "^6.0.0",
+    "did-resolver": "^4.1.0",
+    "jose": "^5.9.6",
+    "key-did-resolver": "^4.0.0",
+    "web-did-resolver": "^2.0.30"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.3.3",
+    "@eslint/js": "^9.28.0",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
+    "eslint": "^9.28.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-security": "^3.0.1",
+    "eslint-plugin-unicorn": "^56.0.1",
+    "prettier": "^3.5.3"
+  }
+}
