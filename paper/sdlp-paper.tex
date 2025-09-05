@@ -41,7 +41,7 @@ prem.pillai@gmail.com}
 \maketitle
 
 \begin{abstract}
-Deep links enable seamless inter-application communication by encoding data directly within URLs, but they lack inherent security mechanisms to verify sender authenticity or payload integrity. This paper introduces the Secure Deep Link Protocol (SDLP), a lightweight protocol that provides cryptographic authentication and integrity verification for data transmitted via deep links. SDLP leverages JSON Web Signatures (JWS) with Ed25519 cryptography and Decentralized Identifiers (DIDs) to create verifiable links without requiring centralized certificate authorities. Our protocol achieves 72\% payload efficiency within typical URL length constraints and supports flexible compression algorithms. Performance evaluation shows sub-millisecond link creation (0.09-0.11ms average) and verification times (0.32-0.38ms average) with throughput exceeding 9,000 operations per second. SDLP addresses critical security gaps in deep link communication while maintaining compatibility with existing URL schemes and mobile application ecosystems.
+Deep links enable seamless inter-application communication by encoding data directly within URLs, but they lack inherent platform-level or protocol-provided authentication mechanisms to verify sender authenticity or payload integrity. This paper introduces the Secure Deep Link Protocol (SDLP), a lightweight protocol that provides cryptographic authentication and integrity verification for data transmitted via deep links. SDLP leverages JSON Web Signatures (JWS) with Ed25519 cryptography and Decentralized Identifiers (DIDs) to create verifiable links without requiring centralized certificate authorities. Our protocol achieves 72\% payload efficiency within typical URL length constraints and supports flexible compression algorithms. Performance evaluation shows sub-millisecond link creation (0.09-0.11ms average) and verification times (0.32-0.38ms average) with throughput exceeding 9,000 operations per second. SDLP addresses critical security gaps in deep link communication while maintaining compatibility with existing URL schemes and mobile application ecosystems.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -54,7 +54,7 @@ Deep links serve as a fundamental mechanism for inter-application communication 
 
 Consider these attack scenarios: A malicious actor could craft deep links containing harmful prompts for AI applications, manipulate configuration parameters in development tools, or inject unauthorized commands into automation systems. These vulnerabilities become particularly concerning as deep links increasingly carry sensitive data such as API tokens, user preferences, or executable configurations.
 
-Existing solutions like JWT tokens embedded in URLs suffer from substantial overhead (approximately 78\% size penalty due to double Base64URL encoding), while traditional PKI-based approaches require centralized certificate authorities that may not be available or appropriate for peer-to-peer scenarios.
+Existing solutions have significant limitations: JWT tokens embedded in URLs already use Base64URL encoding (which is URL-safe), resulting in approximately 33-37\% overhead from the encoding. Platform-specific solutions like Universal Links (iOS) and App Links (Android) require domain control and HTTPS infrastructure. OAuth-based approaches focus on authorization flows rather than general payload transmission. Meanwhile, traditional PKI-based approaches require centralized certificate authorities that may not be available or appropriate for peer-to-peer scenarios.
 
 This paper presents the Secure Deep Link Protocol (SDLP), which addresses these limitations through the following contributions:
 
@@ -69,13 +69,13 @@ This paper presents the Secure Deep Link Protocol (SDLP), which addresses these 
 
 \subsection{Deep Link Security}
 
-Traditional deep linking mechanisms in mobile platforms rely on custom URL schemes (iOS) or intent filters (Android) without built-in authentication~\cite{android-intents, ios-url-schemes}. While Universal Links~\cite{ios-universal-links} and App Links~\cite{android-app-links} provide domain-based verification, they require web server control and don't address payload integrity.
+Traditional deep linking mechanisms in mobile platforms rely on custom URL schemes (iOS) or intent filters (Android) without built-in platform-level or protocol-provided authentication~\cite{android-intents, ios-url-schemes}. While Universal Links~\cite{ios-universal-links} and App Links~\cite{android-app-links} provide domain-based verification through HTTPS, they require web server control, don't address payload integrity, and are platform-specific. Other approaches like Firebase Dynamic Links (now deprecated) attempted to provide cross-platform solutions but required proprietary infrastructure.
 
 Recent work has explored authenticated deep links for specific use cases. OAuth 2.0 for native applications~\cite{rfc8252} uses deep links for authorization flows but focuses on token exchange rather than general payload transmission. Mobile app security frameworks~\cite{mobile-app-security} identify deep link vulnerabilities but don't provide comprehensive solutions.
 
 \subsection{JSON Web Signatures and Tokens}
 
-JSON Web Signatures (JWS)~\cite{rfc7515} and JSON Web Tokens (JWT)~\cite{rfc7519} provide established patterns for cryptographic authentication of JSON payloads. However, their direct application to URL transmission suffers from encoding inefficiency: embedding a payload within JWT requires Base64URL encoding the payload, then encoding the entire JWT again for URL transmission, resulting in approximately 78\% overhead.
+JSON Web Signatures (JWS)~\cite{rfc7515} and JSON Web Tokens (JWT)~\cite{rfc7519} provide established patterns for cryptographic authentication of JSON payloads. JWS already uses Base64URL encoding, which is URL-safe and requires no additional encoding for URL transmission. The encoding overhead is approximately 33-37\% from the Base64URL representation. SDLP leverages JWS for signing metadata while keeping the actual data payload separate for efficiency.
 
 \subsection{Decentralized Identity}
 
@@ -106,7 +106,7 @@ An SDLP link follows the structure:
 \texttt{<scheme>://<metadata>.<payload>}
 \end{center}
 
-The protocol separates cryptographic metadata from the actual payload to avoid double encoding overhead. The metadata portion contains a Base64URL-encoded JWS object with sender information and payload verification data. The payload portion contains the Base64URL-encoded, optionally compressed actual data.
+The protocol separates cryptographic metadata from the actual payload for efficiency and security. The metadata portion contains a Base64URL-encoded JWS object where the Core Metadata (including sender DID, checksum, and compression information) serves as the signed JWS payload. The actual data payload is kept separate but is cryptographically protected through the signed SHA-256 checksum in the metadata. This design ensures all security-critical information is tamper-proof while maximizing payload capacity.
 
 % Figure will be included in final version
 % \begin{figure}[!t]
@@ -122,9 +122,9 @@ The metadata portion contains a JWS Flattened JSON Serialization with the follow
 
 \textbf{Protected Header:} Contains the cryptographic algorithm (\texttt{alg}) and key identifier (\texttt{kid}). The \texttt{kid} field specifies a complete DID URL pointing to a verification method in the sender's DID document.
 
-\textbf{Payload (Core Metadata):} Contains protocol version (\texttt{v}), sender identifier (\texttt{sid}), payload MIME type (\texttt{type}), compression algorithm (\texttt{comp}), SHA-256 checksum (\texttt{chk}), and optional temporal bounds (\texttt{exp}, \texttt{nbf}).
+\textbf{Payload (Core Metadata):} This is the cryptographically signed portion of the protocol. It contains protocol version (\texttt{v}), sender identifier (\texttt{sid}), payload MIME type (\texttt{type}), compression algorithm (\texttt{comp}), SHA-256 checksum (\texttt{chk}), and optional temporal bounds (\texttt{exp}, \texttt{nbf}). All these fields are protected from tampering by the JWS signature.
 
-\textbf{Signature:} Ed25519 signature over the JWS signing input, computed as ASCII(BASE64URL(protected) + '.' + BASE64URL(payload)).
+\textbf{Signature:} Ed25519 signature over the JWS signing input, computed as ASCII(BASE64URL(protected) + '.' + BASE64URL(payload)). This signature covers the Core Metadata, ensuring all security-critical information (including the sender's DID and payload checksum) cannot be modified without detection.
 
 \subsection{Security Model}
 
@@ -160,11 +160,11 @@ The implementation prioritizes security through input validation, safe parsing, 
 
 \subsection{Payload Capacity Analysis}
 
-SDLP achieves significant efficiency improvements over naive JWT-in-URL approaches through architectural optimization:
+SDLP's architectural design optimizes payload capacity:
 
-\textbf{Traditional JWT Approach:} Payload → Base64URL → JWT → Base64URL results in $\approx 1.78\times$ size multiplication (78\% overhead).
+\textbf{Standard JWS/JWT:} These already use Base64URL encoding which is URL-safe, resulting in $\approx 1.33-1.37\times$ size multiplication (33-37\% overhead) for the encoded data.
 
-\textbf{SDLP Approach:} Payload → Compression → Base64URL results in $\approx 1.33\times$ size multiplication (33\% overhead).
+\textbf{SDLP Approach:} By separating the Core Metadata (which is signed via JWS) from the actual data payload, we ensure all security-critical information is cryptographically protected while maximizing payload capacity. The payload undergoes: Compression → Base64URL, maintaining the same $\approx 1.33\times$ overhead but with compression benefits.
 
 For a 32KB URL limit with estimated 1KB metadata overhead, SDLP provides approximately 23KB of compressed payload capacity, achieving 72\% payload efficiency.
 

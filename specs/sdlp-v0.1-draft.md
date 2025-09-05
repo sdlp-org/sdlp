@@ -11,7 +11,11 @@ This document proposes a "Secure Deep Link Protocol" designed to transmit arbitr
 
 ## 1. Introduction
 
-Deep links offer a powerful mechanism for inter-application communication and invoking specific functionalities with contextual data. However, standard deep links lack inherent security features to verify the sender's authenticity or the integrity of the transmitted data. This proposal addresses this gap by defining a protocol that wraps a data payload within a cryptographically signed envelope, ensuring that the receiver can trust its origin and that it has not been tampered with.
+Deep links offer a powerful mechanism for inter-application communication and invoking specific functionalities with contextual data. However, standard deep links lack inherent platform-level or protocol-provided authentication features to verify the sender's authenticity or the integrity of the transmitted data. 
+
+While various approaches exist to secure deep links—such as embedding authentication tokens, using OAuth flows, leveraging platform-specific solutions like Universal Links (iOS) and App Links (Android) with HTTPS verification, or proprietary services like Firebase Dynamic Links (now deprecated)—these solutions are either application-specific, platform-dependent, require additional infrastructure, or have limited cross-platform support.
+
+This proposal addresses this gap by defining a universal, standards-based protocol that wraps a data payload within a cryptographically signed envelope, ensuring that the receiver can trust its origin and that it has not been tampered with, regardless of platform or distribution channel.
 
 The protocol prioritizes:
 
@@ -53,7 +57,9 @@ A Secure Deep Link is structured as follows: `<custom_scheme>://<base64url_encod
 
 _Note on URL Encoding: The two main parts of the link are encoded using the Base64URL alphabet, which is safe for use in URLs without further percent-encoding. Receivers SHOULD NOT perform additional URL-decoding on the link content before parsing._
 
-_Note on JWS/Payload Separation: This structure intentionally separates the JWS metadata object from the payload to avoid double Base64URL encoding. If the payload were embedded within the JWS structure (as is typical), it would need to be Base64URL encoded once to become the JWS payload field, then the entire JWS object would be Base64URL encoded again for URL transmission. This would result in approximately 78% size overhead (1.33 × 1.33 ≈ 1.78) compared to the original binary data. By separating them with a dot delimiter, we achieve only the necessary 33% overhead from single Base64URL encoding of the compressed payload, maximizing the usable payload capacity within URL length constraints._
+_Note on JWS/Payload Separation: This structure intentionally separates the JWS metadata object from the actual data payload for efficiency reasons. In a standard JWS structure where the data payload is embedded within the JWS, it would be Base64URL encoded as part of the JWS payload field. However, since JWS already uses Base64URL encoding (which is URL-safe), no additional encoding would be needed for URL transmission—the overhead would remain at approximately 33-37% from the single Base64URL encoding. 
+
+Our separation with a dot delimiter provides a different benefit: it allows the Core Metadata (which contains security-critical fields like sender DID, checksum, and compression info) to be the signed JWS payload, while the actual data payload is kept separate. This design ensures all security-relevant metadata is cryptographically signed while maximizing payload capacity and allowing for efficient streaming of large payloads. The ~33% overhead from Base64URL encoding of the compressed payload is the minimum necessary for safe URL transmission._
 
 ### 3.3. JWS Metadata Object{#3.3.-jws-metadata-object}
 
@@ -81,7 +87,7 @@ This object provides verifiable information about the sender and the payload. Af
 
 - **kid (string):** Key Identifier. This MUST be a complete DID URL that includes a fragment identifier pointing to a specific verification method (public key) within the DID Document associated with the `sid` (Sender Identifier) from the Core Metadata. Example: "did:web:example.com#key-1".
 
-**3.3.2. JWS Payload (Core Metadata JSON)** This JSON object contains the core metadata claims. It MUST be Base64URL encoded to form the payload field value in the JWS structure.
+**3.3.2. JWS Payload (Core Metadata JSON)** This JSON object contains the core metadata claims and IS cryptographically signed via the JWS signature mechanism. It MUST be Base64URL encoded to form the payload field value in the JWS structure. Note that this Core Metadata is what gets signed—not the actual data payload, which is kept separate for efficiency.
 
 ```json
 {
@@ -114,7 +120,11 @@ The second part of the deep link (after the dot separator and Base64URL decoding
 
 ### 3.5. Signature Generation and Verification
 
-The JWS signature is generated and verified according to RFC 7515. The JWS Signing Input is: ASCII(BASE64URL(UTF8(JWS Protected Header)) + '.' + BASE64URL(UTF8(JWS Payload))) This input is signed by the sender using the private key corresponding to the public key identified by kid (which is a key within the DID Document of the sid). Receivers MUST verify this signature.
+The JWS signature is generated and verified according to RFC 7515. The JWS Signing Input is: ASCII(BASE64URL(UTF8(JWS Protected Header)) + '.' + BASE64URL(UTF8(JWS Payload))) 
+
+**Important Security Note:** The JWS Payload here is the Core Metadata JSON (containing `v`, `sid`, `type`, `comp`, `chk`, and optional `exp`/`nbf` fields), NOT the actual data payload. This means all security-critical metadata—including the sender's DID (`sid`), the payload integrity checksum (`chk`), compression algorithm (`comp`), MIME type (`type`), and time bounds—are cryptographically signed and protected from tampering. This design follows the same security principle as JWT, where all claims about the token are signed. The actual data payload is kept separate for efficiency but is protected via the signed SHA-256 checksum in the `chk` field.
+
+This input is signed by the sender using the private key corresponding to the public key identified by kid (which is a key within the DID Document of the sid). Receivers MUST verify this signature.
 
 ### 3.6. URL Length and Payload Capacity Considerations
 
